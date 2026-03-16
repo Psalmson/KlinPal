@@ -95,25 +95,25 @@
       <label class="form-label">Email Address</label>
       <input type="email" class="form-input" id="new-email" placeholder="Enter your email address">
     </div>
-    <div class="form-group">
-      <label class="form-label">Residential Address</label>
-      <div class="addr-wrap">
-        <input type="text" class="form-input" id="new-addr" placeholder="Start typing your address..." autocomplete="off">
-        <div class="addr-status" id="addr-status"></div>
-        <div class="addr-dropdown" id="addr-dropdown"></div>
-      </div>
-      <p class="form-note">Select from the suggestions — we will pick up and deliver here</p>
-      <p class="error-msg" id="new-addr-error">Please select an address from the suggestions</p>
-    </div>
     <div class="form-row">
       <div class="form-group" style="margin:0">
-        <label class="form-label">Building Name</label>
-        <input type="text" class="form-input" id="new-building" placeholder="Optional">
+        <label class="form-label">House / Flat No.</label>
+        <input type="text" class="form-input" id="new-house-no" placeholder="e.g. 15B">
+        <p class="error-msg" id="new-house-no-error">Please enter your house number</p>
       </div>
-      <div class="form-group" style="margin:0">
-        <label class="form-label">Landmark</label>
-        <input type="text" class="form-input" id="new-landmark" placeholder="Optional">
+      <div class="form-group" style="margin:0; flex:2">
+        <label class="form-label">Street Name</label>
+        <div class="addr-wrap">
+          <input type="text" class="form-input" id="new-addr" placeholder="Start typing your street..." autocomplete="off">
+          <div class="addr-status" id="addr-status"></div>
+          <div class="addr-dropdown" id="addr-dropdown"></div>
+        </div>
+        <p class="error-msg" id="new-addr-error">Please select a street from the suggestions</p>
       </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Landmark <span style="color:var(--gray-500);font-weight:400">(Optional)</span></label>
+      <input type="text" class="form-input" id="new-landmark" placeholder="e.g. Opposite GTBank, beside Shoprite">
     </div>
   </div>
   <div class="sticky-bottom">
