@@ -100,8 +100,7 @@
       + '&limit=5'
       + '&dedupe=1'
       + '&proximity_lat='   + CONFIG.CAPPERBERRY_LAT
-      + '&proximity_lon='   + CONFIG.CAPPERBERRY_LNG
-      + '&tag=place:house,place:city,place:suburb,highway:residential,highway:primary';
+      + '&proximity_lon='   + CONFIG.CAPPERBERRY_LNG;
 
     fetch(url)
       .then(function(r) { return r.json(); })
