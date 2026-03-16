@@ -15,7 +15,7 @@
     RATE_PER_KM:       200,
 
     // Google Apps Script endpoint — writes orders to Google Sheet
-    ORDERS_API_URL: 'https://script.google.com/macros/s/AKfycbyOyLXDiJ24ba0_psEqgCutQ3imIoJ5TDktOhzxKrQ2Ye14MIX9XyM0Web3QpoQB-YU/exec',
+    ORDERS_API_URL: 'https://script.google.com/macros/s/AKfycbyK33HiJmDgA6z2jOMeS4vFLMLRJnXPM-ol-zFl7931k7leIFPqba2tbhryXnpHUwI/exec',
 
     // Vendor slug — must match the sheet tab name in Google Sheets
     VENDOR_SLUG: 'capperberry',
