@@ -26,16 +26,7 @@
     MIN_CHARS: 3,
   };
 
-  /* ════════════════════════════════════════════════════════════════
-     MOCK DATABASE
-  ════════════════════════════════════════════════════════════════ */
-  var MOCK_DB = {
-    '08011111111': { firstName: 'Amara',  lastName: 'Okonkwo', email: 'amara@email.com',  address: '14 Banana Island Road, Ikoyi' },
-    '08022222222': { firstName: 'Chidi',  lastName: 'Nwoke',   email: 'chidi@email.com',  address: '5 Admiralty Way, Lekki Phase 1' },
-    '08033333333': { firstName: 'Fatima', lastName: 'Bello',   email: 'fatima@email.com', address: '22 Adeola Odeku, Victoria Island' },
-  };
-
-  /* ─── APP STATE ─── */
+  /* ─── APP STATE ─── />
   var SERVICES = [
     { id: 'express', name: 'Express Wash', price: 300, qty: 0 },
     { id: 'fold',    name: 'Wash + Fold',  price: 300, qty: 0 },
@@ -230,13 +221,26 @@
     err.style.display = 'none';
     go('s-checking');
 
-    setTimeout(function() {
-      var found = MOCK_DB[phone];
-      if (found) {
-        currentUser   = Object.assign({}, found, { phone: phone });
-        isNewCustomer = false;
-        go('s-order');
-      } else {
+    fetch(CONFIG.ORDERS_API_URL + '?action=getCustomer&phone=' + encodeURIComponent(phone) + '&slug=' + CONFIG.VENDOR_SLUG)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.customer) {
+          currentUser   = Object.assign({}, data.customer, { phone: phone });
+          isNewCustomer = false;
+          go('s-order');
+        } else {
+          currentUser      = { phone: phone, firstName: '', lastName: '', email: '', address: '' };
+          isNewCustomer    = true;
+          addressConfirmed = false;
+          selectedAddress  = '';
+          selectedCoords   = null;
+          deliveryFee      = CONFIG.BASE_DELIVERY_FEE;
+          deliveryLabel    = 'Calculating...';
+          go('s-new');
+        }
+      })
+      .catch(function() {
+        // On network error, treat as new customer so flow isn't blocked
         currentUser      = { phone: phone, firstName: '', lastName: '', email: '', address: '' };
         isNewCustomer    = true;
         addressConfirmed = false;
@@ -245,8 +249,7 @@
         deliveryFee      = CONFIG.BASE_DELIVERY_FEE;
         deliveryLabel    = 'Calculating...';
         go('s-new');
-      }
-    }, 1200);
+      });
   }
 
   /* ─── STEP 2a: NEW CUSTOMER SUBMIT ─── */
@@ -289,7 +292,7 @@
 
     if (!valid) return;
 
-    var landmark   = document.getElementById('new-landmark').value.trim();
+    var landmark    = document.getElementById('new-landmark').value.trim();
     var fullAddress = houseVal + ', ' + selectedAddress + (landmark ? ' (' + landmark + ')' : '');
 
     var parts = nameVal.split(' ');
@@ -298,6 +301,22 @@
     currentUser.email     = document.getElementById('new-email').value.trim();
     currentUser.address   = fullAddress;
     selectedAddress       = fullAddress;
+
+    // Save new customer to the Customers sheet
+    fetch(CONFIG.ORDERS_API_URL, {
+      method:  'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action:    'saveCustomer',
+        slug:      CONFIG.VENDOR_SLUG,
+        phone:     currentUser.phone,
+        firstName: currentUser.firstName,
+        lastName:  currentUser.lastName,
+        email:     currentUser.email,
+        address:   fullAddress,
+      }),
+    }).catch(function() {}); // fire and forget — don't block the flow
+
     go('s-order');
   }
 
