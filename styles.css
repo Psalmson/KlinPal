@@ -194,13 +194,12 @@
   }
   .form-input::placeholder { color: var(--gray-300); }
   .form-input.input-error { border-color: #ef4444; }
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; overflow: visible; }
   .form-note { font-size: .75rem; color: var(--gray-500); margin-top: 4px; }
   .addr-wrap { position: relative; }
   .addr-status {
     position: absolute;
-    right: 14px; top: 50%;
-    transform: translateY(-50%);
+    right: 14px; top: 14px;
     font-size: .72rem;
     font-weight: 600;
     pointer-events: none;
@@ -209,7 +208,7 @@
   .addr-status.loading { color: var(--teal); }
   .addr-status.ok      { color: #22c55e; }
   .addr-status.err     { color: #ef4444; }
-  /* ── Mapbox custom autocomplete dropdown ── */
+  /* ── LocationIQ autocomplete dropdown ── */
   .addr-dropdown {
     display: none;
     position: absolute;
@@ -220,7 +219,7 @@
     border-radius: 12px;
     box-shadow: 0 8px 32px rgba(26,39,68,0.12);
     overflow: hidden;
-    z-index: 999;
+    z-index: 9999;
   }
   .addr-item {
     padding: 11px 14px;
