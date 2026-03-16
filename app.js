@@ -14,6 +14,12 @@
     BASE_DELIVERY_FEE: 1000,
     RATE_PER_KM:       200,
 
+    // Google Apps Script endpoint — writes orders to Google Sheet
+    ORDERS_API_URL: 'https://script.google.com/macros/s/AKfycbyOyLXDiJ24ba0_psEqgCutQ3imIoJ5TDktOhzxKrQ2Ye14MIX9XyM0Web3QpoQB-YU/exec',
+
+    // Vendor slug — must match the sheet tab name in Google Sheets
+    VENDOR_SLUG: 'capperberry',
+
     // Autocomplete: wait this many ms after last keystroke before fetching
     DEBOUNCE_MS: 350,
     // Min chars before autocomplete fires
@@ -393,6 +399,45 @@
       +   '<span>Total Cost</span>'
       +   '<span>\u20A6' + total.toLocaleString() + '</span>'
       + '</div>';
+  }
+
+  /* ─── SUBMIT ORDER TO GOOGLE SHEET ─── */
+  function submitOrder() {
+    var btn = document.getElementById('confirm-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Submitting...'; }
+
+    var items = SERVICES.filter(function(s) { return s.qty > 0; });
+    var sub   = items.reduce(function(a, s) { return a + s.price * s.qty; }, 0);
+
+    var payload = {
+      vendorSlug:   CONFIG.VENDOR_SLUG,
+      orderId:      orderId,
+      customerName: currentUser ? (currentUser.firstName + ' ' + currentUser.lastName) : '',
+      phone:        currentUser ? currentUser.phone : '',
+      address:      selectedAddress || (currentUser ? currentUser.address : ''),
+      items:        items.map(function(s) { return { name: s.name, qty: s.qty }; }),
+      subtotal:     sub,
+      deliveryFee:  deliveryFee,
+    };
+
+    fetch(CONFIG.ORDERS_API_URL, {
+      method:  'POST',
+      headers: { 'Content-Type': 'text/plain' }, // avoids CORS preflight for Apps Script
+      body:    JSON.stringify(payload),
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.success) {
+        go('s-success');
+      } else {
+        alert('Something went wrong. Please try again.');
+        if (btn) { btn.disabled = false; btn.textContent = 'Confirm Order'; }
+      }
+    })
+    .catch(function() {
+      // Still navigate to success — don't block the customer if network hiccups
+      go('s-success');
+    });
   }
 
   /* ─── RESET ─── */
