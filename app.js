@@ -251,10 +251,12 @@
 
   /* ─── STEP 2a: NEW CUSTOMER SUBMIT ─── */
   function submitNewCustomer() {
-    var nameInput = document.getElementById('new-name');
-    var addrInput = document.getElementById('new-addr');
-    var nameVal   = nameInput.value.trim();
-    var valid     = true;
+    var nameInput    = document.getElementById('new-name');
+    var houseInput   = document.getElementById('new-house-no');
+    var addrInput    = document.getElementById('new-addr');
+    var nameVal      = nameInput.value.trim();
+    var houseVal     = houseInput.value.trim();
+    var valid        = true;
 
     if (!nameVal) {
       nameInput.classList.add('input-error');
@@ -265,10 +267,19 @@
       document.getElementById('new-name-error').style.display = 'none';
     }
 
+    if (!houseVal) {
+      houseInput.classList.add('input-error');
+      document.getElementById('new-house-no-error').style.display = 'block';
+      valid = false;
+    } else {
+      houseInput.classList.remove('input-error');
+      document.getElementById('new-house-no-error').style.display = 'none';
+    }
+
     if (!addressConfirmed || !selectedAddress) {
       addrInput.classList.add('input-error');
       var addrErr = document.getElementById('new-addr-error');
-      addrErr.textContent   = 'Please select an address from the suggestions';
+      addrErr.textContent   = 'Please select a street from the suggestions';
       addrErr.style.display = 'block';
       valid = false;
     } else {
@@ -278,11 +289,15 @@
 
     if (!valid) return;
 
+    var landmark   = document.getElementById('new-landmark').value.trim();
+    var fullAddress = houseVal + ', ' + selectedAddress + (landmark ? ' (' + landmark + ')' : '');
+
     var parts = nameVal.split(' ');
     currentUser.firstName = parts[0];
     currentUser.lastName  = parts.slice(1).join(' ');
     currentUser.email     = document.getElementById('new-email').value.trim();
-    currentUser.address   = selectedAddress;
+    currentUser.address   = fullAddress;
+    selectedAddress       = fullAddress;
     go('s-order');
   }
 
@@ -448,7 +463,7 @@
     selectedCoords   = null;
     deliveryFee      = CONFIG.BASE_DELIVERY_FEE;
     deliveryLabel    = 'Calculating...';
-    ['phone-input','new-name','new-email','new-addr','new-building','new-landmark']
+    ['phone-input','new-name','new-email','new-house-no','new-addr','new-landmark']
       .forEach(function(id) { var el = document.getElementById(id); if (el) el.value = ''; });
     setAddrStatus('', '');
     hideDropdown();
