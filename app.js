@@ -338,6 +338,40 @@ function renderOrderScreen() {
   } else {
     banner.innerHTML = '';
   }
+
+  // For returning customers, geocode their saved address to get delivery fee
+  if (!isNewCustomer && currentUser && currentUser.address && !addressConfirmed) {
+    selectedAddress  = currentUser.address;
+    addressConfirmed = true;
+    deliveryFee      = CONFIG.BASE_DELIVERY_FEE;
+    deliveryLabel    = 'Calculating...';
+
+    // Geocode the saved address to get coords for distance calculation
+    var geocodeUrl = 'https://api.locationiq.com/v1/autocomplete'
+      + '?key='           + CONFIG.LOCATIONIQ_TOKEN
+      + '&q='             + encodeURIComponent(currentUser.address)
+      + '&countrycodes=ng'
+      + '&limit=1'
+      + '&dedupe=1';
+
+    fetch(geocodeUrl)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (Array.isArray(data) && data.length) {
+          var coords = { lng: parseFloat(data[0].lon), lat: parseFloat(data[0].lat) };
+          selectedCoords = coords;
+          calculateDeliveryFee(coords);
+        } else {
+          // Fallback to base fee if geocoding fails
+          deliveryFee   = CONFIG.BASE_DELIVERY_FEE;
+          deliveryLabel = 'Flat rate';
+        }
+      })
+      .catch(function() {
+        deliveryFee   = CONFIG.BASE_DELIVERY_FEE;
+        deliveryLabel = 'Flat rate';
+      });
+  }
 }
 
 function renderServices() {
