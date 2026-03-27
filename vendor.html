@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Klinpal — Laundromat Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:    #0d1b2a;
+    --navy2:   #162032;
+    --navy3:   #1e2e42;
+    --teal:    #00c9a7;
+    --teal2:   #00a88a;
+    --sky:     #5bc4f5;
+    --white:   #f4f8ff;
+    --gray:    #8a9ab5;
+    --gray2:   #4a5a72;
+    --red:     #ff5757;
+    --amber:   #ffb347;
+    --green:   #3dd68c;
+    --font-head: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+    --radius: 10px;
+    --sidebar: 240px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body { font-family: var(--font-body); background: var(--navy); color: var(--white); min-height: 100vh; display: flex; }
+
+  /* LOGIN */
+  #login-screen { position: fixed; inset: 0; background: var(--navy); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+  .login-card { background: var(--navy2); border: 1px solid var(--navy3); border-radius: 16px; padding: 48px 40px; width: 100%; max-width: 400px; box-shadow: 0 32px 80px rgba(0,0,0,0.4); }
+  .login-logo { font-family: var(--font-head); font-size: 28px; font-weight: 800; color: var(--teal); margin-bottom: 6px; }
+  .login-sub { color: var(--gray); font-size: 13px; margin-bottom: 36px; }
+  .login-label { font-size: 11px; font-weight: 500; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; display: block; }
+  .login-input { width: 100%; background: var(--navy3); border: 1px solid var(--gray2); border-radius: var(--radius); padding: 12px 16px; color: var(--white); font-family: var(--font-body); font-size: 15px; margin-bottom: 20px; outline: none; transition: border-color 0.2s; }
+  .login-input:focus { border-color: var(--teal); }
+  .login-btn { width: 100%; background: var(--teal); color: var(--navy); border: none; border-radius: var(--radius); padding: 14px; font-family: var(--font-head); font-size: 15px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+  .login-btn:hover { background: var(--teal2); }
+  .login-error { color: var(--red); font-size: 13px; margin-top: 12px; display: none; text-align: center; }
+
+  /* SIDEBAR */
+  #app { display: none; width: 100%; }
+  .sidebar { width: var(--sidebar); min-height: 100vh; background: var(--navy2); border-right: 1px solid var(--navy3); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
+  .sidebar-logo { padding: 28px 24px 20px; font-family: var(--font-head); font-size: 22px; font-weight: 800; color: var(--teal); border-bottom: 1px solid var(--navy3); }
+  .sidebar-vendor { padding: 16px 24px; border-bottom: 1px solid var(--navy3); }
+  .sidebar-vendor-name { font-size: 13px; font-weight: 600; color: var(--white); text-transform: capitalize; }
+  .sidebar-vendor-slug { font-family: var(--font-mono); font-size: 11px; color: var(--teal); margin-top: 2px; }
+  .sidebar-nav { flex: 1; padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; cursor: pointer; color: var(--gray); font-size: 14px; font-weight: 500; transition: all 0.15s; border: none; background: none; width: 100%; text-align: left; font-family: var(--font-body); }
+  .nav-item:hover { background: var(--navy3); color: var(--white); }
+  .nav-item.active { background: rgba(0,201,167,0.12); color: var(--teal); }
+  .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+  .sidebar-footer { padding: 16px 12px; border-top: 1px solid var(--navy3); }
+
+  /* MAIN */
+  .main { margin-left: var(--sidebar); flex: 1; padding: 32px; min-height: 100vh; }
+  .page { display: none; }
+  .page.active { display: block; }
+  .page-header { margin-bottom: 28px; display: flex; align-items: flex-start; justify-content: space-between; }
+  .page-title { font-family: var(--font-head); font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
+  .page-subtitle { color: var(--gray); font-size: 13px; margin-top: 4px; }
+
+  /* STATS */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+  .stat-card { background: var(--navy2); border: 1px solid var(--navy3); border-radius: var(--radius); padding: 20px; }
+  .stat-label { font-size: 11px; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; font-weight: 500; }
+  .stat-value { font-family: var(--font-head); font-size: 28px; font-weight: 800; color: var(--white); margin: 6px 0 2px; letter-spacing: -1px; }
+  .stat-value.teal { color: var(--teal); }
+  .stat-value.green { color: var(--green); }
+  .stat-sub { font-size: 12px; color: var(--gray); }
+
+  /* CARD */
+  .card { background: var(--navy2); border: 1px solid var(--navy3); border-radius: var(--radius); overflow: hidden; margin-bottom: 20px; }
+  .card-header { padding: 18px 24px; border-bottom: 1px solid var(--navy3); display: flex; align-items: center; justify-content: space-between; }
+  .card-title { font-family: var(--font-head); font-size: 15px; font-weight: 700; }
+  .card-body { padding: 20px 24px; }
+
+  .btn { border: none; border-radius: 8px; padding: 9px 18px; font-family: var(--font-head); font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s; }
+  .btn-ghost { background: var(--navy3); color: var(--gray); }
+  .btn-ghost:hover { color: var(--white); }
+
+  /* TABLE */
+  table { width: 100%; border-collapse: collapse; }
+  th { padding: 12px 16px; text-align: left; font-size: 11px; color: var(--gray); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 500; border-bottom: 1px solid var(--navy3); background: rgba(0,0,0,0.1); }
+  td { padding: 14px 16px; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .order-id { font-family: var(--font-mono); font-size: 12px; color: var(--teal); }
+  .status-select { background: var(--navy3); border: 1px solid var(--gray2); border-radius: 6px; color: var(--white); font-size: 12px; padding: 6px 10px; cursor: pointer; font-family: var(--font-body); outline: none; }
+
+  /* REVENUE */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .revenue-row { display: flex; justify-content: space-between; align-items: center; padding: 13px 0; border-bottom: 1px solid var(--navy3); font-size: 13px; }
+  .revenue-row:last-child { border-bottom: none; }
+  .revenue-label { color: var(--gray); }
+  .revenue-value { font-family: var(--font-mono); font-weight: 500; }
+
+  .highlight-card { background: linear-gradient(135deg, rgba(0,201,167,0.15), rgba(0,201,167,0.05)); border: 1px solid rgba(0,201,167,0.3); border-radius: var(--radius); padding: 20px; margin-bottom: 20px; }
+  .highlight-label { font-size: 11px; color: var(--teal); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 6px; }
+  .highlight-value { font-family: var(--font-head); font-size: 36px; font-weight: 800; color: var(--green); letter-spacing: -1px; }
+  .highlight-sub { font-size: 12px; color: var(--gray); margin-top: 4px; }
+
+  /* CUSTOMER MODAL */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 500; display: none; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--navy2); border: 1px solid var(--navy3); border-radius: 16px; padding: 32px; width: 100%; max-width: 420px; }
+  .modal-title { font-family: var(--font-head); font-size: 18px; font-weight: 800; margin-bottom: 20px; }
+  .modal-field { margin-bottom: 14px; }
+  .modal-field-label { font-size: 11px; color: var(--gray); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px; }
+  .modal-field-value { font-size: 14px; color: var(--white); }
+  .modal-close { background: var(--navy3); border: none; border-radius: 8px; padding: 10px 20px; color: var(--gray); cursor: pointer; font-family: var(--font-body); margin-top: 8px; }
+
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--gray); }
+  .loading-state { text-align: center; padding: 60px 20px; color: var(--gray); font-size: 14px; }
+
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--teal); color: var(--navy); padding: 12px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; z-index: 9999; transform: translateY(80px); opacity: 0; transition: all 0.3s; pointer-events: none; }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.error { background: var(--red); color: white; }
+
+  @media (max-width: 900px) {
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .two-col { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">klinpal</div>
+    <div class="login-sub">Laundromat Dashboard — Sign in to continue</div>
+    <label class="login-label">Your Slug</label>
+    <input class="login-input" id="login-slug" type="text" placeholder="e.g. capperberry" autocomplete="off">
+    <label class="login-label">Password</label>
+    <input class="login-input" id="login-pass" type="password" placeholder="Enter your password">
+    <button class="login-btn" onclick="doLogin()">Sign In</button>
+    <div class="login-error" id="login-error">Invalid credentials. Try again.</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <aside class="sidebar">
+    <div class="sidebar-logo">klinpal</div>
+    <div class="sidebar-vendor">
+      <div class="sidebar-vendor-name" id="sidebar-name">—</div>
+      <div class="sidebar-vendor-slug" id="sidebar-slug">—</div>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="nav-item active" onclick="showPage('orders')" id="nav-orders"><span class="icon">📋</span> Orders</button>
+      <button class="nav-item" onclick="showPage('revenue')" id="nav-revenue"><span class="icon">💰</span> Revenue</button>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="nav-item" onclick="doLogout()"><span class="icon">🚪</span> Sign Out</button>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- ORDERS -->
+    <div class="page active" id="page-orders">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Orders</div>
+          <div class="page-subtitle" id="orders-sub">Loading...</div>
+        </div>
+        <button class="btn btn-ghost" onclick="loadOrders()">↻ Refresh</button>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">Total Orders</div><div class="stat-value teal" id="s-total">—</div><div class="stat-sub">All time</div></div>
+        <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value" id="s-pending">—</div><div class="stat-sub">Awaiting pickup</div></div>
+        <div class="stat-card"><div class="stat-label">In Progress</div><div class="stat-value" id="s-progress">—</div><div class="stat-sub">Being processed</div></div>
+        <div class="stat-card"><div class="stat-label">Delivered</div><div class="stat-value" id="s-delivered">—</div><div class="stat-sub">Completed</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">All Orders</div></div>
+        <div id="orders-wrap"><div class="loading-state">Loading orders...</div></div>
+      </div>
+    </div>
+
+    <!-- REVENUE -->
+    <div class="page" id="page-revenue">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Revenue</div>
+          <div class="page-subtitle">Your earnings — delivery fees excluded</div>
+        </div>
+      </div>
+
+      <div class="highlight-card">
+        <div class="highlight-label">Your Services Revenue</div>
+        <div class="highlight-value" id="rev-services">—</div>
+        <div class="highlight-sub">Total earned from laundry services (delivery fees not included)</div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">Gross Revenue</div><div class="stat-value" id="rev-gross">—</div><div class="stat-sub">Incl. delivery fees</div></div>
+        <div class="stat-card"><div class="stat-label">Delivery Fees</div><div class="stat-value" id="rev-delivery">—</div><div class="stat-sub">Passed to courier</div></div>
+        <div class="stat-card"><div class="stat-label">Avg Order Value</div><div class="stat-value" id="rev-avg">—</div><div class="stat-sub">Services only</div></div>
+        <div class="stat-card"><div class="stat-label">Most Ordered</div><div class="stat-value teal" id="rev-top" style="font-size:16px;letter-spacing:0">—</div><div class="stat-sub">Top service</div></div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header"><div class="card-title">By Service</div></div>
+          <div class="card-body" id="rev-by-service"><div class="loading-state">Loading...</div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Order Breakdown</div></div>
+          <div class="card-body" id="rev-breakdown"><div class="loading-state">Loading...</div></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- CUSTOMER DETAIL MODAL -->
+<div class="modal-overlay" id="customer-modal">
+  <div class="modal">
+    <div class="modal-title">Customer Details</div>
+    <div class="modal-field"><div class="modal-field-label">Name</div><div class="modal-field-value" id="md-name">—</div></div>
+    <div class="modal-field"><div class="modal-field-label">Phone</div><div class="modal-field-value" id="md-phone">—</div></div>
+    <div class="modal-field"><div class="modal-field-label">Address</div><div class="modal-field-value" id="md-address">—</div></div>
+    <div class="modal-field"><div class="modal-field-label">Items Ordered</div><div class="modal-field-value" id="md-items">—</div></div>
+    <div class="modal-field"><div class="modal-field-label">Order Total</div><div class="modal-field-value" id="md-total">—</div></div>
+    <button class="modal-close" onclick="closeModal()">Close</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  /* ══════════════════════════════════════════════════════
+     CONFIG — Apps Script URL for vendor validation
+  ══════════════════════════════════════════════════════ */
+  var MASTER_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyK33HiJmDgA6z2jOMeS4vFLMLRJnXPM-ol-zFl7931k7leIFPqba2tbhryXnpHUwI/exec';
+
+  var currentVendor = null;
+  var allOrders     = [];
+
+  /* ── LOGIN ── */
+  function doLogin() {
+    var slug = document.getElementById('login-slug').value.trim().toLowerCase();
+    var pass = document.getElementById('login-pass').value.trim();
+    var err  = document.getElementById('login-error');
+
+    if (!slug || !pass) { err.style.display = 'block'; return; }
+
+    // Validate against vendors sheet
+    fetch(MASTER_SCRIPT_URL + '?action=validateVendor&slug=' + encodeURIComponent(slug) + '&password=' + encodeURIComponent(pass))
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.vendor) {
+          currentVendor = data.vendor;
+          err.style.display = 'none';
+          document.getElementById('login-screen').style.display = 'none';
+          document.getElementById('app').style.display = 'flex';
+          document.getElementById('sidebar-name').textContent = currentVendor.name;
+          document.getElementById('sidebar-slug').textContent = '/' + currentVendor.slug;
+          loadOrders();
+        } else {
+          err.style.display = 'block';
+        }
+      })
+      .catch(function() { err.style.display = 'block'; });
+  }
+
+  document.getElementById('login-pass').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') doLogin();
+  });
+
+  function doLogout() {
+    currentVendor = null;
+    allOrders = [];
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('login-slug').value = '';
+    document.getElementById('login-pass').value = '';
+  }
+
+  /* ── NAVIGATION ── */
+  function showPage(name) {
+    document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+    document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+    document.getElementById('page-' + name).classList.add('active');
+    document.getElementById('nav-' + name).classList.add('active');
+    if (name === 'revenue') renderRevenue();
+  }
+
+  /* ── LOAD ORDERS ── */
+  function loadOrders() {
+    document.getElementById('orders-wrap').innerHTML = '<div class="loading-state">Fetching orders...</div>';
+
+    fetch(currentVendor.scriptUrl + '?action=getOrders&slug=' + currentVendor.slug)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        allOrders = data.orders || [];
+        renderOrdersTable();
+        updateStats();
+        document.getElementById('orders-sub').textContent =
+          allOrders.length + ' order' + (allOrders.length !== 1 ? 's' : '') + ' · refreshed just now';
+      })
+      .catch(function() {
+        document.getElementById('orders-wrap').innerHTML = '<div class="empty-state"><div style="font-size:40px;margin-bottom:12px">⚠️</div><div style="font-size:14px">Could not load orders</div></div>';
+      });
+  }
+
+  function updateStats() {
+    document.getElementById('s-total').textContent     = allOrders.length;
+    document.getElementById('s-pending').textContent   = allOrders.filter(function(o) { return o.status === 'Pending'; }).length;
+    document.getElementById('s-progress').textContent  = allOrders.filter(function(o) { return ['Picked Up','Washing','Ready'].includes(o.status); }).length;
+    document.getElementById('s-delivered').textContent = allOrders.filter(function(o) { return o.status === 'Delivered'; }).length;
+  }
+
+  function renderOrdersTable() {
+    var wrap = document.getElementById('orders-wrap');
+    if (!allOrders.length) {
+      wrap.innerHTML = '<div class="empty-state"><div style="font-size:40px;margin-bottom:12px">📭</div><div style="font-size:14px">No orders yet</div></div>';
+      return;
+    }
+
+    var rows = allOrders.slice().reverse().map(function(o, i) {
+      var realIdx  = allOrders.length - 1 - i;
+      var statuses = ['Pending','Picked Up','Washing','Ready','Delivered','Cancelled'];
+      return '<tr>'
+        + '<td><div class="order-id">' + (o.orderId || '—') + '</div><div style="font-size:11px;color:var(--gray);margin-top:2px">' + (o.date || '') + ' ' + (o.time || '') + '</div></td>'
+        + '<td><div style="font-weight:500;cursor:pointer;color:var(--sky)" onclick="showCustomer(' + realIdx + ')">' + (o.customerName || '—') + ' ↗</div><div style="font-size:11px;color:var(--gray)">' + (o.phone || '') + '</div></td>'
+        + '<td style="font-size:12px;color:var(--gray);max-width:160px">' + (o.items || '—') + '</td>'
+        + '<td><div style="font-family:var(--font-mono)">₦' + Number(String(o.subtotal || '0').replace(/[^\d]/g,'')).toLocaleString() + '</div><div style="font-size:11px;color:var(--gray)">+₦' + Number(String(o.deliveryFee || '0').replace(/[^\d]/g,'')).toLocaleString() + ' delivery</div></td>'
+        + '<td><select class="status-select" onchange="updateStatus(' + realIdx + ', this.value)">'
+        +   statuses.map(function(s) { return '<option value="' + s + '"' + (o.status === s ? ' selected' : '') + '>' + s + '</option>'; }).join('')
+        + '</select></td>'
+        + '</tr>';
+    }).join('');
+
+    wrap.innerHTML = '<table>'
+      + '<thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Amount</th><th>Status</th></tr></thead>'
+      + '<tbody>' + rows + '</tbody></table>';
+  }
+
+  function updateStatus(idx, newStatus) {
+    allOrders[idx].status = newStatus;
+    updateStats();
+
+    fetch(currentVendor.scriptUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'updateStatus', slug: currentVendor.slug, orderId: allOrders[idx].orderId, status: newStatus }),
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) { showToast(d.success ? 'Status updated ✓' : 'Update failed', !d.success); })
+    .catch(function() { showToast('Could not update status', true); });
+  }
+
+  /* ── CUSTOMER MODAL ── */
+  function showCustomer(idx) {
+    var o = allOrders[idx];
+    document.getElementById('md-name').textContent    = o.customerName || '—';
+    document.getElementById('md-phone').textContent   = o.phone || '—';
+    document.getElementById('md-address').textContent = o.address || '—';
+    document.getElementById('md-items').textContent   = o.items || '—';
+    document.getElementById('md-total').textContent   = '₦' + Number(String(o.total || '0').replace(/[^\d]/g,'')).toLocaleString();
+    document.getElementById('customer-modal').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('customer-modal').classList.remove('open');
+  }
+
+  /* ── REVENUE ── */
+  function renderRevenue() {
+    if (!allOrders.length) { loadOrders(); return; }
+
+    var grossRev = 0, totalDel = 0, servicesRev = 0;
+    var serviceTotals = {}, statusCount = {};
+
+    allOrders.forEach(function(o) {
+      var total = Number(String(o.total    || '0').replace(/[^\d]/g,''));
+      var del   = Number(String(o.deliveryFee || '0').replace(/[^\d]/g,''));
+      var sub   = Number(String(o.subtotal || '0').replace(/[^\d]/g,''));
+      grossRev    += total;
+      totalDel    += del;
+      servicesRev += sub;
+
+      // Service breakdown
+      if (o.items) {
+        o.items.split(',').forEach(function(item) {
+          var m = item.trim().match(/^(\d+)x\s+(.+)$/);
+          if (m) {
+            var name = m[2].trim();
+            serviceTotals[name] = (serviceTotals[name] || 0) + parseInt(m[1]);
+          }
+        });
+      }
+
+      // Status breakdown
+      var st = o.status || 'Pending';
+      statusCount[st] = (statusCount[st] || 0) + 1;
+    });
+
+    var avgOrder = allOrders.length ? Math.round(servicesRev / allOrders.length) : 0;
+
+    // Top service
+    var topService = '—';
+    var topCount   = 0;
+    Object.entries(serviceTotals).forEach(function(e) {
+      if (e[1] > topCount) { topCount = e[1]; topService = e[0]; }
+    });
+
+    document.getElementById('rev-services').textContent = '₦' + servicesRev.toLocaleString();
+    document.getElementById('rev-gross').textContent    = '₦' + grossRev.toLocaleString();
+    document.getElementById('rev-delivery').textContent = '₦' + totalDel.toLocaleString();
+    document.getElementById('rev-avg').textContent      = '₦' + avgOrder.toLocaleString();
+    document.getElementById('rev-top').textContent      = topService;
+
+    // By service
+    document.getElementById('rev-by-service').innerHTML = Object.entries(serviceTotals)
+      .sort(function(a,b) { return b[1]-a[1]; })
+      .map(function(e) {
+        return '<div class="revenue-row"><span class="revenue-label">' + e[0] + '</span><span class="revenue-value">' + e[1] + ' items</span></div>';
+      }).join('') || '<div style="color:var(--gray);font-size:13px">No data yet</div>';
+
+    // Status breakdown
+    var statusOrder = ['Pending','Picked Up','Washing','Ready','Delivered','Cancelled'];
+    document.getElementById('rev-breakdown').innerHTML = statusOrder
+      .filter(function(s) { return statusCount[s]; })
+      .map(function(s) {
+        var pct = Math.round((statusCount[s] / allOrders.length) * 100);
+        return '<div class="revenue-row"><span class="revenue-label">' + s + '</span><span class="revenue-value">' + statusCount[s] + ' <span style="color:var(--gray);font-size:11px">(' + pct + '%)</span></span></div>';
+      }).join('') || '<div style="color:var(--gray);font-size:13px">No data yet</div>';
+  }
+
+  /* ── TOAST ── */
+  function showToast(msg, isError) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast' + (isError ? ' error' : '');
+    t.classList.add('show');
+    setTimeout(function() { t.classList.remove('show'); }, 3000);
+  }
+</script>
+</body>
+</html>
