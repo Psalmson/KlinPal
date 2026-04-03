@@ -145,8 +145,11 @@
   .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .save-btn { background: var(--teal); color: var(--navy); border: none; border-radius: var(--radius); padding: 12px 28px; font-family: var(--font-head); font-size: 14px; font-weight: 700; cursor: pointer; transition: background 0.2s; margin-right: 10px; }
   .save-btn:hover { background: var(--teal2); }
-  .delete-btn { background: rgba(255,87,87,0.1); color: var(--red); border: 1px solid rgba(255,87,87,0.2); border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; font-family: var(--font-body); transition: all 0.15s; }
-  .delete-btn:hover { background: rgba(255,87,87,0.2); }
+  .link-card { background: linear-gradient(135deg, rgba(0,201,167,0.12), rgba(0,201,167,0.04)); border: 1px solid rgba(0,201,167,0.25); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .link-label { font-size: 11px; color: var(--teal); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 4px; }
+  .link-url { font-family: var(--font-mono); font-size: 13px; color: var(--white); word-break: break-all; }
+  .copy-btn { background: var(--teal); color: var(--navy); border: none; border-radius: 8px; padding: 9px 18px; font-family: var(--font-head); font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: background 0.2s; flex-shrink: 0; }
+  .copy-btn:hover { background: var(--teal2); }
 
 </style>
 </head>
@@ -194,6 +197,14 @@
           <div class="page-subtitle" id="orders-sub">Loading...</div>
         </div>
         <button class="btn btn-ghost" onclick="loadOrders()">↻ Refresh</button>
+      </div>
+
+      <div class="link-card">
+        <div>
+          <div class="link-label">Your Customer Link</div>
+          <div class="link-url" id="customer-link">—</div>
+        </div>
+        <button class="copy-btn" onclick="copyLink()">Copy Link</button>
       </div>
       <div class="stats-grid">
         <div class="stat-card"><div class="stat-label">Total Orders</div><div class="stat-value teal" id="s-total">—</div><div class="stat-sub">All time</div></div>
@@ -327,6 +338,10 @@
           document.getElementById('app').style.display = 'flex';
           document.getElementById('sidebar-name').textContent = currentVendor.name;
           document.getElementById('sidebar-slug').textContent = '/' + currentVendor.slug;
+
+          // Set customer link
+          var customerUrl = window.location.origin + '/?vendor=' + currentVendor.slug;
+          document.getElementById('customer-link').textContent = customerUrl;
 
           if (currentVendor.services && currentVendor.services.length) {
             services = currentVendor.services;
@@ -544,6 +559,22 @@
     })
     .then(function(r) { showToast(r.ok ? 'Services saved ✓' : 'Save failed', !r.ok); })
     .catch(function() { showToast('Could not save services', true); });
+  }
+
+  function copyLink() {
+    var url = window.location.origin + '/?vendor=' + currentVendor.slug;
+    navigator.clipboard.writeText(url)
+      .then(function() { showToast('Link copied ✓'); })
+      .catch(function() {
+        // Fallback for older browsers
+        var el = document.createElement('textarea');
+        el.value = url;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+        showToast('Link copied ✓');
+      });
   }
 
   /* ── TOAST ── */
