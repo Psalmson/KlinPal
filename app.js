@@ -533,7 +533,10 @@ function submitOrder() {
           vendor_name:    VENDOR.name,
           vendor_chat_id: VENDOR.telegram_chat_id || null,
         }),
-      }).catch(function() {}); // fire and forget
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(d) { console.log('Notify result:', d); })
+      .catch(function(e) { console.error('Notify error:', e); });
 
       go('s-success');
     } else {
@@ -587,7 +590,7 @@ function bootstrapVendor() {
     return;
   }
 
-  sbFetch('vendors?slug=eq.' + encodeURIComponent(slug) + '&limit=1')
+  sbFetch('vendors?slug=eq.' + encodeURIComponent(slug) + '&limit=1&select=*')
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (!data || !data.length) {
