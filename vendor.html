@@ -288,12 +288,26 @@
 
 <script>
   /* ══════════════════════════════════════════════════════
-     CONFIG — Apps Script URL for vendor validation
+     CONFIG
   ══════════════════════════════════════════════════════ */
-  var MASTER_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyhklNFHa57lFRV1axi0yD7JV-3WYJNFAECWwnrF_ic9SsXBr_cUHR40FXUtYd0r3gA/exec';
+  var SUPABASE_URL = 'https://mlgdqxqzpzfzndjhywqf.supabase.co';
+  var SUPABASE_KEY = 'sb_publishable_TS5uGf7KzLKxeQw8bxDKYw_HwBNNBeA';
 
   var currentVendor = null;
   var allOrders     = [];
+
+  function sbFetch(path, options) {
+    var url  = SUPABASE_URL + '/rest/v1/' + path;
+    var opts = Object.assign({
+      headers: {
+        'apikey':        SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type':  'application/json',
+        'Prefer':        'return=representation',
+      },
+    }, options || {});
+    return fetch(url, opts);
+  }
 
   /* ── LOGIN ── */
   function doLogin() {
@@ -303,28 +317,22 @@
 
     if (!slug || !pass) { err.style.display = 'block'; return; }
 
-    // Validate against vendors sheet
-    fetch(MASTER_SCRIPT_URL + '?action=validateVendor&slug=' + encodeURIComponent(slug) + '&password=' + encodeURIComponent(pass))
+    sbFetch('vendors?slug=eq.' + encodeURIComponent(slug) + '&password=eq.' + encodeURIComponent(pass) + '&limit=1')
       .then(function(r) { return r.json(); })
       .then(function(data) {
-        if (data.vendor) {
-          currentVendor = data.vendor;
+        if (data && data.length) {
+          currentVendor = data[0];
           err.style.display = 'none';
           document.getElementById('login-screen').style.display = 'none';
           document.getElementById('app').style.display = 'flex';
           document.getElementById('sidebar-name').textContent = currentVendor.name;
           document.getElementById('sidebar-slug').textContent = '/' + currentVendor.slug;
-          // Re-initialise services with vendor-specific storage key
-    // Load services from sheet
-    fetch(currentVendor.scriptUrl + '?action=getServices&slug=' + currentVendor.slug)
-      .then(function(r) { return r.json(); })
-      .then(function(d) {
-        if (d.services && d.services.length) services = d.services;
-        renderServicesEditor();
-      })
-      .catch(function() { renderServicesEditor(); });
 
-    loadOrders();
+          if (currentVendor.services && currentVendor.services.length) {
+            services = currentVendor.services;
+          }
+          renderServicesEditor();
+          loadOrders();
         } else {
           err.style.display = 'block';
         }
@@ -359,10 +367,10 @@
   function loadOrders() {
     document.getElementById('orders-wrap').innerHTML = '<div class="loading-state">Fetching orders...</div>';
 
-    fetch(currentVendor.scriptUrl + '?action=getOrders&slug=' + currentVendor.slug)
+    sbFetch('orders?vendor_id=eq.' + currentVendor.id + '&order=created_at.desc')
       .then(function(r) { return r.json(); })
       .then(function(data) {
-        allOrders = data.orders || [];
+        allOrders = Array.isArray(data) ? data : [];
         renderOrdersTable();
         updateStats();
         document.getElementById('orders-sub').textContent =
@@ -387,15 +395,15 @@
       return;
     }
 
-    var rows = allOrders.slice().reverse().map(function(o, i) {
-      var realIdx  = allOrders.length - 1 - i;
+    var rows = allOrders.map(function(o, i) {
       var statuses = ['Pending','Picked Up','Washing','Ready','Delivered','Cancelled'];
+      var date = o.created_at ? new Date(o.created_at).toLocaleDateString('en-GB') : '';
       return '<tr>'
-        + '<td><div class="order-id">' + (o.orderId || '—') + '</div><div style="font-size:11px;color:var(--gray);margin-top:2px">' + (o.date || '') + ' ' + (o.time || '') + '</div></td>'
-        + '<td><div style="font-weight:500;cursor:pointer;color:var(--sky)" onclick="showCustomer(' + realIdx + ')">' + (o.customerName || '—') + ' ↗</div><div style="font-size:11px;color:var(--gray)">' + (o.phone || '') + '</div></td>'
+        + '<td><div class="order-id">' + (o.order_id || '—') + '</div><div style="font-size:11px;color:var(--gray);margin-top:2px">' + date + '</div></td>'
+        + '<td><div style="font-weight:500;cursor:pointer;color:var(--sky)" onclick="showCustomer(' + i + ')">' + (o.customer_name || '—') + ' ↗</div><div style="font-size:11px;color:var(--gray)">' + (o.phone || '') + '</div></td>'
         + '<td style="font-size:12px;color:var(--gray);max-width:160px">' + (o.items || '—') + '</td>'
-        + '<td><div style="font-family:var(--font-mono)">₦' + Number(String(o.subtotal || '0').replace(/[^\d]/g,'')).toLocaleString() + '</div><div style="font-size:11px;color:var(--gray)">+₦' + Number(String(o.deliveryFee || '0').replace(/[^\d]/g,'')).toLocaleString() + ' delivery</div></td>'
-        + '<td><select class="status-select" onchange="updateStatus(' + realIdx + ', this.value)">'
+        + '<td><div style="font-family:var(--font-mono)">₦' + (o.subtotal || 0).toLocaleString() + '</div><div style="font-size:11px;color:var(--gray)">+₦' + (o.delivery_fee || 0).toLocaleString() + ' delivery</div></td>'
+        + '<td><select class="status-select" onchange="updateStatus(' + i + ', this.value)">'
         +   statuses.map(function(s) { return '<option value="' + s + '"' + (o.status === s ? ' selected' : '') + '>' + s + '</option>'; }).join('')
         + '</select></td>'
         + '</tr>';
@@ -410,24 +418,22 @@
     allOrders[idx].status = newStatus;
     updateStats();
 
-    fetch(currentVendor.scriptUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ action: 'updateStatus', slug: currentVendor.slug, orderId: allOrders[idx].orderId, status: newStatus }),
+    sbFetch('orders?order_id=eq.' + allOrders[idx].order_id, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: newStatus }),
     })
-    .then(function(r) { return r.json(); })
-    .then(function(d) { showToast(d.success ? 'Status updated ✓' : 'Update failed', !d.success); })
+    .then(function(r) { showToast(r.ok ? 'Status updated ✓' : 'Update failed', !r.ok); })
     .catch(function() { showToast('Could not update status', true); });
   }
 
   /* ── CUSTOMER MODAL ── */
   function showCustomer(idx) {
     var o = allOrders[idx];
-    document.getElementById('md-name').textContent    = o.customerName || '—';
+    document.getElementById('md-name').textContent    = o.customer_name || '—';
     document.getElementById('md-phone').textContent   = o.phone || '—';
     document.getElementById('md-address').textContent = o.address || '—';
     document.getElementById('md-items').textContent   = o.items || '—';
-    document.getElementById('md-total').textContent   = '₦' + Number(String(o.total || '0').replace(/[^\d]/g,'')).toLocaleString();
+    document.getElementById('md-total').textContent   = '₦' + (o.total || 0).toLocaleString();
     document.getElementById('customer-modal').classList.add('open');
   }
 
@@ -443,8 +449,7 @@
     var serviceTotals = {}, statusCount = {};
 
     allOrders.forEach(function(o) {
-      var sub = Number(String(o.subtotal || '0').replace(/[^\d]/g,''));
-      servicesRev += sub;
+      servicesRev += (o.subtotal || 0);
 
       if (o.items) {
         o.items.split(',').forEach(function(item) {
@@ -463,8 +468,7 @@
     var avgOrder  = allOrders.length ? Math.round(servicesRev / allOrders.length) : 0;
     var delivered = statusCount['Delivered'] || 0;
 
-    var topService = '—';
-    var topCount   = 0;
+    var topService = '—', topCount = 0;
     Object.entries(serviceTotals).forEach(function(e) {
       if (e[1] > topCount) { topCount = e[1]; topService = e[0]; }
     });
@@ -534,20 +538,11 @@
   }
 
   function saveServices() {
-    fetch(currentVendor.scriptUrl, {
-      method:  'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({
-        action:   'saveServices',
-        slug:     currentVendor.slug,
-        services: services,
-      }),
+    sbFetch('vendors?id=eq.' + currentVendor.id, {
+      method: 'PATCH',
+      body: JSON.stringify({ services: services }),
     })
-    .then(function(r) { return r.json(); })
-    .then(function(d) {
-      if (d.success) showToast('Services saved ✓');
-      else showToast('Save failed', true);
-    })
+    .then(function(r) { showToast(r.ok ? 'Services saved ✓' : 'Save failed', !r.ok); })
     .catch(function() { showToast('Could not save services', true); });
   }
 
