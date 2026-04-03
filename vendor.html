@@ -126,6 +126,28 @@
     .stats-grid { grid-template-columns: 1fr 1fr; }
     .two-col { grid-template-columns: 1fr; }
   }
+  /* SERVICES */
+  .services-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .service-edit-card { background: var(--navy2); border: 1px solid var(--navy3); border-radius: var(--radius); padding: 20px; }
+  .service-edit-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .service-edit-name { font-family: var(--font-head); font-size: 15px; font-weight: 700; }
+  .toggle-switch { position: relative; width: 40px; height: 22px; }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider { position: absolute; cursor: pointer; inset: 0; background: var(--gray2); border-radius: 22px; transition: 0.2s; }
+  .toggle-slider:before { content: ''; position: absolute; height: 16px; width: 16px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.2s; }
+  .toggle-switch input:checked + .toggle-slider { background: var(--teal); }
+  .toggle-switch input:checked + .toggle-slider:before { transform: translateX(18px); }
+  .field-label { font-size: 11px; color: var(--gray); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; display: block; }
+  .field-input { width: 100%; background: var(--navy3); border: 1px solid var(--gray2); border-radius: 8px; padding: 10px 14px; color: var(--white); font-family: var(--font-body); font-size: 14px; outline: none; transition: border-color 0.2s; margin-bottom: 12px; }
+  .field-input:focus { border-color: var(--teal); }
+  .add-service-card { background: var(--navy2); border: 1px dashed var(--gray2); border-radius: var(--radius); padding: 24px; margin-bottom: 24px; }
+  .add-service-title { font-family: var(--font-head); font-size: 15px; font-weight: 700; margin-bottom: 16px; color: var(--teal); }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .save-btn { background: var(--teal); color: var(--navy); border: none; border-radius: var(--radius); padding: 12px 28px; font-family: var(--font-head); font-size: 14px; font-weight: 700; cursor: pointer; transition: background 0.2s; margin-right: 10px; }
+  .save-btn:hover { background: var(--teal2); }
+  .delete-btn { background: rgba(255,87,87,0.1); color: var(--red); border: 1px solid rgba(255,87,87,0.2); border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; font-family: var(--font-body); transition: all 0.15s; }
+  .delete-btn:hover { background: rgba(255,87,87,0.2); }
+
 </style>
 </head>
 <body>
@@ -155,6 +177,7 @@
     <nav class="sidebar-nav">
       <button class="nav-item active" onclick="showPage('orders')" id="nav-orders"><span class="icon">📋</span> Orders</button>
       <button class="nav-item" onclick="showPage('revenue')" id="nav-revenue"><span class="icon">💰</span> Revenue</button>
+      <button class="nav-item" onclick="showPage('services')" id="nav-services"><span class="icon">⚙️</span> Services & Pricing</button>
     </nav>
     <div class="sidebar-footer">
       <button class="nav-item" onclick="doLogout()"><span class="icon">🚪</span> Sign Out</button>
@@ -189,21 +212,21 @@
       <div class="page-header">
         <div>
           <div class="page-title">Revenue</div>
-          <div class="page-subtitle">Your earnings — delivery fees excluded</div>
+          <div class="page-subtitle">Your laundry services earnings</div>
         </div>
       </div>
 
       <div class="highlight-card">
-        <div class="highlight-label">Your Services Revenue</div>
+        <div class="highlight-label">Total Revenue</div>
         <div class="highlight-value" id="rev-services">—</div>
-        <div class="highlight-sub">Total earned from laundry services (delivery fees not included)</div>
+        <div class="highlight-sub">Total earned from laundry services</div>
       </div>
 
       <div class="stats-grid">
-        <div class="stat-card"><div class="stat-label">Gross Revenue</div><div class="stat-value" id="rev-gross">—</div><div class="stat-sub">Incl. delivery fees</div></div>
-        <div class="stat-card"><div class="stat-label">Delivery Fees</div><div class="stat-value" id="rev-delivery">—</div><div class="stat-sub">Passed to courier</div></div>
-        <div class="stat-card"><div class="stat-label">Avg Order Value</div><div class="stat-value" id="rev-avg">—</div><div class="stat-sub">Services only</div></div>
+        <div class="stat-card"><div class="stat-label">Total Orders</div><div class="stat-value" id="rev-orders">—</div><div class="stat-sub">All time</div></div>
+        <div class="stat-card"><div class="stat-label">Avg Order Value</div><div class="stat-value" id="rev-avg">—</div><div class="stat-sub">Per order</div></div>
         <div class="stat-card"><div class="stat-label">Most Ordered</div><div class="stat-value teal" id="rev-top" style="font-size:16px;letter-spacing:0">—</div><div class="stat-sub">Top service</div></div>
+        <div class="stat-card"><div class="stat-label">Delivered</div><div class="stat-value green" id="rev-delivered">—</div><div class="stat-sub">Completed orders</div></div>
       </div>
 
       <div class="two-col">
@@ -218,7 +241,34 @@
       </div>
     </div>
 
+    <!-- SERVICES -->
+    <div class="page" id="page-services">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Services & Pricing</div>
+          <div class="page-subtitle">Manage your service offerings and prices</div>
+        </div>
+      </div>
+      <div class="services-grid" id="services-editor"></div>
+      <div class="add-service-card">
+        <div class="add-service-title">+ Add New Service</div>
+        <div class="field-row">
+          <div>
+            <label class="field-label">Service Name</label>
+            <input class="field-input" id="new-service-name" placeholder="e.g. Curtain Wash">
+          </div>
+          <div>
+            <label class="field-label">Price per item (₦)</label>
+            <input class="field-input" id="new-service-price" type="number" placeholder="e.g. 500">
+          </div>
+        </div>
+        <button class="save-btn" onclick="addService()">Add Service</button>
+      </div>
+      <button class="save-btn" onclick="saveServices()">💾 Save All Changes</button>
+    </div>
+
   </main>
+</div>
 </div>
 
 <!-- CUSTOMER DETAIL MODAL -->
@@ -264,7 +314,13 @@
           document.getElementById('app').style.display = 'flex';
           document.getElementById('sidebar-name').textContent = currentVendor.name;
           document.getElementById('sidebar-slug').textContent = '/' + currentVendor.slug;
-          loadOrders();
+          // Re-initialise services with vendor-specific storage key
+    var savedKey = 'klinpal_services_' + currentVendor.slug;
+    var saved    = localStorage.getItem(savedKey);
+    if (saved) services = JSON.parse(saved);
+
+    loadOrders();
+    renderServicesEditor();
         } else {
           err.style.display = 'block';
         }
@@ -291,7 +347,8 @@
     document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
     document.getElementById('page-' + name).classList.add('active');
     document.getElementById('nav-' + name).classList.add('active');
-    if (name === 'revenue') renderRevenue();
+    if (name === 'revenue')  renderRevenue();
+    if (name === 'services') renderServicesEditor();
   }
 
   /* ── LOAD ORDERS ── */
@@ -378,18 +435,13 @@
   function renderRevenue() {
     if (!allOrders.length) { loadOrders(); return; }
 
-    var grossRev = 0, totalDel = 0, servicesRev = 0;
+    var servicesRev = 0;
     var serviceTotals = {}, statusCount = {};
 
     allOrders.forEach(function(o) {
-      var total = Number(String(o.total    || '0').replace(/[^\d]/g,''));
-      var del   = Number(String(o.deliveryFee || '0').replace(/[^\d]/g,''));
-      var sub   = Number(String(o.subtotal || '0').replace(/[^\d]/g,''));
-      grossRev    += total;
-      totalDel    += del;
+      var sub = Number(String(o.subtotal || '0').replace(/[^\d]/g,''));
       servicesRev += sub;
 
-      // Service breakdown
       if (o.items) {
         o.items.split(',').forEach(function(item) {
           var m = item.trim().match(/^(\d+)x\s+(.+)$/);
@@ -400,34 +452,31 @@
         });
       }
 
-      // Status breakdown
       var st = o.status || 'Pending';
       statusCount[st] = (statusCount[st] || 0) + 1;
     });
 
-    var avgOrder = allOrders.length ? Math.round(servicesRev / allOrders.length) : 0;
+    var avgOrder  = allOrders.length ? Math.round(servicesRev / allOrders.length) : 0;
+    var delivered = statusCount['Delivered'] || 0;
 
-    // Top service
     var topService = '—';
     var topCount   = 0;
     Object.entries(serviceTotals).forEach(function(e) {
       if (e[1] > topCount) { topCount = e[1]; topService = e[0]; }
     });
 
-    document.getElementById('rev-services').textContent = '₦' + servicesRev.toLocaleString();
-    document.getElementById('rev-gross').textContent    = '₦' + grossRev.toLocaleString();
-    document.getElementById('rev-delivery').textContent = '₦' + totalDel.toLocaleString();
-    document.getElementById('rev-avg').textContent      = '₦' + avgOrder.toLocaleString();
-    document.getElementById('rev-top').textContent      = topService;
+    document.getElementById('rev-services').textContent  = '₦' + servicesRev.toLocaleString();
+    document.getElementById('rev-orders').textContent    = allOrders.length;
+    document.getElementById('rev-avg').textContent       = '₦' + avgOrder.toLocaleString();
+    document.getElementById('rev-top').textContent       = topService;
+    document.getElementById('rev-delivered').textContent = delivered;
 
-    // By service
     document.getElementById('rev-by-service').innerHTML = Object.entries(serviceTotals)
       .sort(function(a,b) { return b[1]-a[1]; })
       .map(function(e) {
         return '<div class="revenue-row"><span class="revenue-label">' + e[0] + '</span><span class="revenue-value">' + e[1] + ' items</span></div>';
       }).join('') || '<div style="color:var(--gray);font-size:13px">No data yet</div>';
 
-    // Status breakdown
     var statusOrder = ['Pending','Picked Up','Washing','Ready','Delivered','Cancelled'];
     document.getElementById('rev-breakdown').innerHTML = statusOrder
       .filter(function(s) { return statusCount[s]; })
@@ -435,6 +484,55 @@
         var pct = Math.round((statusCount[s] / allOrders.length) * 100);
         return '<div class="revenue-row"><span class="revenue-label">' + s + '</span><span class="revenue-value">' + statusCount[s] + ' <span style="color:var(--gray);font-size:11px">(' + pct + '%)</span></span></div>';
       }).join('') || '<div style="color:var(--gray);font-size:13px">No data yet</div>';
+  }
+
+  /* ── SERVICES EDITOR ── */
+  var services = JSON.parse(localStorage.getItem('klinpal_services_' + (currentVendor ? currentVendor.slug : '')) || 'null') || [
+    { id: 'express', name: 'Express Wash', price: 300, active: true },
+    { id: 'fold',    name: 'Wash + Fold',  price: 300, active: true },
+    { id: 'iron',    name: 'Wash + Iron',  price: 300, active: true },
+    { id: 'dry',     name: 'Dry-clean',    price: 300, active: true },
+  ];
+
+  function renderServicesEditor() {
+    document.getElementById('services-editor').innerHTML = services.map(function(s, i) {
+      return '<div class="service-edit-card">'
+        + '<div class="service-edit-header">'
+        +   '<div class="service-edit-name">' + s.name + '</div>'
+        +   '<label class="toggle-switch"><input type="checkbox"' + (s.active ? ' checked' : '') + ' onchange="services[' + i + '].active=this.checked"><span class="toggle-slider"></span></label>'
+        + '</div>'
+        + '<label class="field-label">Service Name</label>'
+        + '<input class="field-input" type="text" value="' + s.name + '" oninput="services[' + i + '].name=this.value">'
+        + '<label class="field-label">Price per item (₦)</label>'
+        + '<input class="field-input" type="number" value="' + s.price + '" oninput="services[' + i + '].price=parseInt(this.value)||0">'
+        + '<button class="delete-btn" onclick="deleteService(' + i + ')">🗑 Remove</button>'
+        + '</div>';
+    }).join('');
+  }
+
+  function deleteService(idx) {
+    if (confirm('Remove "' + services[idx].name + '"?')) {
+      services.splice(idx, 1);
+      renderServicesEditor();
+    }
+  }
+
+  function addService() {
+    var name  = document.getElementById('new-service-name').value.trim();
+    var price = parseInt(document.getElementById('new-service-price').value) || 0;
+    if (!name)  { showToast('Enter a service name', true); return; }
+    if (!price) { showToast('Enter a valid price', true); return; }
+    services.push({ id: 'svc_' + Date.now(), name: name, price: price, active: true });
+    document.getElementById('new-service-name').value  = '';
+    document.getElementById('new-service-price').value = '';
+    renderServicesEditor();
+    showToast('Service added ✓');
+  }
+
+  function saveServices() {
+    var key = 'klinpal_services_' + (currentVendor ? currentVendor.slug : 'default');
+    localStorage.setItem(key, JSON.stringify(services));
+    showToast('Services saved ✓');
   }
 
   /* ── TOAST ── */
