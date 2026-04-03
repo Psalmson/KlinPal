@@ -10,7 +10,7 @@ var CONFIG = {
   SUPABASE_KEY:  'sb_publishable_TS5uGf7KzLKxeQw8bxDKYw_HwBNNBeA',
 
   // Pricing defaults — overridden by vendor config
-  BASE_DELIVERY_FEE: 1000,
+  BASE_DELIVERY_FEE: 1500,
   RATE_PER_KM:       200,
 
   // Autocomplete settings
@@ -192,10 +192,13 @@ function calculateDeliveryFee(coords) {
     .then(function(data) {
       var routes  = data.routes;
       if (!routes || !routes.length) throw new Error('No route found');
-      var metres  = routes[0].distance;
-      var km      = parseFloat((metres / 1000).toFixed(1));
-      deliveryFee   = Math.round(CONFIG.BASE_DELIVERY_FEE + CONFIG.RATE_PER_KM * km);
-      deliveryLabel = km + ' km';
+      var metres      = routes[0].distance;
+      var km          = parseFloat((metres / 1000).toFixed(1));
+      var roundTripKm = km * 2; // pickup + delivery = two journeys
+      var baseFee     = Math.round(CONFIG.BASE_DELIVERY_FEE + CONFIG.RATE_PER_KM * roundTripKm);
+      var serviceFee  = Math.min(Math.round(baseFee * 0.2), 1000); // 20% of delivery, capped at ₦1,000
+      deliveryFee     = baseFee + serviceFee;
+      deliveryLabel   = km + ' km';
       setAddrStatus('\u2713 ' + km + ' km away', 'ok');
     })
     .catch(function() {
