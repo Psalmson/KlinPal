@@ -259,19 +259,21 @@
           </div>
           <div class="form-grid" style="margin-bottom: 24px;">
             <div class="field">
-              <label class="field-label">Address</label>
-              <input class="field-input" id="ob-address" placeholder="Laundromat address">
+              <label class="field-label">House / Unit No.</label>
+              <input class="field-input" id="ob-house" placeholder="e.g. 12B">
             </div>
-            <div class="field">
-              <label class="field-label">Latitude</label>
-              <input class="field-input" id="ob-lat" placeholder="e.g. 6.5244">
-              <div class="field-note">Pickup coords for delivery fee calculation.</div>
+            <div class="field" style="position:relative">
+              <label class="field-label">Street / Area</label>
+              <input class="field-input" id="ob-address" placeholder="Start typing street..." autocomplete="off" oninput="onAddressInput()">
+              <div id="ob-addr-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#162032;border:1px solid #1e2e42;border-radius:8px;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,0.3);overflow:hidden;"></div>
+              <div id="ob-addr-status" style="font-size:11px;margin-top:4px;color:#8a9ab5"></div>
+              <div class="field-note">Select from suggestions — coordinates captured automatically</div>
             </div>
           </div>
           <div class="form-grid" style="margin-bottom: 24px;">
             <div class="field">
-              <label class="field-label">Longitude</label>
-              <input class="field-input" id="ob-lng" placeholder="e.g. 3.3792">
+              <label class="field-label">Owner Phone</label>
+              <input class="field-input" id="ob-phone" placeholder="e.g. 08012345678">
             </div>
             <div class="field"></div>
           </div>
@@ -516,20 +518,89 @@
     .catch(function() { showToast('Could not update status', true); });
   }
 
+  var LOCATIONIQ_TOKEN = 'pk.ec47de1300ad77f86deab165cce9bbe2';
+  var obAddressConfirmed = false;
+  var obLat = null, obLng = null;
+  var obDebounce = null;
+
+  function onAddressInput() {
+    obAddressConfirmed = false;
+    obLat = null; obLng = null;
+    document.getElementById('ob-addr-status').textContent = '';
+    clearTimeout(obDebounce);
+    var q = document.getElementById('ob-address').value.trim();
+    if (q.length < 3) { document.getElementById('ob-addr-dropdown').style.display = 'none'; return; }
+    obDebounce = setTimeout(function() { fetchAddressSuggestions(q); }, 350);
+  }
+
+  function fetchAddressSuggestions(q) {
+    var url = 'https://api.locationiq.com/v1/autocomplete'
+      + '?key=' + LOCATIONIQ_TOKEN
+      + '&q=' + encodeURIComponent(q)
+      + '&countrycodes=ng&limit=5&dedupe=1';
+
+    fetch(url)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var dropdown = document.getElementById('ob-addr-dropdown');
+        if (!Array.isArray(data) || !data.length) { dropdown.style.display = 'none'; return; }
+
+        dropdown.innerHTML = data.map(function(r, i) {
+          var parts = (r.display_name || '').split(',');
+          return '<div style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #1e2e42;font-size:13px" '
+            + 'onmouseover="this.style.background=\'#1e2e42\'" onmouseout="this.style.background=\'\'" '
+            + 'onclick="selectObAddress(' + i + ')">'
+            + '<div style="color:#f4f8ff;font-weight:500">' + parts[0].trim() + '</div>'
+            + '<div style="color:#8a9ab5;font-size:11px">' + parts.slice(1).join(',').trim() + '</div>'
+            + '</div>';
+        }).join('');
+
+        dropdown.__results = data;
+        dropdown.style.display = 'block';
+      })
+      .catch(function() { document.getElementById('ob-addr-dropdown').style.display = 'none'; });
+  }
+
+  function selectObAddress(idx) {
+    var dropdown = document.getElementById('ob-addr-dropdown');
+    var result   = dropdown.__results[idx];
+    document.getElementById('ob-address').value = result.display_name || '';
+    obLat = parseFloat(result.lat);
+    obLng = parseFloat(result.lon);
+    obAddressConfirmed = true;
+    dropdown.style.display = 'none';
+    document.getElementById('ob-addr-status').textContent = '✓ ' + obLat.toFixed(4) + ', ' + obLng.toFixed(4);
+    document.getElementById('ob-addr-status').style.color = '#00c9a7';
+  }
+
+  document.addEventListener('click', function(e) {
+    var dropdown = document.getElementById('ob-addr-dropdown');
+    var input    = document.getElementById('ob-address');
+    if (dropdown && input && !input.contains(e.target) && !dropdown.contains(e.target)) {
+      dropdown.style.display = 'none';
+    }
+  });
+
   /* ── ONBOARD VENDOR ── */
   function onboardVendor() {
     var name     = document.getElementById('ob-name').value.trim();
     var slug     = document.getElementById('ob-slug').value.trim();
     var password = document.getElementById('ob-password').value.trim();
     var phone    = document.getElementById('ob-phone').value.trim();
-    var address  = document.getElementById('ob-address').value.trim();
-    var lat      = parseFloat(document.getElementById('ob-lat').value) || null;
-    var lng      = parseFloat(document.getElementById('ob-lng').value) || null;
+    var house    = document.getElementById('ob-house').value.trim();
+    var street   = document.getElementById('ob-address').value.trim();
 
     if (!name || !slug || !password) {
       showToast('Name, slug and password are required', true);
       return;
     }
+
+    if (!obAddressConfirmed || !obLat || !obLng) {
+      showToast('Please select a street from the suggestions', true);
+      return;
+    }
+
+    var address = house ? house + ', ' + street : street;
 
     var btn = document.getElementById('ob-btn');
     btn.disabled = true;
@@ -537,14 +608,16 @@
 
     sbFetch('vendors', {
       method: 'POST',
-      body: JSON.stringify({ name: name, slug: slug, password: password, phone: phone, address: address, lat: lat, lng: lng }),
+      body: JSON.stringify({ name: name, slug: slug, password: password, phone: phone, address: address, lat: obLat, lng: obLng }),
     })
     .then(function(r) {
       if (r.ok) {
         showToast(name + ' onboarded successfully ✓');
-        ['ob-name','ob-slug','ob-password','ob-phone','ob-address','ob-lat','ob-lng'].forEach(function(id) {
+        ['ob-name','ob-slug','ob-password','ob-phone','ob-house','ob-address'].forEach(function(id) {
           document.getElementById(id).value = '';
         });
+        obLat = null; obLng = null; obAddressConfirmed = false;
+        document.getElementById('ob-addr-status').textContent = '';
         loadVendors();
         loadOverview();
         setTimeout(function() { showPage('vendors'); }, 1500);
