@@ -315,12 +315,16 @@
           document.getElementById('sidebar-name').textContent = currentVendor.name;
           document.getElementById('sidebar-slug').textContent = '/' + currentVendor.slug;
           // Re-initialise services with vendor-specific storage key
-    var savedKey = 'klinpal_services_' + currentVendor.slug;
-    var saved    = localStorage.getItem(savedKey);
-    if (saved) services = JSON.parse(saved);
+    // Load services from sheet
+    fetch(currentVendor.scriptUrl + '?action=getServices&slug=' + currentVendor.slug)
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d.services && d.services.length) services = d.services;
+        renderServicesEditor();
+      })
+      .catch(function() { renderServicesEditor(); });
 
     loadOrders();
-    renderServicesEditor();
         } else {
           err.style.display = 'block';
         }
@@ -487,7 +491,7 @@
   }
 
   /* ── SERVICES EDITOR ── */
-  var services = JSON.parse(localStorage.getItem('klinpal_services_' + (currentVendor ? currentVendor.slug : '')) || 'null') || [
+  var services = [
     { id: 'express', name: 'Express Wash', price: 300, active: true },
     { id: 'fold',    name: 'Wash + Fold',  price: 300, active: true },
     { id: 'iron',    name: 'Wash + Iron',  price: 300, active: true },
@@ -530,9 +534,21 @@
   }
 
   function saveServices() {
-    var key = 'klinpal_services_' + (currentVendor ? currentVendor.slug : 'default');
-    localStorage.setItem(key, JSON.stringify(services));
-    showToast('Services saved ✓');
+    fetch(currentVendor.scriptUrl, {
+      method:  'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action:   'saveServices',
+        slug:     currentVendor.slug,
+        services: services,
+      }),
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.success) showToast('Services saved ✓');
+      else showToast('Save failed', true);
+    })
+    .catch(function() { showToast('Could not save services', true); });
   }
 
   /* ── TOAST ── */
