@@ -201,8 +201,8 @@
       <div class="stats-grid">
         <div class="stat-card"><div class="stat-label">Laundromats</div><div class="stat-value teal" id="stat-vendors">—</div><div class="stat-sub">Onboarded</div></div>
         <div class="stat-card"><div class="stat-label">Total Orders</div><div class="stat-value" id="stat-orders">—</div><div class="stat-sub">All time</div></div>
-        <div class="stat-card"><div class="stat-label">Total Revenue</div><div class="stat-value" id="stat-revenue">—</div><div class="stat-sub">Gross</div></div>
-        <div class="stat-card"><div class="stat-label">Pending Orders</div><div class="stat-value" id="stat-pending">—</div><div class="stat-sub">Awaiting action</div></div>
+        <div class="stat-card"><div class="stat-label">Services Revenue</div><div class="stat-value" id="stat-revenue">—</div><div class="stat-sub">Vendor earnings</div></div>
+        <div class="stat-card"><div class="stat-label">Delivery Revenue</div><div class="stat-value" id="stat-delivery">—</div><div class="stat-sub">Net from delivery fees</div></div>
       </div>
       <div class="card">
         <div class="card-header"><div class="card-title">Laundromat Performance</div></div>
@@ -288,8 +288,8 @@
       <div class="stats-grid">
         <div class="stat-card"><div class="stat-label">Total Orders</div><div class="stat-value teal" id="drill-total">—</div></div>
         <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value" id="drill-pending">—</div></div>
-        <div class="stat-card"><div class="stat-label">Delivered</div><div class="stat-value" id="drill-delivered">—</div></div>
-        <div class="stat-card"><div class="stat-label">Revenue</div><div class="stat-value" id="drill-revenue">—</div></div>
+        <div class="stat-card"><div class="stat-label">Services Revenue</div><div class="stat-value" id="drill-revenue">—</div><div class="stat-sub">Vendor earnings</div></div>
+        <div class="stat-card"><div class="stat-label">Delivery Revenue</div><div class="stat-value" id="drill-delivery">—</div><div class="stat-sub">Net from delivery</div></div>
       </div>
       <div class="card">
         <div class="card-header"><div class="card-title">All Orders</div></div>
@@ -407,19 +407,21 @@
       .then(function(r) { return r.json(); })
       .then(function(orders) {
         orders = Array.isArray(orders) ? orders : [];
-        var totalRevenue = orders.reduce(function(a, o) { return a + (o.total || 0); }, 0);
+        var servicesRev  = orders.reduce(function(a, o) { return a + (o.subtotal || 0); }, 0);
+        var deliveryRev  = orders.reduce(function(a, o) { return a + (o.delivery_fee || 0); }, 0);
         var totalPending = orders.filter(function(o) { return o.status === 'Pending'; }).length;
 
-        document.getElementById('stat-orders').textContent  = orders.length;
-        document.getElementById('stat-revenue').textContent = '₦' + totalRevenue.toLocaleString();
-        document.getElementById('stat-pending').textContent = totalPending;
+        document.getElementById('stat-orders').textContent   = orders.length;
+        document.getElementById('stat-revenue').textContent  = '₦' + servicesRev.toLocaleString();
+        document.getElementById('stat-delivery').textContent = '₦' + deliveryRev.toLocaleString();
 
         // Per-vendor breakdown
         var rows = allVendors.map(function(v) {
-          var vendorOrders  = orders.filter(function(o) { return o.vendor_id === v.id; });
-          var revenue       = vendorOrders.reduce(function(a, o) { return a + (o.total || 0); }, 0);
-          var pending       = vendorOrders.filter(function(o) { return o.status === 'Pending'; }).length;
-          return { vendor: v, orders: vendorOrders.length, revenue: revenue, pending: pending };
+          var vendorOrders = orders.filter(function(o) { return o.vendor_id === v.id; });
+          var services     = vendorOrders.reduce(function(a, o) { return a + (o.subtotal || 0); }, 0);
+          var delivery     = vendorOrders.reduce(function(a, o) { return a + (o.delivery_fee || 0); }, 0);
+          var pending      = vendorOrders.filter(function(o) { return o.status === 'Pending'; }).length;
+          return { vendor: v, orders: vendorOrders.length, services: services, delivery: delivery, pending: pending };
         });
 
         var wrap = document.getElementById('overview-table');
@@ -428,12 +430,13 @@
           return;
         }
         wrap.innerHTML = '<table>'
-          + '<thead><tr><th>Laundromat</th><th>Total Orders</th><th>Revenue</th><th>Pending</th><th></th></tr></thead>'
+          + '<thead><tr><th>Laundromat</th><th>Orders</th><th>Services Revenue</th><th>Delivery Revenue</th><th>Pending</th><th></th></tr></thead>'
           + '<tbody>' + rows.map(function(r) {
               return '<tr>'
                 + '<td><div class="vendor-name">' + r.vendor.name + '</div><div class="vendor-slug">/' + r.vendor.slug + '</div></td>'
                 + '<td>' + r.orders + '</td>'
-                + '<td style="font-family:var(--font-mono)">₦' + r.revenue.toLocaleString() + '</td>'
+                + '<td style="font-family:var(--font-mono)">₦' + r.services.toLocaleString() + '</td>'
+                + '<td style="font-family:var(--font-mono)">₦' + r.delivery.toLocaleString() + '</td>'
                 + '<td>' + r.pending + '</td>'
                 + '<td><button class="btn btn-ghost btn-sm" onclick="drillIntoVendorBySlug(\'' + r.vendor.slug + '\')">View</button></td>'
                 + '</tr>';
@@ -465,14 +468,15 @@
       .then(function(r) { return r.json(); })
       .then(function(orders) {
         orders = Array.isArray(orders) ? orders : [];
-        var pending   = orders.filter(function(o) { return o.status === 'Pending'; }).length;
-        var delivered = orders.filter(function(o) { return o.status === 'Delivered'; }).length;
-        var revenue   = orders.reduce(function(a, o) { return a + (o.total || 0); }, 0);
+        var pending      = orders.filter(function(o) { return o.status === 'Pending'; }).length;
+        var delivered    = orders.filter(function(o) { return o.status === 'Delivered'; }).length;
+        var servicesRev  = orders.reduce(function(a, o) { return a + (o.subtotal || 0); }, 0);
+        var deliveryRev  = orders.reduce(function(a, o) { return a + (o.delivery_fee || 0); }, 0);
 
-        document.getElementById('drill-total').textContent     = orders.length;
-        document.getElementById('drill-pending').textContent   = pending;
-        document.getElementById('drill-delivered').textContent = delivered;
-        document.getElementById('drill-revenue').textContent   = '₦' + revenue.toLocaleString();
+        document.getElementById('drill-total').textContent    = orders.length;
+        document.getElementById('drill-pending').textContent  = pending;
+        document.getElementById('drill-revenue').textContent  = '₦' + servicesRev.toLocaleString();
+        document.getElementById('drill-delivery').textContent = '₦' + deliveryRev.toLocaleString();
 
         if (!orders.length) {
           document.getElementById('drill-table').innerHTML = '<div class="empty-state"><div style="font-size:14px;color:var(--gray)">No orders yet</div></div>';
