@@ -270,8 +270,15 @@
               <div class="field-note">Select from suggestions — coordinates captured automatically</div>
             </div>
           </div>
+          <div class="form-grid" style="margin-bottom: 24px;">
+            <div class="field">
+              <label class="field-label">Telegram Group Chat ID</label>
+              <input class="field-input" id="ob-telegram" placeholder="e.g. -1234567890">
+              <div class="field-note">Add the bot to a group, send a message, get the Chat ID from getUpdates.</div>
+            </div>
+            <div class="field"></div>
+          </div>
           <button class="btn btn-teal" onclick="onboardVendor()" id="ob-btn">Onboard Laundromat</button>
-        </div>
       </div>
     </div>
 
@@ -594,6 +601,8 @@
     var house    = document.getElementById('ob-house').value.trim();
     var street   = document.getElementById('ob-address').value.trim();
 
+    var telegram = document.getElementById('ob-telegram').value.trim();
+
     if (!name || !slug || !password) {
       showToast('Name, slug and password are required', true);
       return;
@@ -612,12 +621,12 @@
 
     sbFetch('vendors', {
       method: 'POST',
-      body: JSON.stringify({ name: name, slug: slug, password: password, phone: phone, address: address, lat: obLat, lng: obLng }),
+      body: JSON.stringify({ name: name, slug: slug, password: password, phone: phone, address: address, lat: obLat, lng: obLng, telegram_chat_id: telegram || null }),
     })
     .then(function(r) {
       if (r.ok) {
         showToast(name + ' onboarded successfully ✓');
-        ['ob-name','ob-slug','ob-password','ob-phone','ob-house','ob-address'].forEach(function(id) {
+        ['ob-name','ob-slug','ob-password','ob-phone','ob-house','ob-address','ob-telegram'].forEach(function(id) {
           document.getElementById(id).value = '';
         });
         obLat = null; obLng = null; obAddressConfirmed = false;
