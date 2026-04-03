@@ -385,7 +385,7 @@
     }
     wrap.innerHTML = '<table>'
       + '<thead><tr><th>Laundromat</th><th>Slug</th><th>Phone</th><th>Address</th><th>Onboarded</th><th>Actions</th></tr></thead>'
-      + '<tbody>' + allVendors.map(function(v, i) {
+      + '<tbody>' + allVendors.map(function(v) {
           var date = v.created_at ? new Date(v.created_at).toLocaleDateString('en-GB') : '—';
           return '<tr>'
             + '<td><div class="vendor-name">' + v.name + '</div></td>'
@@ -393,7 +393,7 @@
             + '<td style="font-size:12px;color:var(--gray)">' + (v.phone || '—') + '</td>'
             + '<td style="font-size:12px;color:var(--gray);max-width:180px">' + (v.address || '—') + '</td>'
             + '<td style="font-size:12px;color:var(--gray)">' + date + '</td>'
-            + '<td><button class="btn btn-ghost btn-sm" onclick="drillIntoVendor(' + i + ')">View Orders</button></td>'
+            + '<td><button class="btn btn-ghost btn-sm" onclick="drillIntoVendorBySlug(\'' + v.slug + '\')">View Orders</button></td>'
             + '</tr>';
         }).join('')
       + '</tbody></table>';
