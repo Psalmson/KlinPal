@@ -2,28 +2,28 @@
    CONFIGURATION
 ════════════════════════════════════════════════════════════════ */
 var CONFIG = {
-  // LocationIQ token — get yours free at locationiq.com (no credit card needed)
-  // Used for both address autocomplete AND road distance calculation.
+  // LocationIQ token — address autocomplete + distance calculation
   LOCATIONIQ_TOKEN: 'pk.ec47de1300ad77f86deab165cce9bbe2',
 
-  // Capperberry pickup coords — update if the location changes
-  CAPPERBERRY_LNG: 3.3792,
-  CAPPERBERRY_LAT: 6.5244,
+  // Klinpal main platform script — handles vendor lookup only
+  PLATFORM_API_URL: 'https://script.google.com/macros/s/AKfycbyhklNFHa57lFRV1axi0yD7JV-3WYJNFAECWwnrF_ic9SsXBr_cUHR40FXUtYd0r3gA/exec',
 
-  // Pricing: fee = BASE + RATE_PER_KM * km  (road distance, not straight-line)
+  // Pricing defaults — overridden by vendor config if available
   BASE_DELIVERY_FEE: 1000,
   RATE_PER_KM:       200,
 
-  // Google Apps Script endpoint — writes orders to Google Sheet
-  ORDERS_API_URL: 'https://script.google.com/macros/s/AKfycbyhklNFHa57lFRV1axi0yD7JV-3WYJNFAECWwnrF_ic9SsXBr_cUHR40FXUtYd0r3gA/exec',
-
-  // Vendor slug — must match the sheet tab name in Google Sheets
-  VENDOR_SLUG: 'capperberry',
-
-  // Autocomplete: wait this many ms after last keystroke before fetching
+  // Autocomplete settings
   DEBOUNCE_MS: 350,
-  // Min chars before autocomplete fires
-  MIN_CHARS: 3,
+  MIN_CHARS:   3,
+};
+
+/* ─── VENDOR STATE (populated dynamically from URL slug) ─── */
+var VENDOR = {
+  slug:      '',
+  name:      '',
+  scriptUrl: '',
+  lat:       6.5244,   // default coords — overridden per vendor
+  lng:       3.3792,
 };
 
 /* ─── APP STATE ─── */
@@ -90,8 +90,8 @@ function fetchSuggestions(query) {
     + '&countrycodes=ng'
     + '&limit=5'
     + '&dedupe=1'
-    + '&proximity_lat='   + CONFIG.CAPPERBERRY_LAT
-    + '&proximity_lon='   + CONFIG.CAPPERBERRY_LNG;
+    + '&proximity_lat='   + VENDOR.lat
+    + '&proximity_lon='   + VENDOR.lng;
 
   fetch(url)
     .then(function(r) { return r.json(); })
@@ -164,7 +164,7 @@ function calculateDeliveryFee(coords) {
   setAddrStatus('Calculating...', 'loading');
 
   var url = 'https://us1.locationiq.com/v1/directions/driving/'
-    + CONFIG.CAPPERBERRY_LNG + ',' + CONFIG.CAPPERBERRY_LAT + ';'
+    + VENDOR.lng + ',' + VENDOR.lat + ';'
     + coords.lng + ',' + coords.lat
     + '?key=' + CONFIG.LOCATIONIQ_TOKEN
     + '&overview=false';
@@ -221,7 +221,7 @@ function checkPhone() {
   err.style.display = 'none';
   go('s-checking');
 
-  var lookupUrl = CONFIG.ORDERS_API_URL + '?action=getCustomer&phone=' + encodeURIComponent(phone) + '&slug=' + CONFIG.VENDOR_SLUG;
+  var lookupUrl = VENDOR.scriptUrl + '?action=getCustomer&phone=' + encodeURIComponent(phone) + '&slug=' + VENDOR.slug;
 
   fetch(lookupUrl, { redirect: 'follow' })
     .then(function(r) { return r.json(); })
@@ -305,12 +305,12 @@ function submitNewCustomer() {
   selectedAddress       = fullAddress;
 
   // Save new customer to the Customers sheet
-  fetch(CONFIG.ORDERS_API_URL, {
+  fetch(VENDOR.scriptUrl, {
     method:  'POST',
     headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify({
       action:    'saveCustomer',
-      slug:      CONFIG.VENDOR_SLUG,
+      slug:      VENDOR.slug,
       phone:     currentUser.phone,
       firstName: currentUser.firstName,
       lastName:  currentUser.lastName,
@@ -479,7 +479,7 @@ function submitOrder() {
   var sub   = items.reduce(function(a, s) { return a + s.price * s.qty; }, 0);
 
   var payload = {
-    vendorSlug:   CONFIG.VENDOR_SLUG,
+    vendorSlug:   VENDOR.slug,
     orderId:      orderId,
     customerName: currentUser ? (currentUser.firstName + ' ' + currentUser.lastName) : '',
     phone:        currentUser ? currentUser.phone : '',
@@ -489,7 +489,7 @@ function submitOrder() {
     deliveryFee:  deliveryFee,
   };
 
-  fetch(CONFIG.ORDERS_API_URL, {
+  fetch(VENDOR.scriptUrl, {
     method:  'POST',
     headers: { 'Content-Type': 'text/plain' }, // avoids CORS preflight for Apps Script
     body:    JSON.stringify(payload),
@@ -529,8 +529,58 @@ function resetApp() {
 /* ─── BOOT ─── */
 document.addEventListener('DOMContentLoaded', function() {
   initMapboxAutocomplete();
+  bootstrapVendor();
 });
 
 document.getElementById('phone-input').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') checkPhone();
 });
+
+/* ════════════════════════════════════════════════════════════════
+   VENDOR BOOTSTRAP
+   Reads ?vendor=slug from the URL, fetches vendor details from
+   the main platform script, then unlocks the app.
+════════════════════════════════════════════════════════════════ */
+function bootstrapVendor() {
+  var params = new URLSearchParams(window.location.search);
+  var slug   = params.get('vendor');
+
+  if (!slug) {
+    showVendorError('No vendor specified. Please use a valid Klinpal link.');
+    return;
+  }
+
+  fetch(CONFIG.PLATFORM_API_URL + '?action=getVendor&slug=' + encodeURIComponent(slug))
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data.vendor) {
+        showVendorError('Vendor not found. Please check your link.');
+        return;
+      }
+      // Populate VENDOR state
+      VENDOR.slug      = data.vendor.slug;
+      VENDOR.name      = data.vendor.name;
+      VENDOR.scriptUrl = data.vendor.scriptUrl;
+      if (data.vendor.lat) VENDOR.lat = parseFloat(data.vendor.lat);
+      if (data.vendor.lng) VENDOR.lng = parseFloat(data.vendor.lng);
+
+      // Update page title and landing screen with vendor name
+      document.title = VENDOR.name + ' — Laundry';
+      var brandEls = document.querySelectorAll('.vendor-name-placeholder');
+      brandEls.forEach(function(el) { el.textContent = VENDOR.name; });
+
+      // Unlock the app
+      go('s-landing');
+    })
+    .catch(function() {
+      showVendorError('Could not load vendor. Please try again.');
+    });
+}
+
+function showVendorError(msg) {
+  document.body.innerHTML =
+    '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:sans-serif;color:#8a9ab5;background:#0d1b2a;flex-direction:column;gap:12px;">'
+    + '<div style="font-size:32px">⚠️</div>'
+    + '<div style="font-size:15px">' + msg + '</div>'
+    + '</div>';
+}
