@@ -265,7 +265,7 @@
             <div class="field" style="position:relative">
               <label class="field-label">Street / Area</label>
               <input class="field-input" id="ob-address" placeholder="Start typing street..." autocomplete="off" oninput="onAddressInput()">
-              <div id="ob-addr-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:#162032;border:1px solid #1e2e42;border-radius:8px;z-index:999;box-shadow:0 8px 24px rgba(0,0,0,0.3);overflow-y:auto;max-height:220px;"></div>
+              <div id="ob-addr-dropdown" style="display:none;position:fixed;background:#162032;border:1px solid #1e2e42;border-radius:8px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.5);overflow-y:auto;max-height:240px;"></div>
               <div id="ob-addr-status" style="font-size:11px;margin-top:4px;color:#8a9ab5"></div>
               <div class="field-note">Select from suggestions — coordinates captured automatically</div>
             </div>
@@ -536,7 +536,14 @@
       .then(function(r) { return r.json(); })
       .then(function(data) {
         var dropdown = document.getElementById('ob-addr-dropdown');
+        var input    = document.getElementById('ob-address');
         if (!Array.isArray(data) || !data.length) { dropdown.style.display = 'none'; return; }
+
+        // Position dropdown below the input using fixed coords
+        var rect = input.getBoundingClientRect();
+        dropdown.style.top   = (rect.bottom + 4) + 'px';
+        dropdown.style.left  = rect.left + 'px';
+        dropdown.style.width = rect.width + 'px';
 
         dropdown.innerHTML = data.map(function(r, i) {
           var parts = (r.display_name || '').split(',');
