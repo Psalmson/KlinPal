@@ -181,6 +181,7 @@
       <button class="nav-item active" onclick="showPage('orders')" id="nav-orders"><span class="icon">📋</span> Orders</button>
       <button class="nav-item" onclick="showPage('revenue')" id="nav-revenue"><span class="icon">💰</span> Revenue</button>
       <button class="nav-item" onclick="showPage('services')" id="nav-services"><span class="icon">⚙️</span> Services & Pricing</button>
+      <button class="nav-item" onclick="showPage('notifications')" id="nav-notifications"><span class="icon">🔔</span> Notifications</button>
     </nav>
     <div class="sidebar-footer">
       <button class="nav-item" onclick="doLogout()"><span class="icon">🚪</span> Sign Out</button>
@@ -278,6 +279,30 @@
       <button class="save-btn" onclick="saveServices()">💾 Save All Changes</button>
     </div>
 
+    <!-- NOTIFICATIONS -->
+    <div class="page" id="page-notifications">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Notifications</div>
+          <div class="page-subtitle">Configure your Telegram group for order alerts</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Telegram Group</div></div>
+        <div class="card-body">
+          <p style="font-size:13px;color:var(--gray);margin-bottom:20px;line-height:1.6">
+            Add <strong style="color:var(--teal)">@KlinpalNotifyBot</strong> to your Telegram group, send a message in the group, then visit
+            <code style="background:var(--navy3);padding:2px 6px;border-radius:4px;font-size:12px">api.telegram.org/bot&lt;TOKEN&gt;/getUpdates</code>
+            to get your Group Chat ID (starts with -).
+          </p>
+          <label class="field-label">Telegram Group Chat ID</label>
+          <input class="field-input" id="telegram-chat-id" placeholder="e.g. -1234567890" style="max-width:320px">
+          <div style="font-size:11px;color:var(--gray);margin-top:-6px;margin-bottom:20px">Everyone in the group will receive new order notifications</div>
+          <button class="save-btn" onclick="saveTelegramId()">💾 Save</button>
+        </div>
+      </div>
+    </div>
+
   </main>
 </div>
 </div>
@@ -339,8 +364,10 @@
           document.getElementById('sidebar-name').textContent = currentVendor.name;
           document.getElementById('sidebar-slug').textContent = '/' + currentVendor.slug;
 
-          // Set customer link
-          var customerUrl = window.location.origin + '/?vendor=' + currentVendor.slug;
+          // Populate telegram chat ID field
+          if (currentVendor.telegram_chat_id) {
+            document.getElementById('telegram-chat-id').value = currentVendor.telegram_chat_id;
+          }
           document.getElementById('customer-link').textContent = customerUrl;
 
           if (currentVendor.services && currentVendor.services.length) {
@@ -575,6 +602,23 @@
         document.body.removeChild(el);
         showToast('Link copied ✓');
       });
+  }
+
+  function saveTelegramId() {
+    var chatId = document.getElementById('telegram-chat-id').value.trim();
+    sbFetch('vendors?id=eq.' + currentVendor.id, {
+      method: 'PATCH',
+      body: JSON.stringify({ telegram_chat_id: chatId || null }),
+    })
+    .then(function(r) {
+      if (r.ok) {
+        currentVendor.telegram_chat_id = chatId || null;
+        showToast('Telegram settings saved ✓');
+      } else {
+        showToast('Save failed', true);
+      }
+    })
+    .catch(function() { showToast('Could not save', true); });
   }
 
   /* ── TOAST ── */
