@@ -34,11 +34,12 @@ function sbFetch(path, options) {
 
 /* ─── VENDOR STATE (populated dynamically from URL slug) ─── */
 var VENDOR = {
-  id:   '',
-  slug: '',
-  name: '',
-  lat:  6.5244,
-  lng:  3.3792,
+  id:               '',
+  slug:             '',
+  name:             '',
+  lat:              6.5244,
+  lng:              3.3792,
+  telegram_chat_id: null,
 };
 
 /* ─── APP STATE ─── */
@@ -501,23 +502,39 @@ function submitOrder() {
 
   var itemsStr = items.map(function(s) { return s.qty + 'x ' + s.name; }).join(', ');
 
+  var orderPayload = {
+    order_id:      orderId,
+    vendor_id:     VENDOR.id,
+    customer_name: currentUser ? (currentUser.firstName + ' ' + currentUser.lastName) : '',
+    phone:         currentUser ? currentUser.phone : '',
+    address:       selectedAddress || (currentUser ? currentUser.address : ''),
+    items:         itemsStr,
+    subtotal:      sub,
+    delivery_fee:  deliveryFee,
+    total:         total,
+    status:        'Pending',
+  };
+
   sbFetch('orders', {
     method: 'POST',
-    body: JSON.stringify({
-      order_id:      orderId,
-      vendor_id:     VENDOR.id,
-      customer_name: currentUser ? (currentUser.firstName + ' ' + currentUser.lastName) : '',
-      phone:         currentUser ? currentUser.phone : '',
-      address:       selectedAddress || (currentUser ? currentUser.address : ''),
-      items:         itemsStr,
-      subtotal:      sub,
-      delivery_fee:  deliveryFee,
-      total:         total,
-      status:        'Pending',
-    }),
+    body: JSON.stringify(orderPayload),
   })
   .then(function(r) {
     if (r.ok) {
+      // Fire Telegram notification — fire and forget
+      fetch(CONFIG.SUPABASE_URL + '/functions/v1/notify-order', {
+        method:  'POST',
+        headers: {
+          'Content-Type':  'application/json',
+          'Authorization': 'Bearer ' + CONFIG.SUPABASE_KEY,
+        },
+        body: JSON.stringify({
+          order:          orderPayload,
+          vendor_name:    VENDOR.name,
+          vendor_chat_id: VENDOR.telegram_chat_id || null,
+        }),
+      }).catch(function() {}); // fire and forget
+
       go('s-success');
     } else {
       alert('Something went wrong. Please try again.');
@@ -525,7 +542,7 @@ function submitOrder() {
     }
   })
   .catch(function() {
-    go('s-success'); // don't block customer on network hiccup
+    go('s-success');
   });
 }
 
@@ -579,11 +596,12 @@ function bootstrapVendor() {
       }
       var vendor = data[0];
 
-      VENDOR.id   = vendor.id;
-      VENDOR.slug = vendor.slug;
-      VENDOR.name = vendor.name;
-      VENDOR.lat  = vendor.lat  || 6.5244;
-      VENDOR.lng  = vendor.lng  || 3.3792;
+      VENDOR.id               = vendor.id;
+      VENDOR.slug             = vendor.slug;
+      VENDOR.name             = vendor.name;
+      VENDOR.lat              = vendor.lat  || 6.5244;
+      VENDOR.lng              = vendor.lng  || 3.3792;
+      VENDOR.telegram_chat_id = vendor.telegram_chat_id || null;
 
       document.title = VENDOR.name + ' — Laundry';
       var brandEls = document.querySelectorAll('.vendor-name-placeholder');
