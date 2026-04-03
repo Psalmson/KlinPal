@@ -257,27 +257,23 @@
               <input class="field-input" id="ob-phone" placeholder="e.g. 08012345678">
             </div>
           </div>
-          <div class="form-grid" style="margin-bottom: 16px;">
+          <div class="form-grid" style="margin-bottom: 24px;">
             <div class="field">
               <label class="field-label">Address</label>
               <input class="field-input" id="ob-address" placeholder="Laundromat address">
             </div>
             <div class="field">
-              <label class="field-label">Apps Script URL</label>
-              <input class="field-input" id="ob-script" placeholder="https://script.google.com/macros/s/...">
-              <div class="field-note">The deployed vendor Apps Script endpoint.</div>
+              <label class="field-label">Latitude</label>
+              <input class="field-input" id="ob-lat" placeholder="e.g. 6.5244">
+              <div class="field-note">Pickup coords for delivery fee calculation.</div>
             </div>
           </div>
           <div class="form-grid" style="margin-bottom: 24px;">
             <div class="field">
-              <label class="field-label">Latitude</label>
-              <input class="field-input" id="ob-lat" placeholder="e.g. 6.5244">
-              <div class="field-note">Pickup location coordinates for delivery fee calculation.</div>
-            </div>
-            <div class="field">
               <label class="field-label">Longitude</label>
               <input class="field-input" id="ob-lng" placeholder="e.g. 3.3792">
             </div>
+            <div class="field"></div>
           </div>
           <button class="btn btn-teal" onclick="onboardVendor()" id="ob-btn">Onboard Laundromat</button>
         </div>
@@ -316,10 +312,24 @@
      CONFIG
   ══════════════════════════════════════════════════════ */
   var SUPERADMIN_PASSWORD = 'klinpal2024';
-  var MASTER_SCRIPT_URL   = 'https://script.google.com/macros/s/AKfycbyhklNFHa57lFRV1axi0yD7JV-3WYJNFAECWwnrF_ic9SsXBr_cUHR40FXUtYd0r3gA/exec';
+  var SUPABASE_URL = 'https://mlgdqxqzpzfzndjhywqf.supabase.co';
+  var SUPABASE_KEY = 'sb_publishable_TS5uGf7KzLKxeQw8bxDKYw_HwBNNBeA';
 
   var allVendors       = [];
   var currentDrillVendor = null;
+
+  function sbFetch(path, options) {
+    var url  = SUPABASE_URL + '/rest/v1/' + path;
+    var opts = Object.assign({
+      headers: {
+        'apikey':        SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type':  'application/json',
+        'Prefer':        'return=representation',
+      },
+    }, options || {});
+    return fetch(url, opts);
+  }
 
   /* ── LOGIN ── */
   function doLogin() {
@@ -356,10 +366,10 @@
 
   /* ── LOAD VENDORS ── */
   function loadVendors() {
-    fetch(MASTER_SCRIPT_URL + '?action=getVendors')
+    sbFetch('vendors?select=*&order=created_at.desc')
       .then(function(r) { return r.json(); })
       .then(function(data) {
-        allVendors = data.vendors || [];
+        allVendors = Array.isArray(data) ? data : [];
         renderVendorsTable();
       })
       .catch(function() { showToast('Could not load vendors', true); });
@@ -374,12 +384,13 @@
     wrap.innerHTML = '<table>'
       + '<thead><tr><th>Laundromat</th><th>Slug</th><th>Phone</th><th>Address</th><th>Onboarded</th><th>Actions</th></tr></thead>'
       + '<tbody>' + allVendors.map(function(v, i) {
+          var date = v.created_at ? new Date(v.created_at).toLocaleDateString('en-GB') : '—';
           return '<tr>'
             + '<td><div class="vendor-name">' + v.name + '</div></td>'
             + '<td><div class="mono">' + v.slug + '</div></td>'
             + '<td style="font-size:12px;color:var(--gray)">' + (v.phone || '—') + '</td>'
             + '<td style="font-size:12px;color:var(--gray);max-width:180px">' + (v.address || '—') + '</td>'
-            + '<td style="font-size:12px;color:var(--gray)">' + (v.registered || '—') + '</td>'
+            + '<td style="font-size:12px;color:var(--gray)">' + date + '</td>'
             + '<td><button class="btn btn-ghost btn-sm" onclick="drillIntoVendor(' + i + ')">View Orders</button></td>'
             + '</tr>';
         }).join('')
@@ -388,70 +399,53 @@
 
   /* ── OVERVIEW ── */
   function loadOverview() {
-    fetch(MASTER_SCRIPT_URL + '?action=getVendors')
+    sbFetch('vendors?select=*&order=created_at.desc')
       .then(function(r) { return r.json(); })
       .then(function(data) {
-        allVendors = data.vendors || [];
+        allVendors = Array.isArray(data) ? data : [];
         document.getElementById('stat-vendors').textContent = allVendors.length;
         renderVendorsTable();
 
-        // Load orders for each vendor to compute platform stats
-        var totalOrders = 0, totalRevenue = 0, totalPending = 0;
-        var rows = [];
-        var done = 0;
+        // Fetch all orders in one query
+        return sbFetch('orders?select=vendor_id,total,status');
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(orders) {
+        orders = Array.isArray(orders) ? orders : [];
+        var totalRevenue = orders.reduce(function(a, o) { return a + (o.total || 0); }, 0);
+        var totalPending = orders.filter(function(o) { return o.status === 'Pending'; }).length;
 
-        if (!allVendors.length) {
-          renderOverviewTable(rows, totalOrders, totalRevenue, totalPending);
+        document.getElementById('stat-orders').textContent  = orders.length;
+        document.getElementById('stat-revenue').textContent = '₦' + totalRevenue.toLocaleString();
+        document.getElementById('stat-pending').textContent = totalPending;
+
+        // Per-vendor breakdown
+        var rows = allVendors.map(function(v) {
+          var vendorOrders  = orders.filter(function(o) { return o.vendor_id === v.id; });
+          var revenue       = vendorOrders.reduce(function(a, o) { return a + (o.total || 0); }, 0);
+          var pending       = vendorOrders.filter(function(o) { return o.status === 'Pending'; }).length;
+          return { vendor: v, orders: vendorOrders.length, revenue: revenue, pending: pending };
+        });
+
+        var wrap = document.getElementById('overview-table');
+        if (!rows.length) {
+          wrap.innerHTML = '<div class="empty-state"><div style="font-size:14px;color:var(--gray)">No laundromats yet</div></div>';
           return;
         }
-
-        allVendors.forEach(function(v) {
-          fetch(v.scriptUrl + '?action=getOrders&slug=' + v.slug)
-            .then(function(r) { return r.json(); })
-            .then(function(d) {
-              var orders  = d.orders || [];
-              var revenue = orders.reduce(function(a, o) { return a + Number(String(o.total || '0').replace(/[^\d]/g,'')); }, 0);
-              var pending = orders.filter(function(o) { return o.status === 'Pending'; }).length;
-              totalOrders  += orders.length;
-              totalRevenue += revenue;
-              totalPending += pending;
-              rows.push({ vendor: v, orders: orders.length, revenue: revenue, pending: pending });
-            })
-            .catch(function() { rows.push({ vendor: v, orders: '—', revenue: 0, pending: '—' }); })
-            .finally(function() {
-              done++;
-              if (done === allVendors.length) {
-                renderOverviewTable(rows, totalOrders, totalRevenue, totalPending);
-              }
-            });
-        });
+        wrap.innerHTML = '<table>'
+          + '<thead><tr><th>Laundromat</th><th>Total Orders</th><th>Revenue</th><th>Pending</th><th></th></tr></thead>'
+          + '<tbody>' + rows.map(function(r) {
+              return '<tr>'
+                + '<td><div class="vendor-name">' + r.vendor.name + '</div><div class="vendor-slug">/' + r.vendor.slug + '</div></td>'
+                + '<td>' + r.orders + '</td>'
+                + '<td style="font-family:var(--font-mono)">₦' + r.revenue.toLocaleString() + '</td>'
+                + '<td>' + r.pending + '</td>'
+                + '<td><button class="btn btn-ghost btn-sm" onclick="drillIntoVendorBySlug(\'' + r.vendor.slug + '\')">View</button></td>'
+                + '</tr>';
+            }).join('')
+          + '</tbody></table>';
       })
       .catch(function() { showToast('Could not load overview', true); });
-  }
-
-  function renderOverviewTable(rows, totalOrders, totalRevenue, totalPending) {
-    document.getElementById('stat-orders').textContent  = totalOrders;
-    document.getElementById('stat-revenue').textContent = '₦' + totalRevenue.toLocaleString();
-    document.getElementById('stat-pending').textContent = totalPending;
-
-    var wrap = document.getElementById('overview-table');
-    if (!rows.length) {
-      wrap.innerHTML = '<div class="empty-state"><div style="font-size:14px;color:var(--gray)">No laundromats yet</div></div>';
-      return;
-    }
-
-    wrap.innerHTML = '<table>'
-      + '<thead><tr><th>Laundromat</th><th>Total Orders</th><th>Revenue</th><th>Pending</th><th></th></tr></thead>'
-      + '<tbody>' + rows.map(function(r, i) {
-          return '<tr>'
-            + '<td><div class="vendor-name">' + r.vendor.name + '</div><div class="vendor-slug">/' + r.vendor.slug + '</div></td>'
-            + '<td>' + r.orders + '</td>'
-            + '<td style="font-family:var(--font-mono)">₦' + (typeof r.revenue === 'number' ? r.revenue.toLocaleString() : '—') + '</td>'
-            + '<td>' + r.pending + '</td>'
-            + '<td><button class="btn btn-ghost btn-sm" onclick="drillIntoVendorBySlug(\'' + r.vendor.slug + '\')">View</button></td>'
-            + '</tr>';
-        }).join('')
-      + '</tbody></table>';
   }
 
   /* ── DRILL INTO VENDOR ORDERS ── */
@@ -472,34 +466,33 @@
   function loadVendorOrders(vendor) {
     document.getElementById('drill-table').innerHTML = '<div class="loading-state">Loading orders...</div>';
 
-    fetch(vendor.scriptUrl + '?action=getOrders&slug=' + vendor.slug)
+    sbFetch('orders?vendor_id=eq.' + vendor.id + '&order=created_at.desc')
       .then(function(r) { return r.json(); })
-      .then(function(data) {
-        var orders    = data.orders || [];
-        var total     = orders.length;
+      .then(function(orders) {
+        orders = Array.isArray(orders) ? orders : [];
         var pending   = orders.filter(function(o) { return o.status === 'Pending'; }).length;
         var delivered = orders.filter(function(o) { return o.status === 'Delivered'; }).length;
-        var revenue   = orders.reduce(function(a, o) { return a + Number(String(o.total || '0').replace(/[^\d]/g,'')); }, 0);
+        var revenue   = orders.reduce(function(a, o) { return a + (o.total || 0); }, 0);
 
-        document.getElementById('drill-total').textContent    = total;
-        document.getElementById('drill-pending').textContent  = pending;
+        document.getElementById('drill-total').textContent     = orders.length;
+        document.getElementById('drill-pending').textContent   = pending;
         document.getElementById('drill-delivered').textContent = delivered;
-        document.getElementById('drill-revenue').textContent  = '₦' + revenue.toLocaleString();
+        document.getElementById('drill-revenue').textContent   = '₦' + revenue.toLocaleString();
 
         if (!orders.length) {
           document.getElementById('drill-table').innerHTML = '<div class="empty-state"><div style="font-size:14px;color:var(--gray)">No orders yet</div></div>';
           return;
         }
 
-        var rows = orders.slice().reverse().map(function(o, i) {
-          var realIdx = orders.length - 1 - i;
-          var statuses = ['Pending','Picked Up','Washing','Ready','Delivered','Cancelled'];
+        var statuses = ['Pending','Picked Up','Washing','Ready','Delivered','Cancelled'];
+        var rows = orders.map(function(o) {
+          var date = o.created_at ? new Date(o.created_at).toLocaleDateString('en-GB') : '';
           return '<tr>'
-            + '<td><div class="mono">' + (o.orderId || '—') + '</div><div style="font-size:11px;color:var(--gray)">' + (o.date || '') + ' ' + (o.time || '') + '</div></td>'
-            + '<td><div style="font-weight:500">' + (o.customerName || '—') + '</div><div style="font-size:11px;color:var(--gray)">' + (o.phone || '') + '</div><div style="font-size:11px;color:var(--gray);max-width:160px">' + (o.address || '') + '</div></td>'
+            + '<td><div class="mono">' + (o.order_id || '—') + '</div><div style="font-size:11px;color:var(--gray)">' + date + '</div></td>'
+            + '<td><div style="font-weight:500">' + (o.customer_name || '—') + '</div><div style="font-size:11px;color:var(--gray)">' + (o.phone || '') + '</div><div style="font-size:11px;color:var(--gray);max-width:160px">' + (o.address || '') + '</div></td>'
             + '<td style="font-size:12px;color:var(--gray);max-width:160px">' + (o.items || '—') + '</td>'
-            + '<td style="font-family:var(--font-mono)">₦' + Number(String(o.total || '0').replace(/[^\d]/g,'')).toLocaleString() + '</td>'
-            + '<td><select class="status-select" onchange="updateStatus(this, \'' + vendor.scriptUrl + '\', \'' + vendor.slug + '\', \'' + o.orderId + '\')">'
+            + '<td style="font-family:var(--font-mono)">₦' + (o.total || 0).toLocaleString() + '</td>'
+            + '<td><select class="status-select" onchange="updateStatus(this, \'' + o.order_id + '\')">'
             +   statuses.map(function(s) { return '<option value="' + s + '"' + (o.status === s ? ' selected' : '') + '>' + s + '</option>'; }).join('')
             + '</select></td>'
             + '</tr>';
@@ -514,14 +507,12 @@
       });
   }
 
-  function updateStatus(select, scriptUrl, slug, orderId) {
-    fetch(scriptUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ action: 'updateStatus', slug: slug, orderId: orderId, status: select.value }),
+  function updateStatus(select, orderId) {
+    sbFetch('orders?order_id=eq.' + orderId, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: select.value }),
     })
-    .then(function(r) { return r.json(); })
-    .then(function(d) { showToast(d.success ? 'Status updated ✓' : 'Update failed', !d.success); })
+    .then(function(r) { showToast(r.ok ? 'Status updated ✓' : 'Update failed', !r.ok); })
     .catch(function() { showToast('Could not update status', true); });
   }
 
@@ -532,12 +523,11 @@
     var password = document.getElementById('ob-password').value.trim();
     var phone    = document.getElementById('ob-phone').value.trim();
     var address  = document.getElementById('ob-address').value.trim();
-    var script   = document.getElementById('ob-script').value.trim();
-    var lat      = document.getElementById('ob-lat').value.trim();
-    var lng      = document.getElementById('ob-lng').value.trim();
+    var lat      = parseFloat(document.getElementById('ob-lat').value) || null;
+    var lng      = parseFloat(document.getElementById('ob-lng').value) || null;
 
-    if (!name || !slug || !password || !script) {
-      showToast('Name, slug, password and script URL are required', true);
+    if (!name || !slug || !password) {
+      showToast('Name, slug and password are required', true);
       return;
     }
 
@@ -545,28 +535,21 @@
     btn.disabled = true;
     btn.textContent = 'Onboarding...';
 
-    fetch(MASTER_SCRIPT_URL, {
+    sbFetch('vendors', {
       method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({
-        action: 'addVendor',
-        name: name, slug: slug, password: password,
-        phone: phone, address: address, scriptUrl: script,
-        lat: lat, lng: lng,
-      }),
+      body: JSON.stringify({ name: name, slug: slug, password: password, phone: phone, address: address, lat: lat, lng: lng }),
     })
-    .then(function(r) { return r.json(); })
-    .then(function(d) {
-      if (d.success) {
+    .then(function(r) {
+      if (r.ok) {
         showToast(name + ' onboarded successfully ✓');
-        ['ob-name','ob-slug','ob-password','ob-phone','ob-address','ob-script','ob-lat','ob-lng'].forEach(function(id) {
+        ['ob-name','ob-slug','ob-password','ob-phone','ob-address','ob-lat','ob-lng'].forEach(function(id) {
           document.getElementById(id).value = '';
         });
         loadVendors();
         loadOverview();
         setTimeout(function() { showPage('vendors'); }, 1500);
       } else {
-        showToast(d.error || 'Onboarding failed', true);
+        return r.json().then(function(e) { showToast(e.message || 'Onboarding failed', true); });
       }
     })
     .catch(function() { showToast('Could not onboard vendor', true); })
