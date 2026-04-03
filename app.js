@@ -569,8 +569,22 @@ function bootstrapVendor() {
       var brandEls = document.querySelectorAll('.vendor-name-placeholder');
       brandEls.forEach(function(el) { el.textContent = VENDOR.name; });
 
-      // Unlock the app
-      go('s-landing');
+      // Fetch vendor's services from their sheet
+      fetch(VENDOR.scriptUrl + '?action=getServices&slug=' + VENDOR.slug)
+        .then(function(r) { return r.json(); })
+        .then(function(svcData) {
+          if (svcData.services && svcData.services.length) {
+            // Replace default SERVICES with vendor's saved services
+            // Only include active ones for the customer order page
+            SERVICES = svcData.services
+              .filter(function(s) { return s.active; })
+              .map(function(s) { return { id: s.id, name: s.name, price: s.price, qty: 0 }; });
+          }
+        })
+        .catch(function() {}) // silently fall back to defaults
+        .finally(function() {
+          go('s-landing');
+        });
     })
     .catch(function() {
       showVendorError('Could not load vendor. Please try again.');
