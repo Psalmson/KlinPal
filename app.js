@@ -5,10 +5,11 @@ var CONFIG = {
   // LocationIQ token — address autocomplete + distance calculation
   LOCATIONIQ_TOKEN: 'pk.ec47de1300ad77f86deab165cce9bbe2',
 
-  // Klinpal main platform script — handles vendor lookup only
-  PLATFORM_API_URL: 'https://script.google.com/macros/s/AKfycbyhklNFHa57lFRV1axi0yD7JV-3WYJNFAECWwnrF_ic9SsXBr_cUHR40FXUtYd0r3gA/exec',
+  // Supabase
+  SUPABASE_URL:  'https://mlgdqxqzpzfzndjhywqf.supabase.co',
+  SUPABASE_KEY:  'sb_publishable_TS5uGf7KzLKxeQw8bxDKYw_HwBNNBeA',
 
-  // Pricing defaults — overridden by vendor config if available
+  // Pricing defaults — overridden by vendor config
   BASE_DELIVERY_FEE: 1000,
   RATE_PER_KM:       200,
 
@@ -17,13 +18,27 @@ var CONFIG = {
   MIN_CHARS:   3,
 };
 
+/* ─── SUPABASE HELPER ─── */
+function sbFetch(path, options) {
+  var url  = CONFIG.SUPABASE_URL + '/rest/v1/' + path;
+  var opts = Object.assign({
+    headers: {
+      'apikey':        CONFIG.SUPABASE_KEY,
+      'Authorization': 'Bearer ' + CONFIG.SUPABASE_KEY,
+      'Content-Type':  'application/json',
+      'Prefer':        'return=representation',
+    },
+  }, options || {});
+  return fetch(url, opts);
+}
+
 /* ─── VENDOR STATE (populated dynamically from URL slug) ─── */
 var VENDOR = {
-  slug:      '',
-  name:      '',
-  scriptUrl: '',
-  lat:       6.5244,   // default coords — overridden per vendor
-  lng:       3.3792,
+  id:   '',
+  slug: '',
+  name: '',
+  lat:  6.5244,
+  lng:  3.3792,
 };
 
 /* ─── APP STATE ─── */
@@ -221,13 +236,12 @@ function checkPhone() {
   err.style.display = 'none';
   go('s-checking');
 
-  var lookupUrl = VENDOR.scriptUrl + '?action=getCustomer&phone=' + encodeURIComponent(phone) + '&slug=' + VENDOR.slug;
-
-  fetch(lookupUrl, { redirect: 'follow' })
+  sbFetch('customers?vendor_id=eq.' + VENDOR.id + '&phone=eq.' + encodeURIComponent(phone) + '&limit=1')
     .then(function(r) { return r.json(); })
     .then(function(data) {
-      if (data.customer) {
-        currentUser   = Object.assign({}, data.customer, { phone: phone });
+      if (data && data.length) {
+        var c = data[0];
+        currentUser   = { phone: c.phone, firstName: c.first_name, lastName: c.last_name, email: c.email, address: c.address };
         isNewCustomer = false;
         go('s-order');
       } else {
@@ -242,7 +256,6 @@ function checkPhone() {
       }
     })
     .catch(function() {
-      // On network error, treat as new customer so flow isn't blocked
       currentUser      = { phone: phone, firstName: '', lastName: '', email: '', address: '' };
       isNewCustomer    = true;
       addressConfirmed = false;
@@ -304,20 +317,24 @@ function submitNewCustomer() {
   currentUser.address   = fullAddress;
   selectedAddress       = fullAddress;
 
-  // Save new customer to the Customers sheet
-  fetch(VENDOR.scriptUrl, {
-    method:  'POST',
-    headers: { 'Content-Type': 'text/plain' },
+  // Upsert customer to Supabase
+  sbFetch('customers', {
+    method: 'POST',
+    headers: {
+      'apikey':        CONFIG.SUPABASE_KEY,
+      'Authorization': 'Bearer ' + CONFIG.SUPABASE_KEY,
+      'Content-Type':  'application/json',
+      'Prefer':        'resolution=merge-duplicates',
+    },
     body: JSON.stringify({
-      action:    'saveCustomer',
-      slug:      VENDOR.slug,
-      phone:     currentUser.phone,
-      firstName: currentUser.firstName,
-      lastName:  currentUser.lastName,
-      email:     currentUser.email,
-      address:   fullAddress,
+      vendor_id:  VENDOR.id,
+      phone:      currentUser.phone,
+      first_name: currentUser.firstName,
+      last_name:  currentUser.lastName,
+      email:      currentUser.email || '',
+      address:    fullAddress,
     }),
-  }).catch(function() {}); // fire and forget — don't block the flow
+  }).catch(function() {}); // fire and forget
 
   go('s-order');
 }
@@ -470,33 +487,34 @@ function renderSummary() {
     + '</div>';
 }
 
-/* ─── SUBMIT ORDER TO GOOGLE SHEET ─── */
+/* ─── SUBMIT ORDER TO SUPABASE ─── */
 function submitOrder() {
   var btn = document.getElementById('confirm-btn');
   if (btn) { btn.disabled = true; btn.textContent = 'Submitting...'; }
 
   var items = SERVICES.filter(function(s) { return s.qty > 0; });
   var sub   = items.reduce(function(a, s) { return a + s.price * s.qty; }, 0);
+  var total = sub + deliveryFee;
 
-  var payload = {
-    vendorSlug:   VENDOR.slug,
-    orderId:      orderId,
-    customerName: currentUser ? (currentUser.firstName + ' ' + currentUser.lastName) : '',
-    phone:        currentUser ? currentUser.phone : '',
-    address:      selectedAddress || (currentUser ? currentUser.address : ''),
-    items:        items.map(function(s) { return { name: s.name, qty: s.qty }; }),
-    subtotal:     sub,
-    deliveryFee:  deliveryFee,
-  };
+  var itemsStr = items.map(function(s) { return s.qty + 'x ' + s.name; }).join(', ');
 
-  fetch(VENDOR.scriptUrl, {
-    method:  'POST',
-    headers: { 'Content-Type': 'text/plain' }, // avoids CORS preflight for Apps Script
-    body:    JSON.stringify(payload),
+  sbFetch('orders', {
+    method: 'POST',
+    body: JSON.stringify({
+      order_id:      orderId,
+      vendor_id:     VENDOR.id,
+      customer_name: currentUser ? (currentUser.firstName + ' ' + currentUser.lastName) : '',
+      phone:         currentUser ? currentUser.phone : '',
+      address:       selectedAddress || (currentUser ? currentUser.address : ''),
+      items:         itemsStr,
+      subtotal:      sub,
+      delivery_fee:  deliveryFee,
+      total:         total,
+      status:        'Pending',
+    }),
   })
-  .then(function(r) { return r.json(); })
-  .then(function(data) {
-    if (data.success) {
+  .then(function(r) {
+    if (r.ok) {
       go('s-success');
     } else {
       alert('Something went wrong. Please try again.');
@@ -504,8 +522,7 @@ function submitOrder() {
     }
   })
   .catch(function() {
-    // Still navigate to success — don't block the customer if network hiccups
-    go('s-success');
+    go('s-success'); // don't block customer on network hiccup
   });
 }
 
@@ -538,8 +555,8 @@ document.getElementById('phone-input').addEventListener('keydown', function(e) {
 
 /* ════════════════════════════════════════════════════════════════
    VENDOR BOOTSTRAP
-   Reads ?vendor=slug from the URL, fetches vendor details from
-   the main platform script, then unlocks the app.
+   Reads ?vendor=slug from the URL, fetches vendor from Supabase,
+   then unlocks the app.
 ════════════════════════════════════════════════════════════════ */
 function bootstrapVendor() {
   var params = new URLSearchParams(window.location.search);
@@ -550,41 +567,32 @@ function bootstrapVendor() {
     return;
   }
 
-  fetch(CONFIG.PLATFORM_API_URL + '?action=getVendor&slug=' + encodeURIComponent(slug))
+  sbFetch('vendors?slug=eq.' + encodeURIComponent(slug) + '&limit=1')
     .then(function(r) { return r.json(); })
     .then(function(data) {
-      if (!data.vendor) {
+      if (!data || !data.length) {
         showVendorError('Vendor not found. Please check your link.');
         return;
       }
-      // Populate VENDOR state
-      VENDOR.slug      = data.vendor.slug;
-      VENDOR.name      = data.vendor.name;
-      VENDOR.scriptUrl = data.vendor.scriptUrl;
-      if (data.vendor.lat) VENDOR.lat = parseFloat(data.vendor.lat);
-      if (data.vendor.lng) VENDOR.lng = parseFloat(data.vendor.lng);
+      var vendor = data[0];
 
-      // Update page title and landing screen with vendor name
+      VENDOR.id   = vendor.id;
+      VENDOR.slug = vendor.slug;
+      VENDOR.name = vendor.name;
+      VENDOR.lat  = vendor.lat  || 6.5244;
+      VENDOR.lng  = vendor.lng  || 3.3792;
+
       document.title = VENDOR.name + ' — Laundry';
       var brandEls = document.querySelectorAll('.vendor-name-placeholder');
       brandEls.forEach(function(el) { el.textContent = VENDOR.name; });
 
-      // Fetch vendor's services from their sheet
-      fetch(VENDOR.scriptUrl + '?action=getServices&slug=' + VENDOR.slug)
-        .then(function(r) { return r.json(); })
-        .then(function(svcData) {
-          if (svcData.services && svcData.services.length) {
-            // Replace default SERVICES with vendor's saved services
-            // Only include active ones for the customer order page
-            SERVICES = svcData.services
-              .filter(function(s) { return s.active; })
-              .map(function(s) { return { id: s.id, name: s.name, price: s.price, qty: 0 }; });
-          }
-        })
-        .catch(function() {}) // silently fall back to defaults
-        .finally(function() {
-          go('s-landing');
-        });
+      // Load active services
+      if (vendor.services && vendor.services.length) {
+        SERVICES = vendor.services
+          .filter(function(s) { return s.active; })
+          .map(function(s) { return { id: s.id, name: s.name, price: s.price, qty: 0 }; });
+      }
+      go('s-landing');
     })
     .catch(function() {
       showVendorError('Could not load vendor. Please try again.');
