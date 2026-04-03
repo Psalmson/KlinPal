@@ -524,10 +524,7 @@ function submitOrder() {
       // Fire Telegram notification — fire and forget
       fetch(CONFIG.SUPABASE_URL + '/functions/v1/notify-order', {
         method:  'POST',
-        headers: {
-          'Content-Type':  'application/json',
-          'Authorization': 'Bearer ' + CONFIG.SUPABASE_KEY,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           order:          orderPayload,
           vendor_name:    VENDOR.name,
