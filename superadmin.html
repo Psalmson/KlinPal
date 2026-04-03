@@ -257,7 +257,7 @@
               <input class="field-input" id="ob-phone" placeholder="e.g. 08012345678">
             </div>
           </div>
-          <div class="form-grid" style="margin-bottom: 24px;">
+          <div class="form-grid" style="margin-bottom: 16px;">
             <div class="field">
               <label class="field-label">Address</label>
               <input class="field-input" id="ob-address" placeholder="Laundromat address">
@@ -265,7 +265,18 @@
             <div class="field">
               <label class="field-label">Apps Script URL</label>
               <input class="field-input" id="ob-script" placeholder="https://script.google.com/macros/s/...">
-              <div class="field-note">The deployed Google Apps Script endpoint for this vendor.</div>
+              <div class="field-note">The deployed vendor Apps Script endpoint.</div>
+            </div>
+          </div>
+          <div class="form-grid" style="margin-bottom: 24px;">
+            <div class="field">
+              <label class="field-label">Latitude</label>
+              <input class="field-input" id="ob-lat" placeholder="e.g. 6.5244">
+              <div class="field-note">Pickup location coordinates for delivery fee calculation.</div>
+            </div>
+            <div class="field">
+              <label class="field-label">Longitude</label>
+              <input class="field-input" id="ob-lng" placeholder="e.g. 3.3792">
             </div>
           </div>
           <button class="btn btn-teal" onclick="onboardVendor()" id="ob-btn">Onboard Laundromat</button>
@@ -522,6 +533,8 @@
     var phone    = document.getElementById('ob-phone').value.trim();
     var address  = document.getElementById('ob-address').value.trim();
     var script   = document.getElementById('ob-script').value.trim();
+    var lat      = document.getElementById('ob-lat').value.trim();
+    var lng      = document.getElementById('ob-lng').value.trim();
 
     if (!name || !slug || !password || !script) {
       showToast('Name, slug, password and script URL are required', true);
@@ -539,13 +552,14 @@
         action: 'addVendor',
         name: name, slug: slug, password: password,
         phone: phone, address: address, scriptUrl: script,
+        lat: lat, lng: lng,
       }),
     })
     .then(function(r) { return r.json(); })
     .then(function(d) {
       if (d.success) {
         showToast(name + ' onboarded successfully ✓');
-        ['ob-name','ob-slug','ob-password','ob-phone','ob-address','ob-script'].forEach(function(id) {
+        ['ob-name','ob-slug','ob-password','ob-phone','ob-address','ob-script','ob-lat','ob-lng'].forEach(function(id) {
           document.getElementById(id).value = '';
         });
         loadVendors();
