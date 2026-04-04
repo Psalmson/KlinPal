@@ -454,8 +454,8 @@
   }
 
   /* ── DRILL INTO VENDOR ORDERS ── */
-  function drillIntoVendor(idx) {
-    var vendor = allVendors[idx];
+  function drillIntoVendor(vendor) {
+    if (!vendor) return;
     currentDrillVendor = vendor;
     document.getElementById('drill-title').textContent    = vendor.name + ' — Orders';
     document.getElementById('drill-subtitle').textContent = '/' + vendor.slug;
@@ -464,8 +464,20 @@
   }
 
   function drillIntoVendorBySlug(slug) {
+    // If allVendors is empty (e.g. navigated directly to Laundromats tab),
+    // fetch the vendor fresh from Supabase
     var vendor = allVendors.find(function(v) { return v.slug === slug; });
-    if (vendor) drillIntoVendor(allVendors.indexOf(vendor));
+    if (vendor) {
+      drillIntoVendor(vendor);
+    } else {
+      sbFetch('vendors?slug=eq.' + encodeURIComponent(slug) + '&limit=1')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data && data.length) drillIntoVendor(data[0]);
+          else showToast('Vendor not found', true);
+        })
+        .catch(function() { showToast('Could not load vendor', true); });
+    }
   }
 
   function loadVendorOrders(vendor) {
