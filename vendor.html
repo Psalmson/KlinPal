@@ -401,13 +401,15 @@
     document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
     document.getElementById('page-' + name).classList.add('active');
     document.getElementById('nav-' + name).classList.add('active');
-    if (name === 'revenue')  renderRevenue();
+    if (name === 'revenue')  renderRevenue();   // render from cached allOrders
     if (name === 'services') renderServicesEditor();
   }
 
   /* ── LOAD ORDERS ── */
   function loadOrders() {
     document.getElementById('orders-wrap').innerHTML = '<div class="loading-state">Fetching orders...</div>';
+    document.getElementById('rev-by-service').innerHTML = '<div class="loading-state">Loading...</div>';
+    document.getElementById('rev-breakdown').innerHTML  = '<div class="loading-state">Loading...</div>';
 
     sbFetch('orders?vendor_id=eq.' + currentVendor.id + '&order=created_at.desc')
       .then(function(r) { return r.json(); })
@@ -415,6 +417,7 @@
         allOrders = Array.isArray(data) ? data : [];
         renderOrdersTable();
         updateStats();
+        renderRevenue(); // always update revenue once orders loaded
         document.getElementById('orders-sub').textContent =
           allOrders.length + ' order' + (allOrders.length !== 1 ? 's' : '') + ' · refreshed just now';
       })
@@ -485,7 +488,20 @@
 
   /* ── REVENUE ── */
   function renderRevenue() {
-    if (!allOrders.length) { loadOrders(); return; }
+    if (!allOrders.length && !currentVendor) return;
+
+    // If orders haven't loaded yet, show loading state — loadOrders will call renderRevenue when done
+    if (!currentVendor) return;
+    if (allOrders.length === 0) {
+      document.getElementById('rev-services').textContent  = '₦0';
+      document.getElementById('rev-orders').textContent    = '0';
+      document.getElementById('rev-avg').textContent       = '₦0';
+      document.getElementById('rev-top').textContent       = '—';
+      document.getElementById('rev-delivered').textContent = '0';
+      document.getElementById('rev-by-service').innerHTML  = '<div style="color:var(--gray);font-size:13px">No orders yet</div>';
+      document.getElementById('rev-breakdown').innerHTML   = '<div style="color:var(--gray);font-size:13px">No orders yet</div>';
+      return;
+    }
 
     var servicesRev = 0;
     var serviceTotals = {}, statusCount = {};
