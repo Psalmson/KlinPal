@@ -409,7 +409,7 @@
         renderVendorsTable();
 
         // Fetch all orders in one query
-        return sbFetch('orders?select=vendor_id,total,status');
+        return sbFetch('orders?select=vendor_id,subtotal,delivery_fee,total,status');
       })
       .then(function(r) { return r.json(); })
       .then(function(orders) {
