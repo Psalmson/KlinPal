@@ -491,10 +491,15 @@
 
   function loadVendorOrders(vendor) {
     document.getElementById('drill-table').innerHTML = '<div class="loading-state">Loading orders...</div>';
+    window.scrollTo(0, 0);
+    document.querySelector('.main').scrollTop = 0;
+
+    console.log('loadVendorOrders called with:', vendor.id);
 
     sbFetch('orders?vendor_id=eq.' + vendor.id + '&order=created_at.desc')
       .then(function(r) { return r.json(); })
       .then(function(orders) {
+        console.log('orders received:', orders);
         orders = Array.isArray(orders) ? orders : [];
         var pending      = orders.filter(function(o) { return o.status === 'Pending'; }).length;
         var delivered    = orders.filter(function(o) { return o.status === 'Delivered'; }).length;
@@ -528,6 +533,8 @@
         document.getElementById('drill-table').innerHTML = '<table>'
           + '<thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th></tr></thead>'
           + '<tbody>' + rows + '</tbody></table>';
+
+        console.log('drill-table rendered with', orders.length, 'orders');
       })
       .catch(function() {
         document.getElementById('drill-table').innerHTML = '<div class="empty-state"><div style="font-size:14px;color:var(--gray)">Could not load orders</div></div>';
