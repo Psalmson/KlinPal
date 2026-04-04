@@ -343,8 +343,7 @@
     document.getElementById('login-error').style.display = 'none';
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
-    loadOverview();
-    loadVendors();
+    loadOverview(); // populates allVendors and renders both overview and laundromats table
   }
 
   document.getElementById('login-pass').addEventListener('keydown', function(e) {
@@ -364,6 +363,7 @@
     document.getElementById('page-' + name).classList.add('active');
     var navEl = document.getElementById('nav-' + name);
     if (navEl) navEl.classList.add('active');
+    window.scrollTo(0, 0);
   }
 
   /* ── LOAD VENDORS ── */
@@ -406,7 +406,7 @@
       .then(function(data) {
         allVendors = Array.isArray(data) ? data : [];
         document.getElementById('stat-vendors').textContent = allVendors.length;
-        renderVendorsTable();
+        renderVendorsTable(); // keep laundromats tab in sync
 
         // Fetch all orders in one query
         return sbFetch('orders?select=vendor_id,subtotal,delivery_fee,total,status');
