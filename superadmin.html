@@ -455,26 +455,35 @@
 
   /* ── DRILL INTO VENDOR ORDERS ── */
   function drillIntoVendor(vendor) {
-    if (!vendor) return;
+    if (!vendor || !vendor.id) {
+      showToast('Could not load vendor details', true);
+      return;
+    }
     currentDrillVendor = vendor;
     document.getElementById('drill-title').textContent    = vendor.name + ' — Orders';
     document.getElementById('drill-subtitle').textContent = '/' + vendor.slug;
+    document.getElementById('drill-table').innerHTML      = '<div class="loading-state">Loading orders...</div>';
+    document.getElementById('drill-total').textContent    = '—';
+    document.getElementById('drill-pending').textContent  = '—';
+    document.getElementById('drill-revenue').textContent  = '—';
+    document.getElementById('drill-delivery').textContent = '—';
     showPage('vendor-orders');
     loadVendorOrders(vendor);
   }
 
   function drillIntoVendorBySlug(slug) {
-    // If allVendors is empty (e.g. navigated directly to Laundromats tab),
-    // fetch the vendor fresh from Supabase
     var vendor = allVendors.find(function(v) { return v.slug === slug; });
     if (vendor) {
       drillIntoVendor(vendor);
     } else {
-      sbFetch('vendors?slug=eq.' + encodeURIComponent(slug) + '&limit=1')
+      sbFetch('vendors?slug=eq.' + encodeURIComponent(slug) + '&limit=1&select=*')
         .then(function(r) { return r.json(); })
         .then(function(data) {
-          if (data && data.length) drillIntoVendor(data[0]);
-          else showToast('Vendor not found', true);
+          if (Array.isArray(data) && data.length) {
+            drillIntoVendor(data[0]);
+          } else {
+            showToast('Vendor not found', true);
+          }
         })
         .catch(function() { showToast('Could not load vendor', true); });
     }
