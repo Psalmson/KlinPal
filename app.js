@@ -542,6 +542,17 @@ function submitOrder() {
       .then(function(d) { console.log('Notify result:', d); })
       .catch(function(e) { console.error('Notify error:', e); });
 
+      // Open WhatsApp with pre-filled payment proof message
+      var waMsg = encodeURIComponent(
+        'Hi ' + VENDOR.name + ' 👋\n\n'
+        + 'I just placed an order and have made payment.\n\n'
+        + 'Order ID: ' + orderId + '\n'
+        + 'Amount Paid: ₦' + total.toLocaleString() + '\n'
+        + 'Pickup & Delivery Address: ' + (selectedAddress || (currentUser ? currentUser.address : '')) + '\n\n'
+        + 'Please find my payment receipt attached.'
+      );
+      window.open('https://wa.me/2349031186357?text=' + waMsg, '_blank');
+
       go('s-success');
     } else {
       alert('Something went wrong. Please try again.');
