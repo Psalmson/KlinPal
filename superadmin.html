@@ -7,18 +7,16 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --navy:    #0d1b2a;
-    --navy2:   #162032;
-    --navy3:   #1e2e42;
-    --teal:    #00c9a7;
-    --teal2:   #00a88a;
-    --sky:     #5bc4f5;
-    --white:   #f4f8ff;
-    --gray:    #8a9ab5;
-    --gray2:   #4a5a72;
-    --red:     #ff5757;
-    --amber:   #ffb347;
-    --green:   #3dd68c;
+    --navy:  #0d1b2a;
+    --navy2: #162032;
+    --navy3: #1e2e42;
+    --teal:  #00c9a7;
+    --teal2: #00a88a;
+    --white: #f4f8ff;
+    --gray:  #8a9ab5;
+    --gray2: #4a5a72;
+    --red:   #ff5757;
+    --green: #3dd68c;
     --font-head: 'Syne', sans-serif;
     --font-body: 'DM Sans', sans-serif;
     --font-mono: 'DM Mono', monospace;
@@ -27,133 +25,92 @@
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: var(--font-body);
-    background: var(--navy);
-    color: var(--white);
-    min-height: 100vh;
-    display: flex;
-  }
+  body { font-family: var(--font-body); background: var(--navy); color: var(--white); min-height: 100vh; }
 
   /* LOGIN */
-  #login-screen {
-    position: fixed; inset: 0;
-    background: var(--navy);
-    display: flex; align-items: center; justify-content: center;
-    z-index: 1000;
-  }
-
-  .login-card {
-    background: var(--navy2);
-    border: 1px solid var(--navy3);
-    border-radius: 16px;
-    padding: 48px 40px;
-    width: 100%; max-width: 400px;
-    box-shadow: 0 32px 80px rgba(0,0,0,0.4);
-  }
-
-  .login-logo { font-family: var(--font-head); font-size: 28px; font-weight: 800; color: var(--teal); margin-bottom: 4px; }
-  .login-badge { display: inline-block; background: rgba(0,201,167,0.15); color: var(--teal); font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; margin-bottom: 28px; }
-  .login-label { font-size: 11px; font-weight: 500; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; display: block; }
-  .login-input { width: 100%; background: var(--navy3); border: 1px solid var(--gray2); border-radius: var(--radius); padding: 12px 16px; color: var(--white); font-family: var(--font-body); font-size: 15px; margin-bottom: 20px; outline: none; transition: border-color 0.2s; }
+  #login-screen { position: fixed; inset: 0; background: var(--navy); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+  .login-card   { background: var(--navy2); border: 1px solid var(--navy3); border-radius: 16px; padding: 48px 40px; width: 100%; max-width: 400px; box-shadow: 0 32px 80px rgba(0,0,0,0.4); }
+  .login-logo   { font-family: var(--font-head); font-size: 28px; font-weight: 800; color: var(--teal); margin-bottom: 4px; }
+  .login-badge  { display: inline-block; background: rgba(0,201,167,0.15); color: var(--teal); font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; margin-bottom: 28px; }
+  .login-label  { font-size: 11px; font-weight: 500; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; display: block; }
+  .login-input  { width: 100%; background: var(--navy3); border: 1px solid var(--gray2); border-radius: var(--radius); padding: 12px 16px; color: var(--white); font-family: var(--font-body); font-size: 15px; margin-bottom: 20px; outline: none; transition: border-color 0.2s; }
   .login-input:focus { border-color: var(--teal); }
-  .login-btn { width: 100%; background: var(--teal); color: var(--navy); border: none; border-radius: var(--radius); padding: 14px; font-family: var(--font-head); font-size: 15px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+  .login-btn    { width: 100%; background: var(--teal); color: var(--navy); border: none; border-radius: var(--radius); padding: 14px; font-family: var(--font-head); font-size: 15px; font-weight: 700; cursor: pointer; }
   .login-btn:hover { background: var(--teal2); }
-  .login-error { color: var(--red); font-size: 13px; margin-top: 12px; display: none; text-align: center; }
+  .login-error  { color: var(--red); font-size: 13px; margin-top: 12px; display: none; text-align: center; }
 
-  /* SIDEBAR */
-  #app { display: none; width: 100%; }
-
-  .sidebar {
-    width: var(--sidebar); min-height: 100vh;
-    background: var(--navy2); border-right: 1px solid var(--navy3);
-    display: flex; flex-direction: column;
-    position: fixed; top: 0; left: 0; bottom: 0; z-index: 100;
-  }
-
+  /* LAYOUT */
+  #app { display: none; }
+  .sidebar { width: var(--sidebar); min-height: 100vh; background: var(--navy2); border-right: 1px solid var(--navy3); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
   .sidebar-logo { padding: 28px 24px 8px; font-family: var(--font-head); font-size: 22px; font-weight: 800; color: var(--teal); }
-  .sidebar-badge { margin: 0 24px 20px; display: inline-block; background: rgba(0,201,167,0.15); color: var(--teal); font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; border-bottom: 1px solid var(--navy3); padding-bottom: 20px; }
-  .sidebar-nav { flex: 1; padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; }
-
-  .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; cursor: pointer; color: var(--gray); font-size: 14px; font-weight: 500; transition: all 0.15s; border: none; background: none; width: 100%; text-align: left; font-family: var(--font-body); }
-  .nav-item:hover { background: var(--navy3); color: var(--white); }
+  .sidebar-tag  { margin: 0 24px 16px; padding-bottom: 16px; border-bottom: 1px solid var(--navy3); }
+  .sidebar-tag span { background: rgba(0,201,167,0.15); color: var(--teal); font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; }
+  .sidebar-nav  { flex: 1; padding: 12px; display: flex; flex-direction: column; gap: 4px; }
+  .sidebar-foot { padding: 12px; border-top: 1px solid var(--navy3); }
+  .nav-item     { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; cursor: pointer; color: var(--gray); font-size: 14px; font-weight: 500; border: none; background: none; width: 100%; text-align: left; font-family: var(--font-body); transition: all 0.15s; }
+  .nav-item:hover  { background: var(--navy3); color: var(--white); }
   .nav-item.active { background: rgba(0,201,167,0.12); color: var(--teal); }
-  .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
-  .sidebar-footer { padding: 16px 12px; border-top: 1px solid var(--navy3); }
-
-  /* MAIN */
-  .main { margin-left: var(--sidebar); flex: 1; padding: 32px; min-height: 100vh; }
-  .page { display: none; }
+  .nav-item .icon  { font-size: 16px; width: 20px; text-align: center; }
+  .main  { margin-left: var(--sidebar); padding: 32px; min-height: 100vh; }
+  .page        { display: none; }
   .page.active { display: block; }
-  .page-header { margin-bottom: 28px; display: flex; align-items: flex-start; justify-content: space-between; }
-  .page-title { font-family: var(--font-head); font-size: 26px; font-weight: 800; color: var(--white); letter-spacing: -0.5px; }
+
+  /* PAGE */
+  .page-header   { margin-bottom: 28px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+  .page-title    { font-family: var(--font-head); font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
   .page-subtitle { color: var(--gray); font-size: 13px; margin-top: 4px; }
 
   /* STATS */
-  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
-  .stat-card { background: var(--navy2); border: 1px solid var(--navy3); border-radius: var(--radius); padding: 20px; }
+  .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 28px; }
+  .stat-card  { background: var(--navy2); border: 1px solid var(--navy3); border-radius: var(--radius); padding: 20px; }
   .stat-label { font-size: 11px; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; font-weight: 500; }
   .stat-value { font-family: var(--font-head); font-size: 28px; font-weight: 800; color: var(--white); margin: 6px 0 2px; letter-spacing: -1px; }
   .stat-value.teal { color: var(--teal); }
-  .stat-sub { font-size: 12px; color: var(--gray); }
+  .stat-sub   { font-size: 12px; color: var(--gray); }
 
   /* CARD */
-  .card { background: var(--navy2); border: 1px solid var(--navy3); border-radius: var(--radius); overflow: hidden; margin-bottom: 20px; }
+  .card        { background: var(--navy2); border: 1px solid var(--navy3); border-radius: var(--radius); overflow: hidden; margin-bottom: 20px; }
   .card-header { padding: 18px 24px; border-bottom: 1px solid var(--navy3); display: flex; align-items: center; justify-content: space-between; }
-  .card-title { font-family: var(--font-head); font-size: 15px; font-weight: 700; color: var(--white); }
+  .card-title  { font-family: var(--font-head); font-size: 15px; font-weight: 700; }
 
-  .btn { border: none; border-radius: 8px; padding: 9px 18px; font-family: var(--font-head); font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s; }
-  .btn-teal { background: var(--teal); color: var(--navy); }
+  /* BUTTONS */
+  .btn       { border: none; border-radius: 8px; padding: 9px 18px; font-family: var(--font-head); font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s; }
+  .btn-teal  { background: var(--teal); color: var(--navy); }
   .btn-teal:hover { background: var(--teal2); }
   .btn-ghost { background: var(--navy3); color: var(--gray); }
   .btn-ghost:hover { color: var(--white); }
-  .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 6px; }
+  .btn-sm    { padding: 6px 14px; font-size: 12px; border-radius: 6px; }
 
   /* TABLE */
   table { width: 100%; border-collapse: collapse; }
-  th { padding: 12px 16px; text-align: left; font-size: 11px; color: var(--gray); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 500; border-bottom: 1px solid var(--navy3); background: rgba(0,0,0,0.1); }
-  td { padding: 14px 16px; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: middle; }
+  th { padding: 12px 20px; text-align: left; font-size: 11px; color: var(--gray); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 500; border-bottom: 1px solid var(--navy3); background: rgba(0,0,0,0.1); }
+  td { padding: 16px 20px; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: middle; }
   tr:last-child td { border-bottom: none; }
   tr:hover td { background: rgba(255,255,255,0.02); }
-
-  .mono { font-family: var(--font-mono); font-size: 12px; color: var(--teal); }
-  .vendor-name { font-weight: 600; color: var(--white); }
+  .mono        { font-family: var(--font-mono); font-size: 12px; color: var(--teal); }
+  .vendor-name { font-weight: 600; }
   .vendor-slug { font-family: var(--font-mono); font-size: 11px; color: var(--gray); margin-top: 2px; }
 
-  .badge { display: inline-block; padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-  .badge-green { background: rgba(61,214,140,0.15); color: var(--green); }
-  .badge-amber { background: rgba(255,179,71,0.15); color: var(--amber); }
-
-  /* ONBOARD FORM */
-  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  .field { margin-bottom: 0; }
+  /* FORM */
+  .form-grid   { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
   .field-label { font-size: 11px; color: var(--gray); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; display: block; }
   .field-input { width: 100%; background: var(--navy3); border: 1px solid var(--gray2); border-radius: 8px; padding: 10px 14px; color: var(--white); font-family: var(--font-body); font-size: 14px; outline: none; transition: border-color 0.2s; }
   .field-input:focus { border-color: var(--teal); }
-  .field-note { font-size: 11px; color: var(--gray); margin-top: 5px; }
+  .field-note  { font-size: 11px; color: var(--gray); margin-top: 5px; }
 
-  /* ORDERS DRILL */
+  /* DRILL */
   .back-btn { display: flex; align-items: center; gap: 6px; background: none; border: none; color: var(--gray); font-size: 13px; cursor: pointer; font-family: var(--font-body); padding: 0; margin-bottom: 20px; transition: color 0.15s; }
   .back-btn:hover { color: var(--white); }
-
   .status-select { background: var(--navy3); border: 1px solid var(--gray2); border-radius: 6px; color: var(--white); font-size: 12px; padding: 6px 10px; cursor: pointer; font-family: var(--font-body); outline: none; }
 
-  /* EMPTY / LOADING */
-  .empty-state { text-align: center; padding: 60px 20px; color: var(--gray); }
+  /* STATES */
+  .empty-state   { text-align: center; padding: 60px 20px; color: var(--gray); }
   .loading-state { text-align: center; padding: 60px 20px; color: var(--gray); font-size: 14px; }
 
   /* TOAST */
   .toast { position: fixed; bottom: 24px; right: 24px; background: var(--teal); color: var(--navy); padding: 12px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; z-index: 9999; transform: translateY(80px); opacity: 0; transition: all 0.3s; pointer-events: none; }
-  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.show  { transform: translateY(0); opacity: 1; }
   .toast.error { background: var(--red); color: white; }
-
-  /* MODAL */
-  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 500; display: none; align-items: center; justify-content: center; }
-  .modal-overlay.open { display: flex; }
-  .modal { background: var(--navy2); border: 1px solid var(--navy3); border-radius: 16px; padding: 32px; width: 100%; max-width: 480px; }
-  .modal-title { font-family: var(--font-head); font-size: 18px; font-weight: 800; margin-bottom: 24px; }
-  .modal-actions { display: flex; gap: 10px; margin-top: 24px; justify-content: flex-end; }
 </style>
 </head>
 <body>
@@ -174,15 +131,13 @@
 <div id="app">
   <aside class="sidebar">
     <div class="sidebar-logo">klinpal</div>
-    <div style="margin: 0 24px 20px; border-bottom: 1px solid var(--navy3); padding-bottom: 16px;">
-      <span style="background: rgba(0,201,167,0.15); color: var(--teal); font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 3px 8px; border-radius: 4px;">Superadmin</span>
-    </div>
+    <div class="sidebar-tag"><span>Superadmin</span></div>
     <nav class="sidebar-nav">
       <button class="nav-item active" onclick="showPage('overview')" id="nav-overview"><span class="icon">🏠</span> Overview</button>
       <button class="nav-item" onclick="showPage('vendors')" id="nav-vendors"><span class="icon">🏪</span> Laundromats</button>
       <button class="nav-item" onclick="showPage('onboard')" id="nav-onboard"><span class="icon">➕</span> Onboard New</button>
     </nav>
-    <div class="sidebar-footer">
+    <div class="sidebar-foot">
       <button class="nav-item" onclick="doLogout()"><span class="icon">🚪</span> Sign Out</button>
     </div>
   </aside>
@@ -202,7 +157,7 @@
         <div class="stat-card"><div class="stat-label">Laundromats</div><div class="stat-value teal" id="stat-vendors">—</div><div class="stat-sub">Onboarded</div></div>
         <div class="stat-card"><div class="stat-label">Total Orders</div><div class="stat-value" id="stat-orders">—</div><div class="stat-sub">All time</div></div>
         <div class="stat-card"><div class="stat-label">Services Revenue</div><div class="stat-value" id="stat-revenue">—</div><div class="stat-sub">Vendor earnings</div></div>
-        <div class="stat-card"><div class="stat-label">Delivery Revenue</div><div class="stat-value" id="stat-delivery">—</div><div class="stat-sub">Net from delivery fees</div></div>
+        <div class="stat-card"><div class="stat-label">Delivery Revenue</div><div class="stat-value" id="stat-delivery">—</div><div class="stat-sub">Net from delivery</div></div>
       </div>
       <div class="card">
         <div class="card-header"><div class="card-title">Laundromat Performance</div></div>
@@ -210,7 +165,7 @@
       </div>
     </div>
 
-    <!-- VENDORS LIST -->
+    <!-- LAUNDROMATS -->
     <div class="page" id="page-vendors">
       <div class="page-header">
         <div>
@@ -235,50 +190,51 @@
       </div>
       <div class="card">
         <div class="card-header"><div class="card-title">New Laundromat Details</div></div>
-        <div style="padding: 24px;">
-          <div class="form-grid" style="margin-bottom: 16px;">
-            <div class="field">
+        <div style="padding:28px">
+          <div class="form-grid">
+            <div>
               <label class="field-label">Laundromat Name</label>
               <input class="field-input" id="ob-name" placeholder="e.g. Fresh Press Laundry">
             </div>
-            <div class="field">
+            <div>
               <label class="field-label">Slug (URL identifier)</label>
               <input class="field-input" id="ob-slug" placeholder="e.g. freshpress" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9]/g,'')">
               <div class="field-note">Lowercase letters and numbers only. Used in the customer URL.</div>
             </div>
           </div>
-          <div class="form-grid" style="margin-bottom: 16px;">
-            <div class="field">
+          <div class="form-grid">
+            <div>
               <label class="field-label">Dashboard Password</label>
               <input class="field-input" id="ob-password" placeholder="Set a secure password">
             </div>
-            <div class="field">
+            <div>
               <label class="field-label">Owner Phone</label>
               <input class="field-input" id="ob-phone" placeholder="e.g. 08012345678">
             </div>
           </div>
-          <div class="form-grid" style="margin-bottom: 24px;">
-            <div class="field">
+          <div class="form-grid">
+            <div>
               <label class="field-label">House / Unit No.</label>
               <input class="field-input" id="ob-house" placeholder="e.g. 12B">
             </div>
-            <div class="field" style="position:relative">
+            <div style="position:relative">
               <label class="field-label">Street / Area</label>
               <input class="field-input" id="ob-address" placeholder="Start typing street..." autocomplete="off" oninput="onAddressInput()">
               <div id="ob-addr-dropdown" style="display:none;position:fixed;background:#162032;border:1px solid #1e2e42;border-radius:8px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.5);overflow-y:auto;max-height:240px;"></div>
-              <div id="ob-addr-status" style="font-size:11px;margin-top:4px;color:#8a9ab5"></div>
+              <div id="ob-addr-status" style="font-size:11px;margin-top:5px;color:var(--gray)"></div>
               <div class="field-note">Select from suggestions — coordinates captured automatically</div>
             </div>
           </div>
-          <div class="form-grid" style="margin-bottom: 24px;">
-            <div class="field">
+          <div class="form-grid">
+            <div>
               <label class="field-label">Telegram Group Chat ID</label>
               <input class="field-input" id="ob-telegram" placeholder="e.g. -1234567890">
-              <div class="field-note">Add the bot to a group, send a message, get the Chat ID from getUpdates.</div>
+              <div class="field-note">Add the bot to a group and get the Chat ID from getUpdates.</div>
             </div>
-            <div class="field"></div>
+            <div></div>
           </div>
           <button class="btn btn-teal" onclick="onboardVendor()" id="ob-btn">Onboard Laundromat</button>
+        </div>
       </div>
     </div>
 
@@ -310,27 +266,32 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  /* ══════════════════════════════════════════════════════
-     CONFIG
-  ══════════════════════════════════════════════════════ */
+  /* ── CONFIG ── */
   var SUPERADMIN_PASSWORD = 'klinpal2024';
-  var SUPABASE_URL = 'https://mlgdqxqzpzfzndjhywqf.supabase.co';
-  var SUPABASE_KEY = 'sb_publishable_TS5uGf7KzLKxeQw8bxDKYw_HwBNNBeA';
+  var SUPABASE_URL        = 'https://mlgdqxqzpzfzndjhywqf.supabase.co';
+  var SUPABASE_KEY        = 'sb_publishable_TS5uGf7KzLKxeQw8bxDKYw_HwBNNBeA';
+  var LOCATIONIQ_TOKEN    = 'pk.ec47de1300ad77f86deab165cce9bbe2';
 
-  var allVendors       = [];
+  var allVendors         = [];
   var currentDrillVendor = null;
+  var obAddressConfirmed = false;
+  var obLat = null, obLng = null, obDebounce = null;
 
+  /* ── SUPABASE ── */
   function sbFetch(path, options) {
-    var url  = SUPABASE_URL + '/rest/v1/' + path;
-    var opts = Object.assign({
+    var defaults = {
       headers: {
         'apikey':        SUPABASE_KEY,
         'Authorization': 'Bearer ' + SUPABASE_KEY,
         'Content-Type':  'application/json',
         'Prefer':        'return=representation',
       },
-    }, options || {});
-    return fetch(url, opts);
+    };
+    var opts = Object.assign({}, defaults, options || {});
+    if (options && options.headers) {
+      opts.headers = Object.assign({}, defaults.headers, options.headers);
+    }
+    return fetch(SUPABASE_URL + '/rest/v1/' + path, opts);
   }
 
   /* ── LOGIN ── */
@@ -342,8 +303,8 @@
     }
     document.getElementById('login-error').style.display = 'none';
     document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('app').style.display = 'flex';
-    loadOverview(); // populates allVendors and renders both overview and laundromats table
+    document.getElementById('app').style.display = 'block';
+    loadOverview();
   }
 
   document.getElementById('login-pass').addEventListener('keydown', function(e) {
@@ -351,6 +312,7 @@
   });
 
   function doLogout() {
+    allVendors = []; currentDrillVendor = null;
     document.getElementById('app').style.display = 'none';
     document.getElementById('login-screen').style.display = 'flex';
     document.getElementById('login-pass').value = '';
@@ -361,155 +323,128 @@
     document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
     document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
     document.getElementById('page-' + name).classList.add('active');
-    var navEl = document.getElementById('nav-' + name);
-    if (navEl) navEl.classList.add('active');
+    var nav = document.getElementById('nav-' + name);
+    if (nav) nav.classList.add('active');
     window.scrollTo(0, 0);
+    if (name === 'vendors') renderVendorsTable();
   }
 
-  /* ── LOAD VENDORS ── */
-  function loadVendors() {
+  /* ── OVERVIEW ── */
+  function loadOverview() {
+    ['stat-vendors','stat-orders','stat-revenue','stat-delivery'].forEach(function(id) {
+      document.getElementById(id).textContent = '…';
+    });
+    document.getElementById('overview-table').innerHTML = '<div class="loading-state">Loading...</div>';
+
     sbFetch('vendors?select=*&order=created_at.desc')
       .then(function(r) { return r.json(); })
-      .then(function(data) {
-        allVendors = Array.isArray(data) ? data : [];
-        renderVendorsTable();
+      .then(function(vendors) {
+        allVendors = Array.isArray(vendors) ? vendors : [];
+        document.getElementById('stat-vendors').textContent = allVendors.length;
+        return sbFetch('orders?select=vendor_id,subtotal,delivery_fee,status');
       })
-      .catch(function() { showToast('Could not load vendors', true); });
+      .then(function(r) { return r.json(); })
+      .then(function(orders) {
+        orders = Array.isArray(orders) ? orders : [];
+
+        var totSvc = orders.reduce(function(a,o){ return a + (Number(o.subtotal)     || 0); }, 0);
+        var totDel = orders.reduce(function(a,o){ return a + (Number(o.delivery_fee) || 0); }, 0);
+
+        document.getElementById('stat-orders').textContent   = orders.length;
+        document.getElementById('stat-revenue').textContent  = '₦' + totSvc.toLocaleString();
+        document.getElementById('stat-delivery').textContent = '₦' + totDel.toLocaleString();
+
+        if (!allVendors.length) {
+          document.getElementById('overview-table').innerHTML = '<div class="empty-state"><div style="font-size:14px">No laundromats yet</div></div>';
+          return;
+        }
+
+        var rows = allVendors.map(function(v) {
+          var vo  = orders.filter(function(o){ return o.vendor_id === v.id; });
+          var svc = vo.reduce(function(a,o){ return a + (Number(o.subtotal)     || 0); }, 0);
+          var del = vo.reduce(function(a,o){ return a + (Number(o.delivery_fee) || 0); }, 0);
+          var pen = vo.filter(function(o){ return o.status === 'Pending'; }).length;
+          return '<tr>'
+            + '<td><div class="vendor-name">' + v.name + '</div><div class="vendor-slug">/' + v.slug + '</div></td>'
+            + '<td>' + vo.length + '</td>'
+            + '<td><span class="mono">₦' + svc.toLocaleString() + '</span></td>'
+            + '<td><span class="mono">₦' + del.toLocaleString() + '</span></td>'
+            + '<td>' + pen + '</td>'
+            + '<td><button class="btn btn-ghost btn-sm" onclick="openVendorOrders(\'' + v.slug + '\')">View Orders</button></td>'
+            + '</tr>';
+        }).join('');
+
+        document.getElementById('overview-table').innerHTML =
+          '<table><thead><tr><th>Laundromat</th><th>Orders</th><th>Services Revenue</th><th>Delivery Revenue</th><th>Pending</th><th></th></tr></thead>'
+          + '<tbody>' + rows + '</tbody></table>';
+      })
+      .catch(function(e) { console.error(e); showToast('Could not load overview', true); });
   }
 
+  /* ── VENDORS TABLE ── */
   function renderVendorsTable() {
     var wrap = document.getElementById('vendors-table');
     if (!allVendors.length) {
       wrap.innerHTML = '<div class="empty-state"><div style="font-size:40px;margin-bottom:12px">🏪</div><div style="font-size:14px">No laundromats onboarded yet</div></div>';
       return;
     }
-    wrap.innerHTML = '<table>'
-      + '<thead><tr><th>Laundromat</th><th>Slug</th><th>Phone</th><th>Address</th><th>Onboarded</th><th>Actions</th></tr></thead>'
-      + '<tbody>' + allVendors.map(function(v) {
-          var date = v.created_at ? new Date(v.created_at).toLocaleDateString('en-GB') : '—';
-          return '<tr>'
-            + '<td><div class="vendor-name">' + v.name + '</div></td>'
-            + '<td><div class="mono">' + v.slug + '</div></td>'
-            + '<td style="font-size:12px;color:var(--gray)">' + (v.phone || '—') + '</td>'
-            + '<td style="font-size:12px;color:var(--gray);max-width:180px">' + (v.address || '—') + '</td>'
-            + '<td style="font-size:12px;color:var(--gray)">' + date + '</td>'
-            + '<td><button class="btn btn-ghost btn-sm" onclick="drillIntoVendorBySlug(\'' + v.slug + '\')">View Orders</button></td>'
-            + '</tr>';
-        }).join('')
-      + '</tbody></table>';
+    var rows = allVendors.map(function(v) {
+      var date = v.created_at ? new Date(v.created_at).toLocaleDateString('en-GB') : '—';
+      return '<tr>'
+        + '<td><div class="vendor-name">' + v.name + '</div></td>'
+        + '<td><span class="mono">' + v.slug + '</span></td>'
+        + '<td style="color:var(--gray)">' + (v.phone || '—') + '</td>'
+        + '<td style="color:var(--gray);font-size:12px;max-width:200px">' + (v.address || '—') + '</td>'
+        + '<td style="color:var(--gray);font-size:12px">' + date + '</td>'
+        + '<td><button class="btn btn-ghost btn-sm" onclick="openVendorOrders(\'' + v.slug + '\')">View Orders</button></td>'
+        + '</tr>';
+    }).join('');
+    wrap.innerHTML = '<table><thead><tr><th>Laundromat</th><th>Slug</th><th>Phone</th><th>Address</th><th>Onboarded</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>';
   }
 
-  /* ── OVERVIEW ── */
-  function loadOverview() {
-    sbFetch('vendors?select=*&order=created_at.desc')
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        allVendors = Array.isArray(data) ? data : [];
-        document.getElementById('stat-vendors').textContent = allVendors.length;
-        renderVendorsTable(); // keep laundromats tab in sync
-
-        // Fetch all orders in one query
-        return sbFetch('orders?select=vendor_id,subtotal,delivery_fee,total,status');
-      })
-      .then(function(r) { return r.json(); })
-      .then(function(orders) {
-        orders = Array.isArray(orders) ? orders : [];
-        var servicesRev  = orders.reduce(function(a, o) { return a + (o.subtotal || 0); }, 0);
-        var deliveryRev  = orders.reduce(function(a, o) { return a + (o.delivery_fee || 0); }, 0);
-        var totalPending = orders.filter(function(o) { return o.status === 'Pending'; }).length;
-
-        document.getElementById('stat-orders').textContent   = orders.length;
-        document.getElementById('stat-revenue').textContent  = '₦' + servicesRev.toLocaleString();
-        document.getElementById('stat-delivery').textContent = '₦' + deliveryRev.toLocaleString();
-
-        // Per-vendor breakdown
-        var rows = allVendors.map(function(v) {
-          var vendorOrders = orders.filter(function(o) { return o.vendor_id === v.id; });
-          var services     = vendorOrders.reduce(function(a, o) { return a + (o.subtotal || 0); }, 0);
-          var delivery     = vendorOrders.reduce(function(a, o) { return a + (o.delivery_fee || 0); }, 0);
-          var pending      = vendorOrders.filter(function(o) { return o.status === 'Pending'; }).length;
-          return { vendor: v, orders: vendorOrders.length, services: services, delivery: delivery, pending: pending };
-        });
-
-        var wrap = document.getElementById('overview-table');
-        if (!rows.length) {
-          wrap.innerHTML = '<div class="empty-state"><div style="font-size:14px;color:var(--gray)">No laundromats yet</div></div>';
-          return;
-        }
-        wrap.innerHTML = '<table>'
-          + '<thead><tr><th>Laundromat</th><th>Orders</th><th>Services Revenue</th><th>Delivery Revenue</th><th>Pending</th><th></th></tr></thead>'
-          + '<tbody>' + rows.map(function(r) {
-              return '<tr>'
-                + '<td><div class="vendor-name">' + r.vendor.name + '</div><div class="vendor-slug">/' + r.vendor.slug + '</div></td>'
-                + '<td>' + r.orders + '</td>'
-                + '<td style="font-family:var(--font-mono)">₦' + r.services.toLocaleString() + '</td>'
-                + '<td style="font-family:var(--font-mono)">₦' + r.delivery.toLocaleString() + '</td>'
-                + '<td>' + r.pending + '</td>'
-                + '<td><button class="btn btn-ghost btn-sm" onclick="drillIntoVendorBySlug(\'' + r.vendor.slug + '\')">View</button></td>'
-                + '</tr>';
-            }).join('')
-          + '</tbody></table>';
-      })
-      .catch(function() { showToast('Could not load overview', true); });
-  }
-
-  /* ── DRILL INTO VENDOR ORDERS ── */
-  function drillIntoVendor(vendor) {
-    if (!vendor || !vendor.id) {
-      showToast('Could not load vendor details', true);
-      return;
+  /* ── VENDOR ORDERS ── */
+  function openVendorOrders(slug) {
+    var vendor = allVendors.find(function(v){ return v.slug === slug; });
+    if (vendor) {
+      showVendorOrders(vendor);
+    } else {
+      sbFetch('vendors?slug=eq.' + encodeURIComponent(slug) + '&limit=1&select=*')
+        .then(function(r){ return r.json(); })
+        .then(function(d){ if (Array.isArray(d) && d.length) showVendorOrders(d[0]); else showToast('Vendor not found', true); })
+        .catch(function(){ showToast('Could not load vendor', true); });
     }
+  }
+
+  function showVendorOrders(vendor) {
     currentDrillVendor = vendor;
     document.getElementById('drill-title').textContent    = vendor.name + ' — Orders';
     document.getElementById('drill-subtitle').textContent = '/' + vendor.slug;
-    document.getElementById('drill-table').innerHTML      = '<div class="loading-state">Loading orders...</div>';
     document.getElementById('drill-total').textContent    = '—';
     document.getElementById('drill-pending').textContent  = '—';
     document.getElementById('drill-revenue').textContent  = '—';
     document.getElementById('drill-delivery').textContent = '—';
+    document.getElementById('drill-table').innerHTML      = '<div class="loading-state">Loading orders...</div>';
     showPage('vendor-orders');
     loadVendorOrders(vendor);
   }
 
-  function drillIntoVendorBySlug(slug) {
-    var vendor = allVendors.find(function(v) { return v.slug === slug; });
-    if (vendor) {
-      drillIntoVendor(vendor);
-    } else {
-      sbFetch('vendors?slug=eq.' + encodeURIComponent(slug) + '&limit=1&select=*')
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-          if (Array.isArray(data) && data.length) {
-            drillIntoVendor(data[0]);
-          } else {
-            showToast('Vendor not found', true);
-          }
-        })
-        .catch(function() { showToast('Could not load vendor', true); });
-    }
-  }
-
   function loadVendorOrders(vendor) {
+    if (!vendor || !vendor.id) { showToast('No vendor selected', true); return; }
     document.getElementById('drill-table').innerHTML = '<div class="loading-state">Loading orders...</div>';
-    window.scrollTo(0, 0);
-    document.querySelector('.main').scrollTop = 0;
 
-    console.log('loadVendorOrders called with:', vendor.id);
-
-    sbFetch('orders?vendor_id=eq.' + vendor.id + '&order=created_at.desc')
-      .then(function(r) { return r.json(); })
-      .then(function(orders) {
-        console.log('orders received:', orders);
+    sbFetch('orders?vendor_id=eq.' + vendor.id + '&order=created_at.desc&select=*')
+      .then(function(r){ return r.json(); })
+      .then(function(orders){
         orders = Array.isArray(orders) ? orders : [];
-        var pending      = orders.filter(function(o) { return o.status === 'Pending'; }).length;
-        var delivered    = orders.filter(function(o) { return o.status === 'Delivered'; }).length;
-        var servicesRev  = orders.reduce(function(a, o) { return a + (o.subtotal || 0); }, 0);
-        var deliveryRev  = orders.reduce(function(a, o) { return a + (o.delivery_fee || 0); }, 0);
+
+        var pending = orders.filter(function(o){ return o.status === 'Pending'; }).length;
+        var svcRev  = orders.reduce(function(a,o){ return a + (Number(o.subtotal)     || 0); }, 0);
+        var delRev  = orders.reduce(function(a,o){ return a + (Number(o.delivery_fee) || 0); }, 0);
 
         document.getElementById('drill-total').textContent    = orders.length;
         document.getElementById('drill-pending').textContent  = pending;
-        document.getElementById('drill-revenue').textContent  = '₦' + servicesRev.toLocaleString();
-        document.getElementById('drill-delivery').textContent = '₦' + deliveryRev.toLocaleString();
+        document.getElementById('drill-revenue').textContent  = '₦' + svcRev.toLocaleString();
+        document.getElementById('drill-delivery').textContent = '₦' + delRev.toLocaleString();
 
         if (!orders.length) {
           document.getElementById('drill-table').innerHTML = '<div class="empty-state"><div style="font-size:14px;color:var(--gray)">No orders yet</div></div>';
@@ -520,107 +455,86 @@
         var rows = orders.map(function(o) {
           var date = o.created_at ? new Date(o.created_at).toLocaleDateString('en-GB') : '';
           return '<tr>'
-            + '<td><div class="mono">' + (o.order_id || '—') + '</div><div style="font-size:11px;color:var(--gray)">' + date + '</div></td>'
-            + '<td><div style="font-weight:500">' + (o.customer_name || '—') + '</div><div style="font-size:11px;color:var(--gray)">' + (o.phone || '') + '</div><div style="font-size:11px;color:var(--gray);max-width:160px">' + (o.address || '') + '</div></td>'
+            + '<td><div class="mono">' + (o.order_id || '—') + '</div><div style="font-size:11px;color:var(--gray);margin-top:3px">' + date + '</div></td>'
+            + '<td><div style="font-weight:600">' + (o.customer_name || '—') + '</div>'
+            +     '<div style="font-size:12px;color:var(--gray)">' + (o.phone || '') + '</div>'
+            +     '<div style="font-size:11px;color:var(--gray);max-width:180px;margin-top:2px">' + (o.address || '') + '</div></td>'
             + '<td style="font-size:12px;color:var(--gray);max-width:160px">' + (o.items || '—') + '</td>'
-            + '<td style="font-family:var(--font-mono)">₦' + (o.total || 0).toLocaleString() + '</td>'
-            + '<td><select class="status-select" onchange="updateStatus(this, \'' + o.order_id + '\')">'
-            +   statuses.map(function(s) { return '<option value="' + s + '"' + (o.status === s ? ' selected' : '') + '>' + s + '</option>'; }).join('')
+            + '<td><span class="mono">₦' + (Number(o.subtotal) || 0).toLocaleString() + '</span></td>'
+            + '<td><select class="status-select" onchange="updateStatus(this,\'' + o.order_id + '\')">'
+            +   statuses.map(function(s){ return '<option value="' + s + '"' + (o.status===s?' selected':'') + '>' + s + '</option>'; }).join('')
             + '</select></td>'
             + '</tr>';
         }).join('');
 
-        document.getElementById('drill-table').innerHTML = '<table>'
-          + '<thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th></tr></thead>'
-          + '<tbody>' + rows + '</tbody></table>';
-
-        console.log('drill-table rendered with', orders.length, 'orders');
+        document.getElementById('drill-table').innerHTML =
+          '<table><thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Subtotal</th><th>Status</th></tr></thead><tbody>' + rows + '</tbody></table>';
       })
-      .catch(function() {
-        document.getElementById('drill-table').innerHTML = '<div class="empty-state"><div style="font-size:14px;color:var(--gray)">Could not load orders</div></div>';
-      });
+      .catch(function(e){ console.error(e); document.getElementById('drill-table').innerHTML = '<div class="empty-state"><div style="font-size:14px;color:var(--gray)">Could not load orders</div></div>'; });
   }
 
   function updateStatus(select, orderId) {
-    sbFetch('orders?order_id=eq.' + orderId, {
-      method: 'PATCH',
-      body: JSON.stringify({ status: select.value }),
-    })
-    .then(function(r) { showToast(r.ok ? 'Status updated ✓' : 'Update failed', !r.ok); })
-    .catch(function() { showToast('Could not update status', true); });
+    sbFetch('orders?order_id=eq.' + orderId, { method: 'PATCH', body: JSON.stringify({ status: select.value }) })
+      .then(function(r){ showToast(r.ok ? 'Status updated ✓' : 'Update failed', !r.ok); })
+      .catch(function(){ showToast('Could not update status', true); });
   }
 
-  var LOCATIONIQ_TOKEN = 'pk.ec47de1300ad77f86deab165cce9bbe2';
-  var obAddressConfirmed = false;
-  var obLat = null, obLng = null;
-  var obDebounce = null;
-
+  /* ── ADDRESS AUTOCOMPLETE ── */
   function onAddressInput() {
-    obAddressConfirmed = false;
-    obLat = null; obLng = null;
+    obAddressConfirmed = false; obLat = null; obLng = null;
     document.getElementById('ob-addr-status').textContent = '';
     clearTimeout(obDebounce);
     var q = document.getElementById('ob-address').value.trim();
     if (q.length < 3) { document.getElementById('ob-addr-dropdown').style.display = 'none'; return; }
-    obDebounce = setTimeout(function() { fetchAddressSuggestions(q); }, 350);
+    obDebounce = setTimeout(function(){ fetchAddressSuggestions(q); }, 350);
   }
 
   function fetchAddressSuggestions(q) {
-    var url = 'https://api.locationiq.com/v1/autocomplete'
-      + '?key=' + LOCATIONIQ_TOKEN
-      + '&q=' + encodeURIComponent(q)
-      + '&countrycodes=ng&limit=5&dedupe=1';
-
-    fetch(url)
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        var dropdown = document.getElementById('ob-addr-dropdown');
-        var input    = document.getElementById('ob-address');
-        if (!Array.isArray(data) || !data.length) { dropdown.style.display = 'none'; return; }
-
-        // Position dropdown below the input using fixed coords
+    fetch('https://api.locationiq.com/v1/autocomplete?key=' + LOCATIONIQ_TOKEN + '&q=' + encodeURIComponent(q) + '&countrycodes=ng&limit=5&dedupe=1')
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        var dd    = document.getElementById('ob-addr-dropdown');
+        var input = document.getElementById('ob-address');
+        if (!Array.isArray(data) || !data.length) { dd.style.display = 'none'; return; }
         var rect = input.getBoundingClientRect();
-        dropdown.style.top   = (rect.bottom + 4) + 'px';
-        dropdown.style.left  = rect.left + 'px';
-        dropdown.style.width = rect.width + 'px';
-
-        dropdown.innerHTML = data.map(function(r, i) {
+        dd.style.top = (rect.bottom + 4) + 'px';
+        dd.style.left = rect.left + 'px';
+        dd.style.width = rect.width + 'px';
+        dd.innerHTML = data.map(function(r, i){
           var parts = (r.display_name || '').split(',');
-          return '<div style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #1e2e42;font-size:13px" '
-            + 'onmouseover="this.style.background=\'#1e2e42\'" onmouseout="this.style.background=\'\'" '
-            + 'onclick="selectObAddress(' + i + ')">'
+          return '<div style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #1e2e42;font-size:13px"'
+            + ' onmouseover="this.style.background=\'#1e2e42\'" onmouseout="this.style.background=\'\'"'
+            + ' onclick="selectObAddress(' + i + ')">'
             + '<div style="color:#f4f8ff;font-weight:500">' + parts[0].trim() + '</div>'
             + '<div style="color:#8a9ab5;font-size:11px">' + parts.slice(1).join(',').trim() + '</div>'
             + '</div>';
         }).join('');
-
-        dropdown.__results = data;
-        dropdown.style.display = 'block';
+        dd.__results = data;
+        dd.style.display = 'block';
       })
-      .catch(function() { document.getElementById('ob-addr-dropdown').style.display = 'none'; });
+      .catch(function(){ document.getElementById('ob-addr-dropdown').style.display = 'none'; });
   }
 
   function selectObAddress(idx) {
-    var dropdown = document.getElementById('ob-addr-dropdown');
-    var result   = dropdown.__results[idx];
+    var dd     = document.getElementById('ob-addr-dropdown');
+    var result = dd.__results[idx];
     document.getElementById('ob-address').value = result.display_name || '';
     obLat = parseFloat(result.lat);
     obLng = parseFloat(result.lon);
     obAddressConfirmed = true;
-    dropdown.style.display = 'none';
-    document.getElementById('ob-addr-status').textContent = '✓ ' + obLat.toFixed(4) + ', ' + obLng.toFixed(4);
-    document.getElementById('ob-addr-status').style.color = '#00c9a7';
+    dd.style.display = 'none';
+    var status = document.getElementById('ob-addr-status');
+    status.textContent = '✓ ' + obLat.toFixed(4) + ', ' + obLng.toFixed(4);
+    status.style.color = 'var(--teal)';
   }
 
-  document.addEventListener('click', function(e) {
-    var dropdown = document.getElementById('ob-addr-dropdown');
-    var input    = document.getElementById('ob-address');
-    if (dropdown && input && !input.contains(e.target) && !dropdown.contains(e.target)) {
-      dropdown.style.display = 'none';
-    }
+  document.addEventListener('click', function(e){
+    var dd    = document.getElementById('ob-addr-dropdown');
+    var input = document.getElementById('ob-address');
+    if (dd && input && !input.contains(e.target) && !dd.contains(e.target)) dd.style.display = 'none';
   });
 
-  /* ── ONBOARD VENDOR ── */
+  /* ── ONBOARD ── */
   function onboardVendor() {
     var name     = document.getElementById('ob-name').value.trim();
     var slug     = document.getElementById('ob-slug').value.trim();
@@ -628,46 +542,33 @@
     var phone    = document.getElementById('ob-phone').value.trim();
     var house    = document.getElementById('ob-house').value.trim();
     var street   = document.getElementById('ob-address').value.trim();
-
     var telegram = document.getElementById('ob-telegram').value.trim();
 
-    if (!name || !slug || !password) {
-      showToast('Name, slug and password are required', true);
-      return;
-    }
-
-    if (!obAddressConfirmed || !obLat || !obLng) {
-      showToast('Please select a street from the suggestions', true);
-      return;
-    }
+    if (!name || !slug || !password) { showToast('Name, slug and password are required', true); return; }
+    if (!obAddressConfirmed || !obLat || !obLng) { showToast('Please select a street from the suggestions', true); return; }
 
     var address = house ? house + ', ' + street : street;
-
     var btn = document.getElementById('ob-btn');
-    btn.disabled = true;
-    btn.textContent = 'Onboarding...';
+    btn.disabled = true; btn.textContent = 'Onboarding...';
 
     sbFetch('vendors', {
       method: 'POST',
       body: JSON.stringify({ name: name, slug: slug, password: password, phone: phone, address: address, lat: obLat, lng: obLng, telegram_chat_id: telegram || null }),
     })
-    .then(function(r) {
+    .then(function(r){
       if (r.ok) {
-        showToast(name + ' onboarded successfully ✓');
-        ['ob-name','ob-slug','ob-password','ob-phone','ob-house','ob-address','ob-telegram'].forEach(function(id) {
-          document.getElementById(id).value = '';
-        });
+        showToast(name + ' onboarded ✓');
+        ['ob-name','ob-slug','ob-password','ob-phone','ob-house','ob-address','ob-telegram'].forEach(function(id){ document.getElementById(id).value = ''; });
         obLat = null; obLng = null; obAddressConfirmed = false;
         document.getElementById('ob-addr-status').textContent = '';
-        loadVendors();
         loadOverview();
-        setTimeout(function() { showPage('vendors'); }, 1500);
+        setTimeout(function(){ showPage('vendors'); }, 1500);
       } else {
-        return r.json().then(function(e) { showToast(e.message || 'Onboarding failed', true); });
+        return r.json().then(function(e){ showToast(e.message || 'Onboarding failed', true); });
       }
     })
-    .catch(function() { showToast('Could not onboard vendor', true); })
-    .finally(function() { btn.disabled = false; btn.textContent = 'Onboard Laundromat'; });
+    .catch(function(){ showToast('Could not onboard vendor', true); })
+    .finally(function(){ btn.disabled = false; btn.textContent = 'Onboard Laundromat'; });
   }
 
   /* ── TOAST ── */
@@ -676,7 +577,7 @@
     t.textContent = msg;
     t.className = 'toast' + (isError ? ' error' : '');
     t.classList.add('show');
-    setTimeout(function() { t.classList.remove('show'); }, 3000);
+    setTimeout(function(){ t.classList.remove('show'); }, 3000);
   }
 </script>
 </body>
