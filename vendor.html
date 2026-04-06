@@ -168,7 +168,10 @@
     <label class="login-label">Your Slug</label>
     <input class="login-input" id="login-slug" type="text" placeholder="e.g. capperberry" autocomplete="off">
     <label class="login-label">Password</label>
-    <input class="login-input" id="login-pass" type="password" placeholder="Enter your password">
+    <div style="position:relative">
+      <input class="login-input" id="login-pass" type="password" placeholder="Enter your password" style="padding-right:48px">
+      <button onclick="togglePwd('login-pass',this)" type="button" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--gray);cursor:pointer;font-size:13px;padding:0">Show</button>
+    </div>
     <button class="login-btn" onclick="doLogin()">Sign In</button>
     <div class="login-error" id="login-error">Invalid credentials. Try again.</div>
   </div>
@@ -218,7 +221,10 @@
         <div class="stat-card"><div class="stat-label">Delivered</div><div class="stat-value green" id="s-delivered">—</div><div class="stat-sub">Completed</div></div>
       </div>
       <div class="card">
-        <div class="card-header"><div class="card-title">All Orders</div></div>
+        <div class="card-header">
+          <div class="card-title">All Orders</div>
+          <input id="order-search" type="text" placeholder="Search by Order ID..." oninput="filterOrders(this.value)" style="background:var(--navy3);border:1px solid var(--gray2);border-radius:6px;padding:7px 12px;color:var(--white);font-size:13px;outline:none;width:220px">
+        </div>
         <div id="orders-wrap"><div class="loading-state">Loading orders...</div></div>
       </div>
     </div>
@@ -353,6 +359,12 @@
     return fetch(SUPABASE_URL + '/rest/v1/' + path, opts);
   }
 
+  function togglePwd(id, btn) {
+    var input = document.getElementById(id);
+    if (input.type === 'password') { input.type = 'text'; btn.textContent = 'Hide'; }
+    else { input.type = 'password'; btn.textContent = 'Show'; }
+  }
+
   /* ── LOGIN ── */
   function doLogin() {
     var slug = document.getElementById('login-slug').value.trim().toLowerCase();
@@ -453,38 +465,41 @@
     document.getElementById('s-delivered').textContent = allOrders.filter(function(o) { return o.status === 'Delivered'; }).length;
   }
 
-  function renderOrdersTable() {
+  function renderOrdersTable(list) {
+    list = list || allOrders;
     var wrap = document.getElementById('orders-wrap');
-    if (!allOrders.length) {
-      wrap.innerHTML = '<div class="empty-state"><div style="font-size:40px;margin-bottom:12px">📭</div><div style="font-size:14px">No orders yet</div></div>';
+    if (!list.length) {
+      wrap.innerHTML = '<div class="empty-state"><div style="font-size:40px;margin-bottom:12px">📭</div><div style="font-size:14px">' + (allOrders.length ? 'No matching orders' : 'No orders yet') + '</div></div>';
       return;
     }
     var statuses = ['Pending','Picked Up','Washing','Ready','Delivered','Cancelled'];
-    var rows = allOrders.map(function(o, i) {
+    var rows = list.map(function(o, i) {
       var date = o.created_at ? new Date(o.created_at).toLocaleDateString('en-GB') : '';
       return '<tr>'
         + '<td><div class="order-id">' + (o.order_id || '—') + '</div><div style="font-size:11px;color:var(--gray);margin-top:2px">' + date + '</div></td>'
-        + '<td><div style="font-weight:600;cursor:pointer;color:var(--sky)" onclick="showCustomer(' + i + ')">' + (o.customer_name || '—') + ' ↗</div>'
-        +     '<div style="font-size:12px;color:var(--gray)">' + (o.phone || '') + '</div></td>'
+        + '<td><div style="font-weight:600;cursor:pointer;color:var(--sky)" onclick="showCustomer(\'' + o.order_id + '\')">' + (o.customer_name || '—') + ' ↗</div>'
+        +     '<div style="font-size:12px;color:var(--gray)">' + (o.phone || '') + '</div>'
+        +     '<div style="font-size:11px;color:var(--gray);max-width:180px;margin-top:2px">' + (o.address || '') + '</div></td>'
         + '<td style="font-size:12px;color:var(--gray);max-width:160px">' + (o.items || '—') + '</td>'
         + '<td><div style="font-family:var(--font-mono)">₦' + (Number(o.subtotal) || 0).toLocaleString() + '</div>'
         +     '<div style="font-size:11px;color:var(--gray)">+₦' + (Number(o.delivery_fee) || 0).toLocaleString() + ' pickup & delivery</div>'
         +     '<div style="font-size:11px;color:var(--gray)">+₦' + (Number(o.service_fee) || 0).toLocaleString() + ' service fee</div></td>'
-        + '<td><select class="status-select" onchange="updateStatus(' + i + ',this.value)">'
+        + '<td><span style="font-size:12px;color:' + ((o.payment_status==='Paid') ? 'var(--green)' : (o.payment_status==='Not Paid') ? 'var(--red)' : 'var(--amber)') + '">' + (o.payment_status || 'Pending') + '</span></td>'
+        + '<td><select class="status-select" onchange="updateStatus(\'' + o.order_id + '\',this.value)">'
         +   statuses.map(function(s) { return '<option value="' + s + '"' + (o.status === s ? ' selected' : '') + '>' + s + '</option>'; }).join('')
         + '</select></td>'
         + '</tr>';
     }).join('');
 
     wrap.innerHTML = '<table>'
-      + '<thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Amount</th><th>Status</th></tr></thead>'
+      + '<thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Amount</th><th>Payment</th><th>Status</th></tr></thead>'
       + '<tbody>' + rows + '</tbody></table>';
   }
 
-  function updateStatus(idx, newStatus) {
-    allOrders[idx].status = newStatus;
-    updateStats();
-    sbFetch('orders?order_id=eq.' + allOrders[idx].order_id, {
+  function updateStatus(orderId, newStatus) {
+    var order = allOrders.find(function(o) { return o.order_id === orderId; });
+    if (order) { order.status = newStatus; updateStats(); }
+    sbFetch('orders?order_id=eq.' + orderId, {
       method: 'PATCH',
       body: JSON.stringify({ status: newStatus }),
     })
@@ -492,9 +507,16 @@
     .catch(function() { showToast('Could not update status', true); });
   }
 
+  function filterOrders(q) {
+    q = q.trim().toLowerCase();
+    var filtered = q ? allOrders.filter(function(o) { return (o.order_id || '').toLowerCase().indexOf(q) > -1; }) : allOrders;
+    renderOrdersTable(filtered);
+  }
+
   /* ── CUSTOMER MODAL ── */
-  function showCustomer(idx) {
-    var o = allOrders[idx];
+  function showCustomer(orderId) {
+    var o = allOrders.find(function(o) { return o.order_id === orderId; });
+    if (!o) return;
     document.getElementById('md-name').textContent    = o.customer_name || '—';
     document.getElementById('md-phone').textContent   = o.phone || '—';
     document.getElementById('md-address').textContent = o.address || '—';
