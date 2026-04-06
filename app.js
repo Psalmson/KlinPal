@@ -54,6 +54,7 @@ var currentUser      = null;
 var isNewCustomer    = false;
 var orderId          = '';
 var deliveryFee      = CONFIG.BASE_DELIVERY_FEE;
+var serviceFee       = 0;
 var deliveryLabel    = 'Calculating...';
 var selectedAddress  = '';
 var selectedCoords   = null;
@@ -195,15 +196,16 @@ function calculateDeliveryFee(coords) {
       if (!routes || !routes.length) throw new Error('No route found');
       var metres      = routes[0].distance;
       var km          = parseFloat((metres / 1000).toFixed(1));
-      var roundTripKm = km * 2; // pickup + delivery = two journeys
+      var roundTripKm = km * 2;
       var baseFee     = Math.round(CONFIG.BASE_DELIVERY_FEE + CONFIG.RATE_PER_KM * roundTripKm);
-      var serviceFee  = Math.min(Math.round(baseFee * 0.2), 1000); // 20% of delivery, capped at ₦1,000
+      serviceFee      = Math.min(Math.round(baseFee * 0.2), 1000);
       deliveryFee     = baseFee + serviceFee;
       deliveryLabel   = km + ' km';
       setAddrStatus('\u2713 ' + km + ' km away', 'ok');
     })
     .catch(function() {
       deliveryFee   = CONFIG.BASE_DELIVERY_FEE;
+      serviceFee    = 0;
       deliveryLabel = 'Could not calculate';
       setAddrStatus('Could not calculate distance', 'err');
     });
@@ -254,7 +256,7 @@ function checkPhone() {
         addressConfirmed = false;
         selectedAddress  = '';
         selectedCoords   = null;
-        deliveryFee      = CONFIG.BASE_DELIVERY_FEE;
+        deliveryFee = CONFIG.BASE_DELIVERY_FEE; serviceFee = 0;
         deliveryLabel    = 'Calculating...';
         go('s-new');
       }
@@ -265,7 +267,7 @@ function checkPhone() {
       addressConfirmed = false;
       selectedAddress  = '';
       selectedCoords   = null;
-      deliveryFee      = CONFIG.BASE_DELIVERY_FEE;
+      deliveryFee = CONFIG.BASE_DELIVERY_FEE; serviceFee = 0;
       deliveryLabel    = 'Calculating...';
       go('s-new');
     });
@@ -364,7 +366,7 @@ function renderOrderScreen() {
   if (!isNewCustomer && currentUser && currentUser.address && !addressConfirmed) {
     selectedAddress  = currentUser.address;
     addressConfirmed = true;
-    deliveryFee      = CONFIG.BASE_DELIVERY_FEE;
+    deliveryFee = CONFIG.BASE_DELIVERY_FEE; serviceFee = 0;
     deliveryLabel    = 'Calculating...';
 
     // Geocode the saved address to get coords for distance calculation
@@ -511,6 +513,7 @@ function submitOrder() {
     items:         itemsStr,
     subtotal:      sub,
     delivery_fee:  deliveryFee,
+    service_fee:   serviceFee,
     total:         total,
     status:        'Pending',
   };
@@ -553,7 +556,7 @@ function resetApp() {
   addressConfirmed = false;
   selectedAddress  = '';
   selectedCoords   = null;
-  deliveryFee      = CONFIG.BASE_DELIVERY_FEE;
+  deliveryFee = CONFIG.BASE_DELIVERY_FEE; serviceFee = 0;
   deliveryLabel    = 'Calculating...';
   ['phone-input','new-name','new-email','new-house-no','new-addr','new-landmark']
     .forEach(function(id) { var el = document.getElementById(id); if (el) el.value = ''; });
