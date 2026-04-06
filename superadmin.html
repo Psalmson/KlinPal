@@ -122,7 +122,10 @@
     <div class="login-logo">klinpal</div>
     <div class="login-badge">Superadmin</div>
     <label class="login-label">Master Password</label>
-    <input class="login-input" id="login-pass" type="password" placeholder="Enter superadmin password">
+    <div style="position:relative">
+      <input class="login-input" id="login-pass" type="password" placeholder="Enter superadmin password" style="padding-right:48px">
+      <button onclick="togglePwd('login-pass',this)" type="button" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--gray);cursor:pointer;font-size:13px;padding:0">Show</button>
+    </div>
     <button class="login-btn" onclick="doLogin()">Sign In</button>
     <div class="login-error" id="login-error">Incorrect password. Try again.</div>
   </div>
@@ -207,7 +210,10 @@
           <div class="form-grid">
             <div>
               <label class="field-label">Dashboard Password</label>
-              <input class="field-input" id="ob-password" placeholder="Set a secure password">
+              <div style="position:relative">
+                <input class="field-input" id="ob-password" placeholder="Set a secure password" type="password" style="padding-right:48px">
+                <button onclick="togglePwd('ob-password',this)" type="button" style="position:absolute;right:14px;top:38%;transform:translateY(-50%);background:none;border:none;color:var(--gray);cursor:pointer;font-size:13px;padding:0">Show</button>
+              </div>
             </div>
             <div>
               <label class="field-label">Owner Phone</label>
@@ -258,7 +264,10 @@
         <div class="stat-card"><div class="stat-label">Service Fee</div><div class="stat-value" id="drill-service-fee">—</div><div class="stat-sub">Klinpal earnings</div></div>
       </div>
       <div class="card">
-        <div class="card-header"><div class="card-title">All Orders</div></div>
+        <div class="card-header">
+          <div class="card-title">All Orders</div>
+          <input id="drill-search" type="text" placeholder="Search by Order ID..." oninput="filterDrillOrders(this.value)" style="background:var(--navy3);border:1px solid var(--gray2);border-radius:6px;padding:7px 12px;color:var(--white);font-size:13px;outline:none;width:220px">
+        </div>
         <div id="drill-table"><div class="loading-state">Loading...</div></div>
       </div>
     </div>
@@ -295,6 +304,12 @@
       opts.headers = Object.assign({}, defaults.headers, options.headers);
     }
     return fetch(SUPABASE_URL + '/rest/v1/' + path, opts);
+  }
+
+  function togglePwd(id, btn) {
+    var input = document.getElementById(id);
+    if (input.type === 'password') { input.type = 'text'; btn.textContent = 'Hide'; }
+    else { input.type = 'password'; btn.textContent = 'Show'; }
   }
 
   /* ── LOGIN ── */
@@ -430,6 +445,8 @@
     document.getElementById('drill-delivery').textContent    = '—';
     document.getElementById('drill-service-fee').textContent = '—';
     document.getElementById('drill-table').innerHTML      = '<div class="loading-state">Loading orders...</div>';
+    var searchEl = document.getElementById('drill-search');
+    if (searchEl) searchEl.value = '';
     showPage('vendor-orders');
     loadVendorOrders(vendor);
   }
@@ -442,6 +459,7 @@
       .then(function(r){ return r.json(); })
       .then(function(orders){
         orders = Array.isArray(orders) ? orders : [];
+        drillOrders = orders; // store for search
 
         var pending = orders.filter(function(o){ return o.status === 'Pending'; }).length;
         var svcRev  = orders.reduce(function(a,o){ return a + (Number(o.subtotal)     || 0); }, 0);
@@ -459,28 +477,50 @@
           return;
         }
 
-        var statuses = ['Pending','Picked Up','Washing','Ready','Delivered','Cancelled'];
-        var rows = orders.map(function(o) {
-          var date = o.created_at ? new Date(o.created_at).toLocaleDateString('en-GB') : '';
-          return '<tr>'
-            + '<td><div class="mono">' + (o.order_id || '—') + '</div><div style="font-size:11px;color:var(--gray);margin-top:3px">' + date + '</div></td>'
-            + '<td><div style="font-weight:600">' + (o.customer_name || '—') + '</div>'
-            +     '<div style="font-size:12px;color:var(--gray)">' + (o.phone || '') + '</div>'
-            +     '<div style="font-size:11px;color:var(--gray);max-width:180px;margin-top:2px">' + (o.address || '') + '</div></td>'
-            + '<td style="font-size:12px;color:var(--gray);max-width:160px">' + (o.items || '—') + '</td>'
-            + '<td><span class="mono">₦' + (Number(o.subtotal) || 0).toLocaleString() + '</span>'
-            +     '<div style="font-size:11px;color:var(--gray);margin-top:3px">+₦' + (Number(o.delivery_fee) || 0).toLocaleString() + ' pickup & delivery</div>'
-            +     '<div style="font-size:11px;color:var(--amber);margin-top:2px">+₦' + (Number(o.service_fee) || 0).toLocaleString() + ' service fee</div></td>'
-            + '<td><select class="status-select" onchange="updateStatus(this,\'' + o.order_id + '\')">'
-            +   statuses.map(function(s){ return '<option value="' + s + '"' + (o.status===s?' selected':'') + '>' + s + '</option>'; }).join('')
-            + '</select></td>'
-            + '</tr>';
-        }).join('');
-
-        document.getElementById('drill-table').innerHTML =
-          '<table><thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Amount</th><th>Status</th></tr></thead><tbody>' + rows + '</tbody></table>';
+        renderDrillTable(orders);
       })
       .catch(function(e){ console.error(e); document.getElementById('drill-table').innerHTML = '<div class="empty-state"><div style="font-size:14px;color:var(--gray)">Could not load orders</div></div>'; });
+  }
+
+  var drillOrders = [];
+
+  function filterDrillOrders(q) {
+    q = q.trim().toLowerCase();
+    var filtered = q ? drillOrders.filter(function(o){ return (o.order_id || '').toLowerCase().indexOf(q) > -1; }) : drillOrders;
+    renderDrillTable(filtered);
+  }
+
+  function renderDrillTable(orders) {
+    var paymentStatuses = ['Pending','Paid','Not Paid'];
+    var statuses = ['Pending','Picked Up','Washing','Ready','Delivered','Cancelled'];
+    var rows = orders.map(function(o) {
+      var date = o.created_at ? new Date(o.created_at).toLocaleDateString('en-GB') : '';
+      return '<tr>'
+        + '<td><div class="mono">' + (o.order_id || '—') + '</div><div style="font-size:11px;color:var(--gray);margin-top:3px">' + date + '</div></td>'
+        + '<td><div style="font-weight:600">' + (o.customer_name || '—') + '</div>'
+        +     '<div style="font-size:12px;color:var(--gray)">' + (o.phone || '') + '</div>'
+        +     '<div style="font-size:11px;color:var(--gray);max-width:180px;margin-top:2px">' + (o.address || '') + '</div></td>'
+        + '<td style="font-size:12px;color:var(--gray);max-width:160px">' + (o.items || '—') + '</td>'
+        + '<td><span class="mono">₦' + (Number(o.subtotal) || 0).toLocaleString() + '</span>'
+        +     '<div style="font-size:11px;color:var(--gray);margin-top:3px">+₦' + (Number(o.delivery_fee) || 0).toLocaleString() + ' pickup & delivery</div>'
+        +     '<div style="font-size:11px;color:var(--amber);margin-top:2px">+₦' + (Number(o.service_fee) || 0).toLocaleString() + ' service fee</div></td>'
+        + '<td><select class="status-select" onchange="updatePaymentStatus(this,\'' + o.order_id + '\')">'
+        +   paymentStatuses.map(function(s){ return '<option value="' + s + '"' + ((o.payment_status||'Pending')===s?' selected':'') + '>' + s + '</option>'; }).join('')
+        + '</select></td>'
+        + '<td><select class="status-select" onchange="updateStatus(this,\'' + o.order_id + '\')">'
+        +   statuses.map(function(s){ return '<option value="' + s + '"' + (o.status===s?' selected':'') + '>' + s + '</option>'; }).join('')
+        + '</select></td>'
+        + '</tr>';
+    }).join('');
+
+    document.getElementById('drill-table').innerHTML =
+      '<table><thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Amount</th><th>Payment</th><th>Status</th></tr></thead><tbody>' + rows + '</tbody></table>';
+  }
+
+  function updatePaymentStatus(select, orderId) {
+    sbFetch('orders?order_id=eq.' + orderId, { method: 'PATCH', body: JSON.stringify({ payment_status: select.value }) })
+      .then(function(r){ showToast(r.ok ? 'Payment status updated ✓' : 'Update failed', !r.ok); })
+      .catch(function(){ showToast('Could not update payment status', true); });
   }
 
   function updateStatus(select, orderId) {
