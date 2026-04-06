@@ -485,7 +485,11 @@ function renderSummary() {
     }).join('')
     + '<div class="summary-row sub-row">'
     +   '<span>Pickup &amp; Delivery <small style="color:var(--gray-500)">' + deliveryLabel + '</small></span>'
-    +   '<span>\u20A6' + deliveryFee.toLocaleString() + '</span>'
+    +   '<span>\u20A6' + (deliveryFee - serviceFee).toLocaleString() + '</span>'
+    + '</div>'
+    + '<div class="summary-row sub-row">'
+    +   '<span>Service Fee</span>'
+    +   '<span>\u20A6' + serviceFee.toLocaleString() + '</span>'
     + '</div>'
     + '<div class="summary-row total">'
     +   '<span>Total Cost</span>'
