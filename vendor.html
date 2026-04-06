@@ -468,7 +468,7 @@
         +     '<div style="font-size:12px;color:var(--gray)">' + (o.phone || '') + '</div></td>'
         + '<td style="font-size:12px;color:var(--gray);max-width:160px">' + (o.items || '—') + '</td>'
         + '<td><div style="font-family:var(--font-mono)">₦' + (Number(o.subtotal) || 0).toLocaleString() + '</div>'
-        +     '<div style="font-size:11px;color:var(--gray)">+₦' + (Number(o.delivery_fee) || 0).toLocaleString() + ' delivery</div></td>'
+        +     '<div style="font-size:11px;color:var(--gray)">+₦' + (Number(o.delivery_fee) || 0).toLocaleString() + ' pickup & delivery</div></td>'
         + '<td><select class="status-select" onchange="updateStatus(' + i + ',this.value)">'
         +   statuses.map(function(s) { return '<option value="' + s + '"' + (o.status === s ? ' selected' : '') + '>' + s + '</option>'; }).join('')
         + '</select></td>'
