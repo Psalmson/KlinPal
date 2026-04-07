@@ -55,6 +55,7 @@ var isNewCustomer    = false;
 var orderId          = '';
 var deliveryFee      = CONFIG.BASE_DELIVERY_FEE;
 var serviceFee       = 0;
+var platformFee      = 0;
 var deliveryLabel    = 'Calculating...';
 var selectedAddress  = '';
 var selectedCoords   = null;
@@ -196,16 +197,15 @@ function calculateDeliveryFee(coords) {
       if (!routes || !routes.length) throw new Error('No route found');
       var metres      = routes[0].distance;
       var km          = parseFloat((metres / 1000).toFixed(1));
-      var roundTripKm = km * 2;
+      var roundTripKm = km * 2; // pickup + delivery = two journeys
       var baseFee     = Math.round(CONFIG.BASE_DELIVERY_FEE + CONFIG.RATE_PER_KM * roundTripKm);
-      serviceFee      = Math.min(Math.round(baseFee * 0.2), 1000);
+      serviceFee      = Math.min(Math.round(baseFee * 0.2), 1000); // global var
       deliveryFee     = baseFee + serviceFee;
       deliveryLabel   = km + ' km';
       setAddrStatus('\u2713 ' + km + ' km away', 'ok');
     })
     .catch(function() {
       deliveryFee   = CONFIG.BASE_DELIVERY_FEE;
-      serviceFee    = 0;
       deliveryLabel = 'Could not calculate';
       setAddrStatus('Could not calculate distance', 'err');
     });
@@ -227,17 +227,28 @@ function go(screenId) {
   if (screenId === 's-summary') renderSummary();
 }
 
+function goBackFromOrder() {
+  // New customers go back to personal details; returning customers go to phone entry
+  go(isNewCustomer ? 's-new' : 's-phone');
+}
+
 /* ─── STEP 1: CHECK PHONE ─── */
 function checkPhone() {
   var input = document.getElementById('phone-input');
   var err   = document.getElementById('phone-error');
   var phone = input.value.trim().replace(/\s+/g, '');
 
-  if (phone.length < 7) {
+  // Normalise +234 format to 11-digit local format
+  if (phone.startsWith('+234')) phone = '0' + phone.slice(4);
+  else if (phone.startsWith('234') && phone.length === 13) phone = '0' + phone.slice(3);
+
+  if (phone.length !== 11 || !/^\d{11}$/.test(phone)) {
     input.classList.add('input-error');
+    err.textContent = 'Please enter a valid 11-digit Nigerian phone number';
     err.style.display = 'block';
     return;
   }
+  input.value = phone; // update field with normalised number
   input.classList.remove('input-error');
   err.style.display = 'none';
   go('s-checking');
@@ -256,7 +267,7 @@ function checkPhone() {
         addressConfirmed = false;
         selectedAddress  = '';
         selectedCoords   = null;
-        deliveryFee = CONFIG.BASE_DELIVERY_FEE; serviceFee = 0;
+        deliveryFee      = CONFIG.BASE_DELIVERY_FEE;
         deliveryLabel    = 'Calculating...';
         go('s-new');
       }
@@ -267,7 +278,7 @@ function checkPhone() {
       addressConfirmed = false;
       selectedAddress  = '';
       selectedCoords   = null;
-      deliveryFee = CONFIG.BASE_DELIVERY_FEE; serviceFee = 0;
+      deliveryFee      = CONFIG.BASE_DELIVERY_FEE;
       deliveryLabel    = 'Calculating...';
       go('s-new');
     });
@@ -366,7 +377,7 @@ function renderOrderScreen() {
   if (!isNewCustomer && currentUser && currentUser.address && !addressConfirmed) {
     selectedAddress  = currentUser.address;
     addressConfirmed = true;
-    deliveryFee = CONFIG.BASE_DELIVERY_FEE; serviceFee = 0;
+    deliveryFee      = CONFIG.BASE_DELIVERY_FEE;
     deliveryLabel    = 'Calculating...';
 
     // Geocode the saved address to get coords for distance calculation
@@ -468,6 +479,7 @@ function proceedFromOrder() {
 function renderSummary() {
   var items = SERVICES.filter(function(s) { return s.qty > 0; });
   var sub   = items.reduce(function(a, s) { return a + s.price * s.qty; }, 0);
+  platformFee = Math.round(sub * 0.1); // 10% of subtotal
   var total = sub + deliveryFee;
 
   orderId = genOrderId();
@@ -518,6 +530,7 @@ function submitOrder() {
     subtotal:      sub,
     delivery_fee:  deliveryFee,
     service_fee:   serviceFee,
+    platform_fee:  platformFee,
     total:         total,
     status:        'Pending',
   };
@@ -542,17 +555,6 @@ function submitOrder() {
       .then(function(d) { console.log('Notify result:', d); })
       .catch(function(e) { console.error('Notify error:', e); });
 
-      // Open WhatsApp with pre-filled payment proof message
-      var waMsg = encodeURIComponent(
-        'Hi ' + VENDOR.name + ' 👋\n\n'
-        + 'I just placed an order and have made payment.\n\n'
-        + 'Order ID: ' + orderId + '\n'
-        + 'Amount Paid: ₦' + total.toLocaleString() + '\n'
-        + 'Pickup & Delivery Address: ' + (selectedAddress || (currentUser ? currentUser.address : '')) + '\n\n'
-        + 'Please find my payment receipt attached.'
-      );
-      window.open('https://wa.me/2349031186357?text=' + waMsg, '_blank');
-
       go('s-success');
     } else {
       alert('Something went wrong. Please try again.');
@@ -571,7 +573,9 @@ function resetApp() {
   addressConfirmed = false;
   selectedAddress  = '';
   selectedCoords   = null;
-  deliveryFee = CONFIG.BASE_DELIVERY_FEE; serviceFee = 0;
+  deliveryFee      = CONFIG.BASE_DELIVERY_FEE;
+  serviceFee       = 0;
+  platformFee      = 0;
   deliveryLabel    = 'Calculating...';
   ['phone-input','new-name','new-email','new-house-no','new-addr','new-landmark']
     .forEach(function(id) { var el = document.getElementById(id); if (el) el.value = ''; });
