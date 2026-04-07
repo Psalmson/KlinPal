@@ -157,13 +157,42 @@
         </div>
         <button class="btn btn-ghost" onclick="loadOverview()">↻ Refresh</button>
       </div>
-      <div class="stats-grid" style="grid-template-columns:repeat(6,1fr)">
+      <!-- Hero row: Klinpal Revenue + Laundromat Revenue -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+
+        <div style="background:var(--navy2);border:1px solid var(--navy3);border-radius:var(--radius);padding:20px 24px;display:flex;align-items:center">
+          <div style="flex:1">
+            <div style="font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;font-weight:500">Total Klinpal Revenue</div>
+            <div style="font-family:var(--font-head);font-size:32px;font-weight:800;color:var(--teal);letter-spacing:-1px;margin:6px 0 4px" id="stat-klinpal-total">—</div>
+            <div style="font-size:11px;color:var(--gray)">Service fee + platform fee</div>
+          </div>
+          <div style="width:1px;background:var(--navy3);align-self:stretch;margin:0 20px"></div>
+          <div style="display:flex;flex-direction:column;gap:12px;min-width:120px">
+            <div>
+              <div style="font-size:11px;color:var(--gray);margin-bottom:2px">Service fee</div>
+              <div style="font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--white)" id="stat-service-fee">—</div>
+            </div>
+            <div>
+              <div style="font-size:11px;color:var(--gray);margin-bottom:2px">Platform fee</div>
+              <div style="font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--red)" id="stat-platform-fee">—</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:var(--navy2);border:1px solid var(--navy3);border-radius:var(--radius);padding:20px 24px">
+          <div style="font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;font-weight:500">Laundromat Revenue</div>
+          <div style="font-family:var(--font-head);font-size:32px;font-weight:800;color:var(--white);letter-spacing:-1px;margin:6px 0 4px" id="stat-revenue">—</div>
+          <div style="font-size:11px;color:var(--gray)">Vendor earnings</div>
+        </div>
+
+      </div>
+
+      <!-- Small cards row -->
+      <div class="stats-grid" style="margin-bottom:28px">
         <div class="stat-card"><div class="stat-label">Laundromats</div><div class="stat-value teal" id="stat-vendors">—</div><div class="stat-sub">Onboarded</div></div>
         <div class="stat-card"><div class="stat-label">Total Orders</div><div class="stat-value" id="stat-orders">—</div><div class="stat-sub">All time</div></div>
-        <div class="stat-card"><div class="stat-label">Laundromat Revenue</div><div class="stat-value" id="stat-revenue">—</div><div class="stat-sub">Vendor earnings</div></div>
         <div class="stat-card"><div class="stat-label">Delivery Revenue</div><div class="stat-value" id="stat-delivery">—</div><div class="stat-sub">Net from delivery</div></div>
-        <div class="stat-card"><div class="stat-label">Service Fee</div><div class="stat-value" id="stat-service-fee">—</div><div class="stat-sub">Klinpal earnings</div></div>
-        <div class="stat-card"><div class="stat-label">Platform Fee</div><div class="stat-value" id="stat-platform-fee">—</div><div class="stat-sub">Klinpal commission</div></div>
+        <div class="stat-card"><div class="stat-label">Pending Orders</div><div class="stat-value" id="stat-pending">—</div><div class="stat-sub">Awaiting pickup</div></div>
       </div>
       <div class="card">
         <div class="card-header"><div class="card-title">Laundromat Performance</div></div>
@@ -257,12 +286,42 @@
         </div>
         <button class="btn btn-ghost" onclick="loadVendorOrders(currentDrillVendor)">↻ Refresh</button>
       </div>
-      <div class="stats-grid" style="grid-template-columns:repeat(5,1fr)">
+      <!-- Hero row -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+
+        <div style="background:var(--navy2);border:1px solid var(--navy3);border-radius:var(--radius);padding:20px 24px;display:flex;align-items:center">
+          <div style="flex:1">
+            <div style="font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;font-weight:500">Total Klinpal Revenue</div>
+            <div style="font-family:var(--font-head);font-size:32px;font-weight:800;color:var(--teal);letter-spacing:-1px;margin:6px 0 4px" id="drill-klinpal-total">—</div>
+            <div style="font-size:11px;color:var(--gray)">Service fee + platform fee</div>
+          </div>
+          <div style="width:1px;background:var(--navy3);align-self:stretch;margin:0 20px"></div>
+          <div style="display:flex;flex-direction:column;gap:12px;min-width:120px">
+            <div>
+              <div style="font-size:11px;color:var(--gray);margin-bottom:2px">Service fee</div>
+              <div style="font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--white)" id="drill-service-fee">—</div>
+            </div>
+            <div>
+              <div style="font-size:11px;color:var(--gray);margin-bottom:2px">Platform fee</div>
+              <div style="font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--red)" id="drill-service-fee-platform">—</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:var(--navy2);border:1px solid var(--navy3);border-radius:var(--radius);padding:20px 24px">
+          <div style="font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;font-weight:500">Laundromat Revenue</div>
+          <div style="font-family:var(--font-head);font-size:32px;font-weight:800;color:var(--white);letter-spacing:-1px;margin:6px 0 4px" id="drill-revenue">—</div>
+          <div style="font-size:11px;color:var(--gray)">Vendor earnings</div>
+        </div>
+
+      </div>
+
+      <!-- Small cards row -->
+      <div class="stats-grid" style="margin-bottom:28px">
         <div class="stat-card"><div class="stat-label">Total Orders</div><div class="stat-value teal" id="drill-total">—</div></div>
         <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value" id="drill-pending">—</div></div>
-        <div class="stat-card"><div class="stat-label">Laundromat Revenue</div><div class="stat-value" id="drill-revenue">—</div><div class="stat-sub">Vendor earnings</div></div>
         <div class="stat-card"><div class="stat-label">Delivery Revenue</div><div class="stat-value" id="drill-delivery">—</div><div class="stat-sub">Net from delivery</div></div>
-        <div class="stat-card"><div class="stat-label">Service Fee</div><div class="stat-value" id="drill-service-fee">—</div><div class="stat-sub">Klinpal earnings</div></div>
+        <div class="stat-card"><div class="stat-label">Delivered</div><div class="stat-value green" id="drill-delivered">—</div></div>
       </div>
       <div class="card">
         <div class="card-header" style="flex-wrap:wrap;gap:10px">
@@ -367,7 +426,7 @@
 
   /* ── OVERVIEW ── */
   function loadOverview() {
-    ['stat-vendors','stat-orders','stat-revenue','stat-delivery','stat-service-fee','stat-platform-fee'].forEach(function(id) {
+    ['stat-vendors','stat-orders','stat-revenue','stat-delivery','stat-service-fee','stat-platform-fee','stat-klinpal-total','stat-pending'].forEach(function(id) {
       document.getElementById(id).textContent = '…';
     });
     document.getElementById('overview-table').innerHTML = '<div class="loading-state">Loading...</div>';
@@ -387,12 +446,15 @@
         var totDel      = orders.reduce(function(a,o){ return a + (Number(o.delivery_fee)  || 0); }, 0);
         var totFee      = orders.reduce(function(a,o){ return a + (Number(o.service_fee)   || 0); }, 0);
         var totPlatform = orders.reduce(function(a,o){ return a + (Number(o.platform_fee)  || 0); }, 0);
+        var totPending  = orders.filter(function(o){ return o.status === 'Pending'; }).length;
 
         document.getElementById('stat-orders').textContent        = orders.length;
         document.getElementById('stat-revenue').textContent       = '₦' + totSvc.toLocaleString();
         document.getElementById('stat-delivery').textContent      = '₦' + totDel.toLocaleString();
         document.getElementById('stat-service-fee').textContent   = '₦' + totFee.toLocaleString();
         document.getElementById('stat-platform-fee').textContent  = '₦' + totPlatform.toLocaleString();
+        document.getElementById('stat-klinpal-total').textContent = '₦' + (totFee + totPlatform).toLocaleString();
+        document.getElementById('stat-pending').textContent       = totPending;
 
         if (!allVendors.length) {
           document.getElementById('overview-table').innerHTML = '<div class="empty-state"><div style="font-size:14px">No laundromats yet</div></div>';
@@ -461,12 +523,15 @@
     currentDrillVendor = vendor;
     document.getElementById('drill-title').textContent    = vendor.name + ' — Orders';
     document.getElementById('drill-subtitle').textContent = '/' + vendor.slug;
-    document.getElementById('drill-total').textContent       = '—';
-    document.getElementById('drill-pending').textContent     = '—';
-    document.getElementById('drill-revenue').textContent     = '—';
-    document.getElementById('drill-delivery').textContent    = '—';
-    document.getElementById('drill-service-fee').textContent = '—';
-    document.getElementById('drill-table').innerHTML      = '<div class="loading-state">Loading orders...</div>';
+    document.getElementById('drill-total').textContent                = '—';
+    document.getElementById('drill-pending').textContent              = '—';
+    document.getElementById('drill-delivered').textContent            = '—';
+    document.getElementById('drill-revenue').textContent              = '—';
+    document.getElementById('drill-delivery').textContent             = '—';
+    document.getElementById('drill-service-fee').textContent          = '—';
+    document.getElementById('drill-service-fee-platform').textContent = '—';
+    document.getElementById('drill-klinpal-total').textContent        = '—';
+    document.getElementById('drill-table').innerHTML                  = '<div class="loading-state">Loading orders...</div>';
     var searchEl = document.getElementById('drill-search');
     var payEl    = document.getElementById('drill-filter-payment');
     var statEl   = document.getElementById('drill-filter-status');
@@ -487,16 +552,21 @@
         orders = Array.isArray(orders) ? orders : [];
         drillOrders = orders; // store for search
 
-        var pending = orders.filter(function(o){ return o.status === 'Pending'; }).length;
-        var svcRev  = orders.reduce(function(a,o){ return a + (Number(o.subtotal)     || 0); }, 0);
-        var delRev  = orders.reduce(function(a,o){ return a + (Number(o.delivery_fee) || 0); }, 0);
-        var feeRev  = orders.reduce(function(a,o){ return a + (Number(o.service_fee)  || 0); }, 0);
+        var pending   = orders.filter(function(o){ return o.status === 'Pending'; }).length;
+        var delivered = orders.filter(function(o){ return o.status === 'Delivered'; }).length;
+        var svcRev    = orders.reduce(function(a,o){ return a + (Number(o.subtotal)     || 0); }, 0);
+        var delRev    = orders.reduce(function(a,o){ return a + (Number(o.delivery_fee) || 0); }, 0);
+        var feeRev    = orders.reduce(function(a,o){ return a + (Number(o.service_fee)  || 0); }, 0);
+        var platRev   = orders.reduce(function(a,o){ return a + (Number(o.platform_fee) || 0); }, 0);
 
-        document.getElementById('drill-total').textContent       = orders.length;
-        document.getElementById('drill-pending').textContent     = pending;
-        document.getElementById('drill-revenue').textContent     = '₦' + svcRev.toLocaleString();
-        document.getElementById('drill-delivery').textContent    = '₦' + delRev.toLocaleString();
-        document.getElementById('drill-service-fee').textContent = '₦' + feeRev.toLocaleString();
+        document.getElementById('drill-total').textContent                = orders.length;
+        document.getElementById('drill-pending').textContent              = pending;
+        document.getElementById('drill-delivered').textContent            = delivered;
+        document.getElementById('drill-revenue').textContent              = '₦' + svcRev.toLocaleString();
+        document.getElementById('drill-delivery').textContent             = '₦' + delRev.toLocaleString();
+        document.getElementById('drill-service-fee').textContent          = '₦' + feeRev.toLocaleString();
+        document.getElementById('drill-service-fee-platform').textContent = '₦' + platRev.toLocaleString();
+        document.getElementById('drill-klinpal-total').textContent        = '₦' + (feeRev + platRev).toLocaleString();
 
         if (!orders.length) {
           document.getElementById('drill-table').innerHTML = '<div class="empty-state"><div style="font-size:14px;color:var(--gray)">No orders yet</div></div>';
