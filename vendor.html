@@ -164,14 +164,36 @@
 <div id="login-screen">
   <div class="login-card">
     <div class="login-logo">klinpal</div>
-    <div class="login-sub">Laundromat Dashboard — Sign in to continue</div>
-    <label class="login-label">Your Slug</label>
-    <input class="login-input" id="login-slug" type="text" placeholder="e.g. capperberry" autocomplete="off">
-    <label class="login-label">Password</label>
-    <div style="position:relative">
-      <input class="login-input" id="login-pass" type="password" placeholder="Enter your password" style="padding-right:48px">
-      <button onclick="togglePwd('login-pass',this)" type="button" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--gray);cursor:pointer;font-size:13px;padding:0">Show</button>
+
+    <!-- Toggle -->
+    <div style="display:flex;background:var(--navy3);border-radius:8px;padding:4px;margin-bottom:28px">
+      <button id="toggle-vendor" onclick="setLoginMode('vendor')" style="flex:1;padding:8px;border:none;border-radius:6px;font-family:var(--font-head);font-size:13px;font-weight:700;cursor:pointer;background:var(--teal);color:var(--navy);transition:all 0.15s">Vendor</button>
+      <button id="toggle-staff" onclick="setLoginMode('staff')" style="flex:1;padding:8px;border:none;border-radius:6px;font-family:var(--font-head);font-size:13px;font-weight:700;cursor:pointer;background:transparent;color:var(--gray);transition:all 0.15s">Staff</button>
     </div>
+
+    <label class="login-label">Laundromat Slug</label>
+    <input class="login-input" id="login-slug" type="text" placeholder="e.g. capperberry" autocomplete="off">
+
+    <!-- Vendor fields -->
+    <div id="vendor-fields">
+      <label class="login-label">Password</label>
+      <div style="position:relative">
+        <input class="login-input" id="login-pass" type="password" placeholder="Enter your password" style="padding-right:48px">
+        <button onclick="togglePwd('login-pass',this)" type="button" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--gray);cursor:pointer;font-size:13px;padding:0">Show</button>
+      </div>
+    </div>
+
+    <!-- Staff fields -->
+    <div id="staff-fields" style="display:none">
+      <label class="login-label">Phone Number</label>
+      <input class="login-input" id="login-phone" type="tel" placeholder="e.g. 08012345678" autocomplete="off">
+      <label class="login-label">PIN</label>
+      <div style="position:relative">
+        <input class="login-input" id="login-pin" type="password" placeholder="Enter your PIN" style="padding-right:48px">
+        <button onclick="togglePwd('login-pin',this)" type="button" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--gray);cursor:pointer;font-size:13px;padding:0">Show</button>
+      </div>
+    </div>
+
     <button class="login-btn" onclick="doLogin()">Sign In</button>
     <div class="login-error" id="login-error">Invalid credentials. Try again.</div>
   </div>
@@ -190,6 +212,7 @@
       <button class="nav-item" onclick="showPage('revenue')" id="nav-revenue"><span class="icon">💰</span> Revenue</button>
       <button class="nav-item" onclick="showPage('services')" id="nav-services"><span class="icon">⚙️</span> Services & Pricing</button>
       <button class="nav-item" onclick="showPage('notifications')" id="nav-notifications"><span class="icon">🔔</span> Notifications</button>
+      <button class="nav-item" onclick="showPage('staff')" id="nav-staff"><span class="icon">👥</span> Staff</button>
     </nav>
     <div class="sidebar-foot">
       <button class="nav-item" onclick="doLogout()"><span class="icon">🚪</span> Sign Out</button>
@@ -341,6 +364,49 @@
       </div>
     </div>
 
+    <!-- STAFF -->
+    <div class="page" id="page-staff">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Staff</div>
+          <div class="page-subtitle">Manage staff access to your orders dashboard</div>
+        </div>
+      </div>
+
+      <!-- Add staff form -->
+      <div class="add-service-card" style="margin-bottom:24px">
+        <div class="add-service-title">+ Add Staff Member</div>
+        <div class="field-row">
+          <div>
+            <label class="field-label">Full Name</label>
+            <input class="field-input" id="staff-name" placeholder="e.g. Amara Okonkwo">
+          </div>
+          <div>
+            <label class="field-label">Phone Number</label>
+            <input class="field-input" id="staff-phone" type="tel" placeholder="e.g. 08012345678">
+          </div>
+        </div>
+        <div class="field-row">
+          <div>
+            <label class="field-label">PIN</label>
+            <div style="position:relative">
+              <input class="field-input" id="staff-pin" type="password" placeholder="Set a numeric PIN" style="padding-right:48px">
+              <button onclick="togglePwd('staff-pin',this)" type="button" style="position:absolute;right:14px;top:35%;transform:translateY(-50%);background:none;border:none;color:var(--gray);cursor:pointer;font-size:13px;padding:0">Show</button>
+            </div>
+          </div>
+          <div style="display:flex;align-items:flex-end">
+            <button class="save-btn" onclick="addStaff()">Add Staff</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Staff list -->
+      <div class="card">
+        <div class="card-header"><div class="card-title">Current Staff</div></div>
+        <div id="staff-list"><div class="loading-state">Loading...</div></div>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -366,6 +432,9 @@
 
   var currentVendor = null;
   var allOrders     = [];
+  var isStaffSession = false;
+  var currentStaff  = null;
+  var loginMode     = 'vendor';
   var services      = [
     { id: 'express', name: 'Express Wash', price: 300, active: true },
     { id: 'fold',    name: 'Wash + Fold',  price: 300, active: true },
@@ -396,58 +465,118 @@
     else { input.type = 'password'; btn.textContent = 'Show'; }
   }
 
+  function setLoginMode(mode) {
+    loginMode = mode;
+    document.getElementById('vendor-fields').style.display = mode === 'vendor' ? 'block' : 'none';
+    document.getElementById('staff-fields').style.display  = mode === 'staff'  ? 'block' : 'none';
+    document.getElementById('toggle-vendor').style.background = mode === 'vendor' ? 'var(--teal)' : 'transparent';
+    document.getElementById('toggle-vendor').style.color      = mode === 'vendor' ? 'var(--navy)' : 'var(--gray)';
+    document.getElementById('toggle-staff').style.background  = mode === 'staff'  ? 'var(--teal)' : 'transparent';
+    document.getElementById('toggle-staff').style.color       = mode === 'staff'  ? 'var(--navy)' : 'var(--gray)';
+    document.getElementById('login-error').style.display = 'none';
+  }
+
   /* ── LOGIN ── */
   function doLogin() {
     var slug = document.getElementById('login-slug').value.trim().toLowerCase();
-    var pass = document.getElementById('login-pass').value.trim();
     var err  = document.getElementById('login-error');
-    if (!slug || !pass) { err.style.display = 'block'; return; }
 
-    sbFetch('vendors?slug=eq.' + encodeURIComponent(slug) + '&password=eq.' + encodeURIComponent(pass) + '&limit=1&select=*')
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (!Array.isArray(data) || !data.length) { err.style.display = 'block'; return; }
+    if (loginMode === 'vendor') {
+      var pass = document.getElementById('login-pass').value.trim();
+      if (!slug || !pass) { err.style.display = 'block'; return; }
 
-        currentVendor = data[0];
-        err.style.display = 'none';
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('app').style.display = 'block';
+      sbFetch('vendors?slug=eq.' + encodeURIComponent(slug) + '&password=eq.' + encodeURIComponent(pass) + '&limit=1&select=*')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (!Array.isArray(data) || !data.length) { err.style.display = 'block'; return; }
+          isStaffSession = false;
+          currentStaff   = null;
+          bootVendorSession(data[0]);
+        })
+        .catch(function() { err.style.display = 'block'; });
 
-        // Populate sidebar
-        document.getElementById('sidebar-name').textContent = currentVendor.name;
-        document.getElementById('sidebar-slug').textContent = '/' + currentVendor.slug;
+    } else {
+      var phone = document.getElementById('login-phone').value.trim().replace(/\s+/g,'');
+      var pin   = document.getElementById('login-pin').value.trim();
+      if (!slug || !phone || !pin) { err.style.display = 'block'; return; }
 
-        // Customer link
-        var customerUrl = window.location.origin + '/?vendor=' + currentVendor.slug;
-        document.getElementById('customer-link').textContent = customerUrl;
+      // First find the vendor by slug
+      sbFetch('vendors?slug=eq.' + encodeURIComponent(slug) + '&limit=1&select=*')
+        .then(function(r) { return r.json(); })
+        .then(function(vdata) {
+          if (!Array.isArray(vdata) || !vdata.length) { err.style.display = 'block'; return; }
+          var vendor = vdata[0];
+          // Then check staff record
+          return sbFetch('vendor_staff?vendor_id=eq.' + vendor.id + '&phone=eq.' + encodeURIComponent(phone) + '&pin=eq.' + encodeURIComponent(pin) + '&active=eq.true&limit=1&select=*')
+            .then(function(r) { return r.json(); })
+            .then(function(sdata) {
+              if (!Array.isArray(sdata) || !sdata.length) { err.style.display = 'block'; return; }
+              isStaffSession = true;
+              currentStaff   = sdata[0];
+              bootVendorSession(vendor);
+            });
+        })
+        .catch(function() { err.style.display = 'block'; });
+    }
+  }
 
-        // Telegram
-        if (currentVendor.telegram_chat_id) {
-          document.getElementById('telegram-chat-id').value = currentVendor.telegram_chat_id;
-        }
+  function bootVendorSession(vendor) {
+    currentVendor = vendor;
+    document.getElementById('login-error').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
 
-        // Services
-        if (currentVendor.services && currentVendor.services.length) {
-          services = currentVendor.services;
-        }
-        renderServicesEditor();
+    // Sidebar
+    document.getElementById('sidebar-name').textContent = isStaffSession
+      ? currentStaff.name
+      : currentVendor.name;
+    document.getElementById('sidebar-slug').textContent = isStaffSession
+      ? 'Staff · /' + currentVendor.slug
+      : '/' + currentVendor.slug;
 
-        // Load orders
-        loadOrders();
-      })
-      .catch(function() { err.style.display = 'block'; });
+    // Hide/show nav items based on session type
+    var staffOnly = isStaffSession;
+    document.getElementById('nav-revenue').style.display       = staffOnly ? 'none' : '';
+    document.getElementById('nav-services').style.display      = staffOnly ? 'none' : '';
+    document.getElementById('nav-notifications').style.display = staffOnly ? 'none' : '';
+    document.getElementById('nav-staff').style.display         = staffOnly ? 'none' : '';
+
+    // Customer link
+    var customerUrl = window.location.origin + '/?vendor=' + currentVendor.slug;
+    document.getElementById('customer-link').textContent = customerUrl;
+
+    // Telegram & services (vendor only)
+    if (!isStaffSession) {
+      if (currentVendor.telegram_chat_id) {
+        document.getElementById('telegram-chat-id').value = currentVendor.telegram_chat_id;
+      }
+      if (currentVendor.services && currentVendor.services.length) {
+        services = currentVendor.services;
+      }
+      renderServicesEditor();
+      loadStaff();
+    }
+
+    loadOrders();
   }
 
   document.getElementById('login-slug').addEventListener('keydown', function(e) { if (e.key === 'Enter') document.getElementById('login-pass').focus(); });
   document.getElementById('login-pass').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
+  document.getElementById('login-pin').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
 
   function doLogout() {
-    currentVendor = null;
-    allOrders     = [];
+    currentVendor  = null;
+    currentStaff   = null;
+    isStaffSession = false;
+    allOrders      = [];
+    loginMode      = 'vendor';
+    setLoginMode('vendor');
     document.getElementById('app').style.display = 'none';
     document.getElementById('login-screen').style.display = 'flex';
-    document.getElementById('login-slug').value = '';
-    document.getElementById('login-pass').value = '';
+    document.getElementById('login-slug').value  = '';
+    document.getElementById('login-pass').value  = '';
+    document.getElementById('login-phone').value = '';
+    document.getElementById('login-pin').value   = '';
     // Reset nav
     document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
     document.getElementById('nav-orders').classList.add('active');
@@ -464,6 +593,7 @@
     window.scrollTo(0, 0);
     if (name === 'revenue')  renderRevenue();
     if (name === 'services') renderServicesEditor();
+    if (name === 'staff')    loadStaff();
   }
 
   /* ── LOAD ORDERS ── */
@@ -519,7 +649,9 @@
         + '<td><span style="font-size:12px;color:' + ((o.payment_status==='Paid') ? 'var(--green)' : (o.payment_status==='Not Paid') ? 'var(--red)' : 'var(--amber)') + '">' + (o.payment_status || 'Pending') + '</span></td>'
         + '<td><select class="status-select" onchange="updateStatus(\'' + o.order_id + '\',this.value)">'
         +   statuses.map(function(s) { return '<option value="' + s + '"' + (o.status === s ? ' selected' : '') + '>' + s + '</option>'; }).join('')
-        + '</select></td>'
+        + '</select>'
+        + (o.last_updated_by ? '<div style="font-size:10px;color:var(--gray);margin-top:4px">by ' + o.last_updated_by + '</div>' : '')
+        + '</td>'
         + '</tr>';
     }).join('');
 
@@ -531,9 +663,10 @@
   function updateStatus(orderId, newStatus) {
     var order = allOrders.find(function(o) { return o.order_id === orderId; });
     if (order) { order.status = newStatus; updateStats(); }
+    var updatedBy = isStaffSession ? currentStaff.name : (currentVendor ? currentVendor.name : '');
     sbFetch('orders?order_id=eq.' + orderId, {
       method: 'PATCH',
-      body: JSON.stringify({ status: newStatus }),
+      body: JSON.stringify({ status: newStatus, last_updated_by: updatedBy }),
     })
     .then(function(r) { showToast(r.ok ? 'Status updated ✓' : 'Update failed', !r.ok); })
     .catch(function() { showToast('Could not update status', true); });
@@ -706,7 +839,72 @@
     .catch(function() { showToast('Could not save', true); });
   }
 
-  /* ── TOAST ── */
+  /* ── STAFF MANAGEMENT ── */
+  function loadStaff() {
+    document.getElementById('staff-list').innerHTML = '<div class="loading-state">Loading...</div>';
+    sbFetch('vendor_staff?vendor_id=eq.' + currentVendor.id + '&order=created_at.asc&select=*')
+      .then(function(r) { return r.json(); })
+      .then(function(data) { renderStaffList(Array.isArray(data) ? data : []); })
+      .catch(function() { document.getElementById('staff-list').innerHTML = '<div class="empty-state"><div style="font-size:13px">Could not load staff</div></div>'; });
+  }
+
+  function renderStaffList(staffList) {
+    var wrap = document.getElementById('staff-list');
+    if (!staffList.length) {
+      wrap.innerHTML = '<div class="empty-state"><div style="font-size:40px;margin-bottom:12px">👥</div><div style="font-size:14px">No staff added yet</div></div>';
+      return;
+    }
+    wrap.innerHTML = '<table>'
+      + '<thead><tr><th>Name</th><th>Phone</th><th>Role</th><th>Status</th><th></th></tr></thead>'
+      + '<tbody>' + staffList.map(function(s) {
+        return '<tr>'
+          + '<td style="font-weight:600">' + s.name + '</td>'
+          + '<td style="font-size:13px;color:var(--gray)">' + s.phone + '</td>'
+          + '<td><span style="font-size:11px;background:rgba(0,201,167,0.12);color:var(--teal);padding:3px 8px;border-radius:4px">Orders Only</span></td>'
+          + '<td><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"' + (s.active ? ' checked' : '') + ' onchange="toggleStaff(\'' + s.id + '\',this.checked)" style="width:16px;height:16px;accent-color:var(--teal)"><span style="font-size:13px;color:' + (s.active ? 'var(--green)' : 'var(--gray)') + '">' + (s.active ? 'Active' : 'Inactive') + '</span></label></td>'
+          + '<td><button class="delete-btn" onclick="removeStaff(\'' + s.id + '\',\'' + s.name + '\')">Remove</button></td>'
+          + '</tr>';
+      }).join('') + '</tbody></table>';
+  }
+
+  function addStaff() {
+    var name  = document.getElementById('staff-name').value.trim();
+    var phone = document.getElementById('staff-phone').value.trim().replace(/\s+/g,'');
+    var pin   = document.getElementById('staff-pin').value.trim();
+    if (!name)  { showToast('Enter staff name', true); return; }
+    if (!phone) { showToast('Enter phone number', true); return; }
+    if (!pin)   { showToast('Set a PIN', true); return; }
+
+    sbFetch('vendor_staff', {
+      method: 'POST',
+      body: JSON.stringify({ vendor_id: currentVendor.id, name: name, phone: phone, pin: pin, role: 'orders_only', active: true }),
+    })
+    .then(function(r) {
+      if (r.ok) {
+        document.getElementById('staff-name').value  = '';
+        document.getElementById('staff-phone').value = '';
+        document.getElementById('staff-pin').value   = '';
+        showToast('Staff added ✓');
+        loadStaff();
+      } else {
+        r.json().then(function(e) { showToast(e.message && e.message.indexOf('unique') > -1 ? 'This phone number is already registered' : 'Could not add staff', true); });
+      }
+    })
+    .catch(function() { showToast('Could not add staff', true); });
+  }
+
+  function toggleStaff(id, active) {
+    sbFetch('vendor_staff?id=eq.' + id, { method: 'PATCH', body: JSON.stringify({ active: active }) })
+      .then(function(r) { showToast(r.ok ? (active ? 'Staff activated ✓' : 'Staff deactivated ✓') : 'Update failed', !r.ok); loadStaff(); })
+      .catch(function() { showToast('Could not update', true); });
+  }
+
+  function removeStaff(id, name) {
+    if (!confirm('Remove "' + name + '" from staff?')) return;
+    sbFetch('vendor_staff?id=eq.' + id, { method: 'DELETE' })
+      .then(function(r) { showToast(r.ok ? 'Staff removed ✓' : 'Could not remove', !r.ok); loadStaff(); })
+      .catch(function() { showToast('Could not remove', true); });
+  }
   function showToast(msg, isError) {
     var t = document.getElementById('toast');
     t.textContent = msg;
