@@ -221,9 +221,26 @@
         <div class="stat-card"><div class="stat-label">Delivered</div><div class="stat-value green" id="s-delivered">—</div><div class="stat-sub">Completed</div></div>
       </div>
       <div class="card">
-        <div class="card-header">
+        <div class="card-header" style="flex-wrap:wrap;gap:10px">
           <div class="card-title">All Orders</div>
-          <input id="order-search" type="text" placeholder="Search by Order ID..." oninput="filterOrders(this.value)" style="background:var(--navy3);border:1px solid var(--gray2);border-radius:6px;padding:7px 12px;color:var(--white);font-size:13px;outline:none;width:220px">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <input id="order-search" type="text" placeholder="Search Order ID..." oninput="applyFilters()" style="background:var(--navy3);border:1px solid var(--gray2);border-radius:6px;padding:7px 12px;color:var(--white);font-size:13px;outline:none;width:160px">
+            <select id="filter-payment" onchange="applyFilters()" style="background:var(--navy3);border:1px solid var(--gray2);border-radius:6px;padding:7px 10px;color:var(--white);font-size:13px;outline:none;cursor:pointer">
+              <option value="">All Payments</option>
+              <option value="Paid">Paid</option>
+              <option value="Pending">Pending</option>
+              <option value="Not Paid">Not Paid</option>
+            </select>
+            <select id="filter-status" onchange="applyFilters()" style="background:var(--navy3);border:1px solid var(--gray2);border-radius:6px;padding:7px 10px;color:var(--white);font-size:13px;outline:none;cursor:pointer">
+              <option value="">All Order Statuses</option>
+              <option value="Pending">Pending</option>
+              <option value="Picked Up">Picked Up</option>
+              <option value="Washing">Washing</option>
+              <option value="Ready">Ready</option>
+              <option value="Delivered">Delivered</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+          </div>
         </div>
         <div id="orders-wrap"><div class="loading-state">Loading orders...</div></div>
       </div>
@@ -238,9 +255,23 @@
         </div>
       </div>
       <div class="highlight-card">
-        <div class="highlight-label">Total Revenue</div>
+        <div class="highlight-label">Vendor Earnings</div>
         <div class="highlight-value" id="rev-total">—</div>
-        <div class="highlight-sub">Total earned from laundry services</div>
+        <div class="highlight-sub">Subtotal minus platform fee (10%)</div>
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(0,201,167,0.2);display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+          <div>
+            <div style="font-size:11px;color:var(--green);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;margin-bottom:4px">Paid</div>
+            <div style="font-family:var(--font-head);font-size:20px;font-weight:700;color:var(--green)" id="rev-paid">—</div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--amber);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;margin-bottom:4px">Pending</div>
+            <div style="font-family:var(--font-head);font-size:20px;font-weight:700;color:var(--amber)" id="rev-pending-pay">—</div>
+          </div>
+          <div>
+            <div style="font-size:11px;color:var(--red);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;margin-bottom:4px">Not Paid</div>
+            <div style="font-family:var(--font-head);font-size:20px;font-weight:700;color:var(--red)" id="rev-not-paid">—</div>
+          </div>
+        </div>
       </div>
       <div class="stats-grid">
         <div class="stat-card"><div class="stat-label">Total Orders</div><div class="stat-value" id="rev-orders">—</div><div class="stat-sub">All time</div></div>
@@ -483,7 +514,8 @@
         + '<td style="font-size:12px;color:var(--gray);max-width:160px">' + (o.items || '—') + '</td>'
         + '<td><div style="font-family:var(--font-mono)">₦' + (Number(o.subtotal) || 0).toLocaleString() + '</div>'
         +     '<div style="font-size:11px;color:var(--gray)">+₦' + (Number(o.delivery_fee) || 0).toLocaleString() + ' pickup & delivery</div>'
-        +     '<div style="font-size:11px;color:var(--gray)">+₦' + (Number(o.service_fee) || 0).toLocaleString() + ' service fee</div></td>'
+        +     '<div style="font-size:11px;color:var(--gray)">+₦' + (Number(o.service_fee) || 0).toLocaleString() + ' service fee</div>'
+        +     '<div style="font-size:11px;color:var(--red)">-₦' + (Number(o.platform_fee) || 0).toLocaleString() + ' platform fee</div></td>'
         + '<td><span style="font-size:12px;color:' + ((o.payment_status==='Paid') ? 'var(--green)' : (o.payment_status==='Not Paid') ? 'var(--red)' : 'var(--amber)') + '">' + (o.payment_status || 'Pending') + '</span></td>'
         + '<td><select class="status-select" onchange="updateStatus(\'' + o.order_id + '\',this.value)">'
         +   statuses.map(function(s) { return '<option value="' + s + '"' + (o.status === s ? ' selected' : '') + '>' + s + '</option>'; }).join('')
@@ -492,7 +524,7 @@
     }).join('');
 
     wrap.innerHTML = '<table>'
-      + '<thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Amount</th><th>Payment</th><th>Status</th></tr></thead>'
+      + '<thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Amount</th><th>Payment</th><th>Order Status</th></tr></thead>'
       + '<tbody>' + rows + '</tbody></table>';
   }
 
@@ -507,9 +539,16 @@
     .catch(function() { showToast('Could not update status', true); });
   }
 
-  function filterOrders(q) {
-    q = q.trim().toLowerCase();
-    var filtered = q ? allOrders.filter(function(o) { return (o.order_id || '').toLowerCase().indexOf(q) > -1; }) : allOrders;
+  function applyFilters() {
+    var q       = (document.getElementById('order-search').value || '').trim().toLowerCase();
+    var payment = (document.getElementById('filter-payment').value || '');
+    var status  = (document.getElementById('filter-status').value || '');
+    var filtered = allOrders.filter(function(o) {
+      var matchQ = !q || (o.order_id || '').toLowerCase().indexOf(q) > -1;
+      var matchP = !payment || (o.payment_status || 'Pending') === payment;
+      var matchS = !status  || o.status === status;
+      return matchQ && matchP && matchS;
+    });
     renderOrdersTable(filtered);
   }
 
@@ -528,22 +567,37 @@
 
   /* ── REVENUE ── */
   function renderRevenue() {
-    var servicesRev   = 0;
+    var servicesRev   = 0, totalPlatformFee = 0;
     var serviceTotals = {}, statusCount = {};
+    var paidRev = 0, pendingRev = 0, notPaidRev = 0;
 
     if (!allOrders.length) {
-      document.getElementById('rev-total').textContent     = '₦0';
-      document.getElementById('rev-orders').textContent    = '0';
-      document.getElementById('rev-avg').textContent       = '₦0';
-      document.getElementById('rev-top').textContent       = '—';
-      document.getElementById('rev-delivered').textContent = '0';
-      document.getElementById('rev-by-service').innerHTML  = '<div style="color:var(--gray);font-size:13px;padding:8px 0">No orders yet</div>';
-      document.getElementById('rev-breakdown').innerHTML   = '<div style="color:var(--gray);font-size:13px;padding:8px 0">No orders yet</div>';
+      document.getElementById('rev-total').textContent      = '₦0';
+      document.getElementById('rev-paid').textContent       = '₦0';
+      document.getElementById('rev-pending-pay').textContent = '₦0';
+      document.getElementById('rev-not-paid').textContent   = '₦0';
+      document.getElementById('rev-orders').textContent     = '0';
+      document.getElementById('rev-avg').textContent        = '₦0';
+      document.getElementById('rev-top').textContent        = '—';
+      document.getElementById('rev-delivered').textContent  = '0';
+      document.getElementById('rev-by-service').innerHTML   = '<div style="color:var(--gray);font-size:13px;padding:8px 0">No orders yet</div>';
+      document.getElementById('rev-breakdown').innerHTML    = '<div style="color:var(--gray);font-size:13px;padding:8px 0">No orders yet</div>';
       return;
     }
 
     allOrders.forEach(function(o) {
-      servicesRev += (Number(o.subtotal) || 0);
+      var sub  = Number(o.subtotal)     || 0;
+      var pFee = Number(o.platform_fee) || 0;
+      var net  = sub - pFee;
+      servicesRev      += sub;
+      totalPlatformFee += pFee;
+
+      // Payment breakdown by net payout
+      var ps = o.payment_status || 'Pending';
+      if (ps === 'Paid')     paidRev    += net;
+      else if (ps === 'Not Paid') notPaidRev += net;
+      else                   pendingRev += net;
+
       if (o.items) {
         o.items.split(',').forEach(function(item) {
           var m = item.trim().match(/^(\d+)x\s+(.+)$/);
@@ -554,16 +608,20 @@
       statusCount[st] = (statusCount[st] || 0) + 1;
     });
 
-    var avgOrder  = Math.round(servicesRev / allOrders.length);
-    var delivered = statusCount['Delivered'] || 0;
-    var topSvc    = '—', topCount = 0;
+    var vendorPayout = servicesRev - totalPlatformFee;
+    var avgOrder     = Math.round(vendorPayout / allOrders.length);
+    var delivered    = statusCount['Delivered'] || 0;
+    var topSvc       = '—', topCount = 0;
     Object.keys(serviceTotals).forEach(function(k) { if (serviceTotals[k] > topCount) { topCount = serviceTotals[k]; topSvc = k; } });
 
-    document.getElementById('rev-total').textContent     = '₦' + servicesRev.toLocaleString();
-    document.getElementById('rev-orders').textContent    = allOrders.length;
-    document.getElementById('rev-avg').textContent       = '₦' + avgOrder.toLocaleString();
-    document.getElementById('rev-top').textContent       = topSvc;
-    document.getElementById('rev-delivered').textContent = delivered;
+    document.getElementById('rev-total').textContent       = '₦' + vendorPayout.toLocaleString();
+    document.getElementById('rev-paid').textContent        = '₦' + paidRev.toLocaleString();
+    document.getElementById('rev-pending-pay').textContent = '₦' + pendingRev.toLocaleString();
+    document.getElementById('rev-not-paid').textContent    = '₦' + notPaidRev.toLocaleString();
+    document.getElementById('rev-orders').textContent      = allOrders.length;
+    document.getElementById('rev-avg').textContent         = '₦' + avgOrder.toLocaleString();
+    document.getElementById('rev-top').textContent         = topSvc;
+    document.getElementById('rev-delivered').textContent   = delivered;
 
     var svcKeys = Object.keys(serviceTotals).sort(function(a,b) { return serviceTotals[b] - serviceTotals[a]; });
     document.getElementById('rev-by-service').innerHTML = svcKeys.length
