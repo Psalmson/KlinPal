@@ -264,9 +264,26 @@
         <div class="stat-card"><div class="stat-label">Service Fee</div><div class="stat-value" id="drill-service-fee">—</div><div class="stat-sub">Klinpal earnings</div></div>
       </div>
       <div class="card">
-        <div class="card-header">
+        <div class="card-header" style="flex-wrap:wrap;gap:10px">
           <div class="card-title">All Orders</div>
-          <input id="drill-search" type="text" placeholder="Search by Order ID..." oninput="filterDrillOrders(this.value)" style="background:var(--navy3);border:1px solid var(--gray2);border-radius:6px;padding:7px 12px;color:var(--white);font-size:13px;outline:none;width:220px">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <input id="drill-search" type="text" placeholder="Search Order ID..." oninput="applyDrillFilters()" style="background:var(--navy3);border:1px solid var(--gray2);border-radius:6px;padding:7px 12px;color:var(--white);font-size:13px;outline:none;width:150px">
+            <select id="drill-filter-payment" onchange="applyDrillFilters()" style="background:var(--navy3);border:1px solid var(--gray2);border-radius:6px;padding:7px 10px;color:var(--white);font-size:13px;outline:none;cursor:pointer">
+              <option value="">All Payments</option>
+              <option value="Paid">Paid</option>
+              <option value="Pending">Pending</option>
+              <option value="Not Paid">Not Paid</option>
+            </select>
+            <select id="drill-filter-status" onchange="applyDrillFilters()" style="background:var(--navy3);border:1px solid var(--gray2);border-radius:6px;padding:7px 10px;color:var(--white);font-size:13px;outline:none;cursor:pointer">
+              <option value="">All Order Statuses</option>
+              <option value="Pending">Pending</option>
+              <option value="Picked Up">Picked Up</option>
+              <option value="Washing">Washing</option>
+              <option value="Ready">Ready</option>
+              <option value="Delivered">Delivered</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+          </div>
         </div>
         <div id="drill-table"><div class="loading-state">Loading...</div></div>
       </div>
@@ -359,7 +376,7 @@
       .then(function(vendors) {
         allVendors = Array.isArray(vendors) ? vendors : [];
         document.getElementById('stat-vendors').textContent = allVendors.length;
-        return sbFetch('orders?select=vendor_id,subtotal,delivery_fee,service_fee,status');
+        return sbFetch('orders?select=vendor_id,subtotal,delivery_fee,service_fee,platform_fee,status');
       })
       .then(function(r) { return r.json(); })
       .then(function(orders) {
@@ -446,7 +463,11 @@
     document.getElementById('drill-service-fee').textContent = '—';
     document.getElementById('drill-table').innerHTML      = '<div class="loading-state">Loading orders...</div>';
     var searchEl = document.getElementById('drill-search');
+    var payEl    = document.getElementById('drill-filter-payment');
+    var statEl   = document.getElementById('drill-filter-status');
     if (searchEl) searchEl.value = '';
+    if (payEl)    payEl.value    = '';
+    if (statEl)   statEl.value   = '';
     showPage('vendor-orders');
     loadVendorOrders(vendor);
   }
@@ -484,9 +505,16 @@
 
   var drillOrders = [];
 
-  function filterDrillOrders(q) {
-    q = q.trim().toLowerCase();
-    var filtered = q ? drillOrders.filter(function(o){ return (o.order_id || '').toLowerCase().indexOf(q) > -1; }) : drillOrders;
+  function applyDrillFilters() {
+    var q       = (document.getElementById('drill-search').value || '').trim().toLowerCase();
+    var payment = (document.getElementById('drill-filter-payment').value || '');
+    var status  = (document.getElementById('drill-filter-status').value || '');
+    var filtered = drillOrders.filter(function(o) {
+      var matchQ = !q || (o.order_id || '').toLowerCase().indexOf(q) > -1;
+      var matchP = !payment || (o.payment_status || 'Pending') === payment;
+      var matchS = !status  || o.status === status;
+      return matchQ && matchP && matchS;
+    });
     renderDrillTable(filtered);
   }
 
@@ -503,7 +531,8 @@
         + '<td style="font-size:12px;color:var(--gray);max-width:160px">' + (o.items || '—') + '</td>'
         + '<td><span class="mono">₦' + (Number(o.subtotal) || 0).toLocaleString() + '</span>'
         +     '<div style="font-size:11px;color:var(--gray);margin-top:3px">+₦' + (Number(o.delivery_fee) || 0).toLocaleString() + ' pickup & delivery</div>'
-        +     '<div style="font-size:11px;color:var(--amber);margin-top:2px">+₦' + (Number(o.service_fee) || 0).toLocaleString() + ' service fee</div></td>'
+        +     '<div style="font-size:11px;color:var(--amber);margin-top:2px">+₦' + (Number(o.service_fee) || 0).toLocaleString() + ' service fee</div>'
+        +     '<div style="font-size:11px;color:var(--red);margin-top:2px">-₦' + (Number(o.platform_fee) || 0).toLocaleString() + ' platform fee</div></td>'
         + '<td><select class="status-select" onchange="updatePaymentStatus(this,\'' + o.order_id + '\')">'
         +   paymentStatuses.map(function(s){ return '<option value="' + s + '"' + ((o.payment_status||'Pending')===s?' selected':'') + '>' + s + '</option>'; }).join('')
         + '</select></td>'
@@ -514,7 +543,7 @@
     }).join('');
 
     document.getElementById('drill-table').innerHTML =
-      '<table><thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Amount</th><th>Payment</th><th>Status</th></tr></thead><tbody>' + rows + '</tbody></table>';
+      '<table><thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Amount</th><th>Payment</th><th>Order Status</th></tr></thead><tbody>' + rows + '</tbody></table>';
   }
 
   function updatePaymentStatus(select, orderId) {
