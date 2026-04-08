@@ -624,6 +624,22 @@ function bootstrapVendor() {
       VENDOR.lat              = vendor.lat  || 6.5244;
       VENDOR.lng              = vendor.lng  || 3.3792;
       VENDOR.telegram_chat_id = vendor.telegram_chat_id || null;
+      VENDOR.brand_color      = vendor.brand_color || null;
+      VENDOR.logo_url         = vendor.logo_url     || null;
+
+      // Apply brand colour — swaps the teal accent across the whole customer page
+      if (VENDOR.brand_color) {
+        document.documentElement.style.setProperty('--teal', VENDOR.brand_color);
+        document.documentElement.style.setProperty('--teal-dark', VENDOR.brand_color);
+      }
+
+      // Apply vendor logo — replaces Klinpal logo images with vendor's logo
+      if (VENDOR.logo_url) {
+        document.querySelectorAll('.logo-img').forEach(function(img) {
+          img.src = VENDOR.logo_url;
+          img.alt = VENDOR.name;
+        });
+      }
 
       document.title = VENDOR.name + ' — Laundry';
       var brandEls = document.querySelectorAll('.vendor-name-placeholder');
