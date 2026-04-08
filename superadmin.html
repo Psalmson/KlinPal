@@ -147,6 +147,7 @@
       <button class="nav-item active" onclick="showPage('overview')" id="nav-overview"><span class="icon">🏠</span> Overview</button>
       <button class="nav-item" onclick="showPage('vendors')" id="nav-vendors"><span class="icon">🏪</span> Laundromats</button>
       <button class="nav-item" onclick="showPage('onboard')" id="nav-onboard"><span class="icon">➕</span> Onboard New</button>
+      <button class="nav-item" onclick="showPage('riders')" id="nav-riders"><span class="icon">🛵</span> Riders</button>
     </nav>
     <div class="sidebar-foot">
       <button class="nav-item" onclick="doLogout()"><span class="icon">🚪</span> Sign Out</button>
@@ -368,6 +369,61 @@
       </div>
     </div>
 
+    <!-- RIDERS -->
+    <div class="page" id="page-riders">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Riders</div>
+          <div class="page-subtitle">Manage drivers and their earnings</div>
+        </div>
+      </div>
+
+      <!-- Add rider form -->
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-header"><div class="card-title">Add New Rider</div></div>
+        <div class="card-body">
+          <div class="form-grid">
+            <div>
+              <label class="field-label">Full Name</label>
+              <input class="field-input" id="rider-name" placeholder="e.g. Emeka Eze">
+            </div>
+            <div>
+              <label class="field-label">Phone Number</label>
+              <input class="field-input" id="rider-phone" type="tel" placeholder="e.g. 08012345678">
+            </div>
+          </div>
+          <div class="form-grid">
+            <div>
+              <label class="field-label">PIN</label>
+              <div style="position:relative">
+                <input class="field-input" id="rider-pin" type="password" placeholder="Set a numeric PIN" style="padding-right:48px">
+                <button onclick="togglePwd('rider-pin',this)" type="button" style="position:absolute;right:14px;top:38%;transform:translateY(-50%);background:none;border:none;color:var(--gray);cursor:pointer;font-size:13px;padding:0">Show</button>
+              </div>
+            </div>
+            <div>
+              <label class="field-label">Earnings % (of delivery fee)</label>
+              <input class="field-input" id="rider-percentage" type="number" min="1" max="100" placeholder="e.g. 60">
+            </div>
+          </div>
+          <div class="form-grid">
+            <div>
+              <label class="field-label">Telegram Chat ID</label>
+              <input class="field-input" id="rider-telegram" placeholder="e.g. 1234567890">
+              <div class="field-note">Driver's personal Telegram Chat ID — for order assignment alerts.</div>
+            </div>
+            <div></div>
+          </div>
+          <button class="btn btn-teal" onclick="addRider()" id="add-rider-btn">Add Rider</button>
+        </div>
+      </div>
+
+      <!-- Riders list -->
+      <div class="card">
+        <div class="card-header"><div class="card-title">All Riders</div></div>
+        <div id="riders-list"><div class="loading-state">Loading...</div></div>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -506,6 +562,7 @@
 
   /* ── NAVIGATION ── */
   function showPage(name) {
+    if (name === 'riders') loadRiders();
     if (name !== 'vendor-orders') stopDrillRealtime();
     document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
     document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
@@ -638,6 +695,13 @@
     if (payEl)    payEl.value    = '';
     if (statEl)   statEl.value   = '';
     showPage('vendor-orders');
+    // Ensure drivers are loaded for the assignment dropdown
+    if (!allDrivers.length) {
+      sbFetch('drivers?active=eq.true&order=name.asc&select=*')
+        .then(function(r){ return r.json(); })
+        .then(function(data){ allDrivers = Array.isArray(data) ? data : []; })
+        .catch(function(){});
+    }
     loadVendorOrders(vendor);
     startDrillRealtime(vendor.id);
   }
@@ -693,11 +757,17 @@
     renderDrillTable(filtered);
   }
 
+  var allDrivers = [];
+
   function renderDrillTable(orders) {
     var paymentStatuses = ['Pending','Paid','Not Paid'];
-    var statuses = ['Pending','Picked Up','Washing','Ready','Delivered','Cancelled'];
+    var statuses = ['Pending','Picked Up','On the Way','Washing','Ready','Delivered','Cancelled'];
     var rows = orders.map(function(o) {
       var date = o.created_at ? new Date(o.created_at).toLocaleDateString('en-GB') : '';
+      var driverOpts = '<option value="">Unassigned</option>'
+        + allDrivers.filter(function(d){ return d.active; }).map(function(d){
+            return '<option value="' + d.id + '"' + (o.driver_id===d.id?' selected':'') + '>' + d.name + ' (' + d.percentage + '%)</option>';
+          }).join('');
       return '<tr>'
         + '<td><div class="mono">' + (o.order_id || '—') + '</div><div style="font-size:11px;color:var(--gray);margin-top:3px">' + date + '</div></td>'
         + '<td><div style="font-weight:600">' + (o.customer_name || '—') + '</div>'
@@ -708,6 +778,7 @@
         +     '<div style="font-size:11px;color:var(--gray);margin-top:3px">+₦' + (Number(o.delivery_fee) || 0).toLocaleString() + ' pickup & delivery</div>'
         +     '<div style="font-size:11px;color:var(--amber);margin-top:2px">+₦' + (Number(o.service_fee) || 0).toLocaleString() + ' service fee</div>'
         +     '<div style="font-size:11px;color:var(--red);margin-top:2px">-₦' + (Number(o.platform_fee) || 0).toLocaleString() + ' platform fee</div></td>'
+        + '<td><select class="status-select" onchange="assignDriver(this,\'' + o.order_id + '\',' + (Number(o.delivery_fee)||0) + ',' + JSON.stringify(o.driver_id||null) + ')">' + driverOpts + '</select></td>'
         + '<td><select class="status-select" onchange="updatePaymentStatus(this,\'' + o.order_id + '\')">'
         +   paymentStatuses.map(function(s){ return '<option value="' + s + '"' + ((o.payment_status||'Pending')===s?' selected':'') + '>' + s + '</option>'; }).join('')
         + '</select></td>'
@@ -718,7 +789,7 @@
     }).join('');
 
     document.getElementById('drill-table').innerHTML =
-      '<table><thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Amount</th><th>Payment</th><th>Order Status</th></tr></thead><tbody>' + rows + '</tbody></table>';
+      '<table><thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Amount</th><th>Rider</th><th>Payment</th><th>Order Status</th></tr></thead><tbody>' + rows + '</tbody></table>';
   }
 
   function updatePaymentStatus(select, orderId) {
@@ -826,6 +897,121 @@
     })
     .catch(function(){ showToast('Could not onboard vendor', true); })
     .finally(function(){ btn.disabled = false; btn.textContent = 'Onboard Laundromat'; });
+  }
+
+  /* ── ASSIGN DRIVER ── */
+  function assignDriver(select, orderId, deliveryFee, prevDriverId) {
+    var driverId = select.value || null;
+    var driver   = driverId ? allDrivers.find(function(d){ return d.id === driverId; }) : null;
+    var riderFee = driver ? Math.round(deliveryFee * (driver.percentage / 100)) : 0;
+    var klinpalDel = deliveryFee - riderFee;
+
+    sbFetch('orders?order_id=eq.' + orderId, {
+      method: 'PATCH',
+      body: JSON.stringify({ driver_id: driverId, rider_fee: riderFee, klinpal_delivery_revenue: klinpalDel }),
+    })
+    .then(function(r) {
+      if (!r.ok) { showToast('Assignment failed', true); return; }
+      showToast(driver ? driver.name + ' assigned ✓' : 'Driver removed ✓');
+      // Update local drillOrders
+      var o = drillOrders.find(function(x){ return x.order_id === orderId; });
+      if (o) { o.driver_id = driverId; o.rider_fee = riderFee; o.klinpal_delivery_revenue = klinpalDel; }
+      // Send Telegram notification to driver
+      if (driver && driver.telegram_chat_id) {
+        var orderObj = drillOrders.find(function(x){ return x.order_id === orderId; }) || {};
+        var msg = '🛵 New Order Assigned!\n\n'
+          + 'Order ID: ' + orderId + '\n'
+          + 'Customer: ' + (orderObj.customer_name || '—') + '\n'
+          + 'Phone: ' + (orderObj.phone || '—') + '\n'
+          + 'Address: ' + (orderObj.address || '—') + '\n'
+          + 'Items: ' + (orderObj.items || '—') + '\n'
+          + 'Your cut: ₦' + riderFee.toLocaleString();
+        sendTelegram(driver.telegram_chat_id, msg);
+      }
+    })
+    .catch(function(){ showToast('Could not assign driver', true); });
+  }
+
+  function sendTelegram(chatId, text) {
+    fetch('https://api.telegram.org/bot8021952716:AAFg_CsHXdp3SGl6guMiPTqHKs9cPvpv_7o/sendMessage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text: text }),
+    }).catch(function(e){ console.error('Telegram error:', e); });
+  }
+
+  /* ── RIDERS ── */
+  function loadRiders() {
+    document.getElementById('riders-list').innerHTML = '<div class="loading-state">Loading...</div>';
+    sbFetch('drivers?order=created_at.desc&select=*')
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        allDrivers = Array.isArray(data) ? data : [];
+        renderRidersList();
+      })
+      .catch(function(){ document.getElementById('riders-list').innerHTML = '<div class="empty-state"><div style="font-size:13px">Could not load riders</div></div>'; });
+  }
+
+  function renderRidersList() {
+    var wrap = document.getElementById('riders-list');
+    if (!allDrivers.length) {
+      wrap.innerHTML = '<div class="empty-state"><div style="font-size:40px;margin-bottom:12px">🛵</div><div style="font-size:14px">No riders added yet</div></div>';
+      return;
+    }
+    var rows = allDrivers.map(function(d) {
+      return '<tr>'
+        + '<td style="font-weight:600">' + d.name + '</td>'
+        + '<td style="color:var(--gray)">' + d.phone + '</td>'
+        + '<td><span style="font-family:var(--font-mono);color:var(--teal)">' + d.percentage + '%</span><span style="font-size:11px;color:var(--gray)"> of delivery</span></td>'
+        + '<td style="font-size:12px;color:var(--gray)">' + (d.telegram_chat_id || '—') + '</td>'
+        + '<td><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"' + (d.active?' checked':'') + ' onchange="toggleRider(\'' + d.id + '\',this.checked)" style="width:16px;height:16px;accent-color:var(--teal)"><span style="font-size:13px;color:' + (d.active?'var(--green)':'var(--gray)') + '">' + (d.active?'Active':'Inactive') + '</span></label></td>'
+        + '<td><button class="btn btn-ghost btn-sm" onclick="removeRider(\'' + d.id + '\',\'' + d.name + '\')">Remove</button></td>'
+        + '</tr>';
+    }).join('');
+    wrap.innerHTML = '<table><thead><tr><th>Name</th><th>Phone</th><th>Earnings</th><th>Telegram ID</th><th>Status</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>';
+  }
+
+  function addRider() {
+    var name       = document.getElementById('rider-name').value.trim();
+    var phone      = document.getElementById('rider-phone').value.trim().replace(/\s+/g,'');
+    var pin        = document.getElementById('rider-pin').value.trim();
+    var pct        = parseInt(document.getElementById('rider-percentage').value) || 60;
+    var telegram   = document.getElementById('rider-telegram').value.trim() || null;
+    if (!name)  { showToast('Enter rider name', true); return; }
+    if (!phone) { showToast('Enter phone number', true); return; }
+    if (!pin)   { showToast('Set a PIN', true); return; }
+
+    var btn = document.getElementById('add-rider-btn');
+    btn.disabled = true; btn.textContent = 'Adding...';
+
+    sbFetch('drivers', {
+      method: 'POST',
+      body: JSON.stringify({ name: name, phone: phone, pin: pin, percentage: pct, telegram_chat_id: telegram, active: true }),
+    })
+    .then(function(r){
+      if (r.ok) {
+        showToast(name + ' added ✓');
+        ['rider-name','rider-phone','rider-pin','rider-percentage','rider-telegram'].forEach(function(id){ document.getElementById(id).value = ''; });
+        loadRiders();
+      } else {
+        return r.json().then(function(e){ showToast(e.message && e.message.indexOf('unique')>-1 ? 'Phone already registered' : 'Could not add rider', true); });
+      }
+    })
+    .catch(function(){ showToast('Could not add rider', true); })
+    .finally(function(){ btn.disabled = false; btn.textContent = 'Add Rider'; });
+  }
+
+  function toggleRider(id, active) {
+    sbFetch('drivers?id=eq.' + id, { method: 'PATCH', body: JSON.stringify({ active: active }) })
+      .then(function(r){ showToast(r.ok ? (active?'Rider activated ✓':'Rider deactivated ✓') : 'Update failed', !r.ok); loadRiders(); })
+      .catch(function(){ showToast('Could not update', true); });
+  }
+
+  function removeRider(id, name) {
+    if (!confirm('Remove "' + name + '" from riders?')) return;
+    sbFetch('drivers?id=eq.' + id, { method: 'DELETE' })
+      .then(function(r){ showToast(r.ok ? 'Rider removed ✓' : 'Could not remove', !r.ok); loadRiders(); })
+      .catch(function(){ showToast('Could not remove', true); });
   }
 
   /* ── BRANDING MODAL ── */
