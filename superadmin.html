@@ -112,6 +112,13 @@
   .toast { position: fixed; bottom: 24px; right: 24px; background: var(--teal); color: var(--navy); padding: 12px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; z-index: 9999; transform: translateY(80px); opacity: 0; transition: all 0.3s; pointer-events: none; }
   .toast.show  { transform: translateY(0); opacity: 1; }
   .toast.error { background: var(--red); color: white; }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 500; display: none; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--navy2); border: 1px solid var(--navy3); border-radius: 16px; padding: 32px; width: 100%; max-width: 420px; }
+  .modal-title { font-family: var(--font-head); font-size: 18px; font-weight: 800; margin-bottom: 20px; }
+  .modal-field { margin-bottom: 14px; }
+  .modal-field-label { font-size: 11px; color: var(--gray); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px; }
+  .modal-close { background: var(--navy3); border: none; border-radius: 8px; padding: 10px 20px; color: var(--gray); cursor: pointer; font-family: var(--font-body); }
 </style>
 </head>
 <body>
@@ -271,6 +278,18 @@
             </div>
             <div></div>
           </div>
+          <div class="form-grid">
+            <div>
+              <label class="field-label">Brand Colour (hex)</label>
+              <input class="field-input" id="ob-brand-color" placeholder="e.g. #7c3aed" style="font-family:var(--font-mono)">
+              <div class="field-note">Leave blank to use the Klinpal default teal.</div>
+            </div>
+            <div>
+              <label class="field-label">Logo URL</label>
+              <input class="field-input" id="ob-logo-url" placeholder="https://drive.google.com/uc?id=...">
+              <div class="field-note">Direct image link from Google Drive or similar.</div>
+            </div>
+          </div>
           <button class="btn btn-teal" onclick="onboardVendor()" id="ob-btn">Onboard Laundromat</button>
         </div>
       </div>
@@ -352,8 +371,35 @@
   </main>
 </div>
 
+<!-- BRANDING MODAL -->
+<div class="modal-overlay" id="branding-modal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-title">Edit Branding</div>
+    <div id="branding-modal-vendor-name" style="font-size:13px;color:var(--gray);margin-bottom:20px"></div>
+    <div class="modal-field">
+      <div class="modal-field-label">Brand Colour</div>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:6px">
+        <input type="color" id="bm-color-picker" style="width:44px;height:44px;border:none;border-radius:8px;cursor:pointer;padding:0;background:none" oninput="document.getElementById('bm-color-hex').value=this.value;document.getElementById('bm-color-preview').style.background=this.value">
+        <input class="field-input" id="bm-color-hex" placeholder="#00c9a7" style="width:140px;margin-bottom:0;font-family:var(--font-mono)" oninput="if(/^#[0-9a-fA-F]{6}$/.test(this.value)){document.getElementById('bm-color-picker').value=this.value;document.getElementById('bm-color-preview').style.background=this.value}">
+        <div id="bm-color-preview" style="width:80px;height:44px;border-radius:8px;background:#00c9a7"></div>
+      </div>
+      <div style="font-size:11px;color:var(--gray);margin-top:6px">Leave blank to use the default teal</div>
+    </div>
+    <div class="modal-field" style="margin-top:16px">
+      <div class="modal-field-label">Logo URL</div>
+      <input class="field-input" id="bm-logo-url" placeholder="https://drive.google.com/uc?id=..." style="margin-top:6px">
+      <div style="font-size:11px;color:var(--gray);margin-top:4px">Direct image link — PNG or SVG with transparent background</div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:24px">
+      <button class="save-btn" onclick="saveBrandingModal()">Save Changes</button>
+      <button class="modal-close" onclick="closeBrandingModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
   /* ── CONFIG ── */
   var SUPERADMIN_PASSWORD = 'klinpal2024';
@@ -361,10 +407,12 @@
   var SUPABASE_KEY        = 'sb_publishable_TS5uGf7KzLKxeQw8bxDKYw_HwBNNBeA';
   var LOCATIONIQ_TOKEN    = 'pk.ec47de1300ad77f86deab165cce9bbe2';
 
-  var allVendors         = [];
-  var currentDrillVendor = null;
-  var obAddressConfirmed = false;
+  var allVendors          = [];
+  var currentDrillVendor  = null;
+  var obAddressConfirmed  = false;
   var obLat = null, obLng = null, obDebounce = null;
+  var realtimeChannel     = null;
+  var drillRealtimeChannel = null;
 
   /* ── SUPABASE ── */
   function sbFetch(path, options) {
@@ -400,6 +448,7 @@
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
     loadOverview();
+    startOverviewRealtime();
   }
 
   document.getElementById('login-pass').addEventListener('keydown', function(e) {
@@ -407,14 +456,57 @@
   });
 
   function doLogout() {
+    stopOverviewRealtime();
+    stopDrillRealtime();
     allVendors = []; currentDrillVendor = null;
     document.getElementById('app').style.display = 'none';
     document.getElementById('login-screen').style.display = 'flex';
     document.getElementById('login-pass').value = '';
   }
 
+  /* ── REALTIME ── */
+  function startOverviewRealtime() {
+    if (realtimeChannel) stopOverviewRealtime();
+    var sc = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    realtimeChannel = sc.channel('superadmin-orders-overview')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, function() {
+        // Any order change — reload overview silently
+        loadOverview();
+      })
+      .subscribe();
+  }
+
+  function stopOverviewRealtime() {
+    if (realtimeChannel) { realtimeChannel.unsubscribe(); realtimeChannel = null; }
+  }
+
+  function startDrillRealtime(vendorId) {
+    if (drillRealtimeChannel) stopDrillRealtime();
+    var sc = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    drillRealtimeChannel = sc.channel('superadmin-drill-' + vendorId)
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'orders',
+        filter: 'vendor_id=eq.' + vendorId,
+      }, function(payload) {
+        if (payload.eventType === 'UPDATE') {
+          var idx = drillOrders.findIndex(function(o) { return o.id === payload.new.id; });
+          if (idx > -1) drillOrders[idx] = payload.new;
+          else drillOrders.unshift(payload.new);
+          applyDrillFilters();
+        } else {
+          loadVendorOrders(currentDrillVendor);
+        }
+      })
+      .subscribe();
+  }
+
+  function stopDrillRealtime() {
+    if (drillRealtimeChannel) { drillRealtimeChannel.unsubscribe(); drillRealtimeChannel = null; }
+  }
+
   /* ── NAVIGATION ── */
   function showPage(name) {
+    if (name !== 'vendor-orders') stopDrillRealtime();
     document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
     document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
     document.getElementById('page-' + name).classList.add('active');
@@ -494,16 +586,23 @@
     }
     var rows = allVendors.map(function(v) {
       var date = v.created_at ? new Date(v.created_at).toLocaleDateString('en-GB') : '—';
+      var swatch = v.brand_color
+        ? '<span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:' + v.brand_color + ';vertical-align:middle;margin-right:6px;border:1px solid rgba(255,255,255,0.1)"></span>' + v.brand_color
+        : '<span style="color:var(--gray);font-size:11px">default</span>';
       return '<tr>'
         + '<td><div class="vendor-name">' + v.name + '</div></td>'
         + '<td><span class="mono">' + v.slug + '</span></td>'
         + '<td style="color:var(--gray)">' + (v.phone || '—') + '</td>'
-        + '<td style="color:var(--gray);font-size:12px;max-width:200px">' + (v.address || '—') + '</td>'
+        + '<td style="color:var(--gray);font-size:12px;max-width:160px">' + (v.address || '—') + '</td>'
+        + '<td style="font-size:12px;font-family:var(--font-mono)">' + swatch + '</td>'
         + '<td style="color:var(--gray);font-size:12px">' + date + '</td>'
-        + '<td><button class="btn btn-ghost btn-sm" onclick="openVendorOrders(\'' + v.slug + '\')">View Orders</button></td>'
+        + '<td style="display:flex;gap:6px;flex-wrap:wrap">'
+        +   '<button class="btn btn-ghost btn-sm" onclick="openVendorOrders(\'' + v.slug + '\')">View Orders</button>'
+        +   '<button class="btn btn-ghost btn-sm" onclick="openBrandingModal(\'' + v.id + '\')">Edit Branding</button>'
+        + '</td>'
         + '</tr>';
     }).join('');
-    wrap.innerHTML = '<table><thead><tr><th>Laundromat</th><th>Slug</th><th>Phone</th><th>Address</th><th>Onboarded</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>';
+    wrap.innerHTML = '<table><thead><tr><th>Laundromat</th><th>Slug</th><th>Phone</th><th>Address</th><th>Brand</th><th>Onboarded</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>';
   }
 
   /* ── VENDOR ORDERS ── */
@@ -540,6 +639,7 @@
     if (statEl)   statEl.value   = '';
     showPage('vendor-orders');
     loadVendorOrders(vendor);
+    startDrillRealtime(vendor.id);
   }
 
   function loadVendorOrders(vendor) {
@@ -690,16 +790,19 @@
 
   /* ── ONBOARD ── */
   function onboardVendor() {
-    var name     = document.getElementById('ob-name').value.trim();
-    var slug     = document.getElementById('ob-slug').value.trim();
-    var password = document.getElementById('ob-password').value.trim();
-    var phone    = document.getElementById('ob-phone').value.trim();
-    var house    = document.getElementById('ob-house').value.trim();
-    var street   = document.getElementById('ob-address').value.trim();
-    var telegram = document.getElementById('ob-telegram').value.trim();
+    var name       = document.getElementById('ob-name').value.trim();
+    var slug       = document.getElementById('ob-slug').value.trim();
+    var password   = document.getElementById('ob-password').value.trim();
+    var phone      = document.getElementById('ob-phone').value.trim();
+    var house      = document.getElementById('ob-house').value.trim();
+    var street     = document.getElementById('ob-address').value.trim();
+    var telegram   = document.getElementById('ob-telegram').value.trim();
+    var brandColor = document.getElementById('ob-brand-color').value.trim() || null;
+    var logoUrl    = document.getElementById('ob-logo-url').value.trim()    || null;
 
     if (!name || !slug || !password) { showToast('Name, slug and password are required', true); return; }
     if (!obAddressConfirmed || !obLat || !obLng) { showToast('Please select a street from the suggestions', true); return; }
+    if (brandColor && !/^#[0-9a-fA-F]{6}$/.test(brandColor)) { showToast('Brand colour must be a valid hex e.g. #7c3aed', true); return; }
 
     var address = house ? house + ', ' + street : street;
     var btn = document.getElementById('ob-btn');
@@ -707,12 +810,12 @@
 
     sbFetch('vendors', {
       method: 'POST',
-      body: JSON.stringify({ name: name, slug: slug, password: password, phone: phone, address: address, lat: obLat, lng: obLng, telegram_chat_id: telegram || null }),
+      body: JSON.stringify({ name: name, slug: slug, password: password, phone: phone, address: address, lat: obLat, lng: obLng, telegram_chat_id: telegram || null, brand_color: brandColor, logo_url: logoUrl }),
     })
     .then(function(r){
       if (r.ok) {
         showToast(name + ' onboarded ✓');
-        ['ob-name','ob-slug','ob-password','ob-phone','ob-house','ob-address','ob-telegram'].forEach(function(id){ document.getElementById(id).value = ''; });
+        ['ob-name','ob-slug','ob-password','ob-phone','ob-house','ob-address','ob-telegram','ob-brand-color','ob-logo-url'].forEach(function(id){ document.getElementById(id).value = ''; });
         obLat = null; obLng = null; obAddressConfirmed = false;
         document.getElementById('ob-addr-status').textContent = '';
         loadOverview();
@@ -723,6 +826,51 @@
     })
     .catch(function(){ showToast('Could not onboard vendor', true); })
     .finally(function(){ btn.disabled = false; btn.textContent = 'Onboard Laundromat'; });
+  }
+
+  /* ── BRANDING MODAL ── */
+  var brandingVendorId = null;
+
+  function openBrandingModal(vendorId) {
+    var vendor = allVendors.find(function(v){ return v.id === vendorId; });
+    if (!vendor) return;
+    brandingVendorId = vendorId;
+    var color = vendor.brand_color || '';
+    var logo  = vendor.logo_url    || '';
+    document.getElementById('branding-modal-vendor-name').textContent = vendor.name;
+    document.getElementById('bm-color-hex').value    = color;
+    document.getElementById('bm-color-picker').value = color || '#00c9a7';
+    document.getElementById('bm-color-preview').style.background = color || '#00c9a7';
+    document.getElementById('bm-logo-url').value     = logo;
+    document.getElementById('branding-modal').classList.add('open');
+  }
+
+  function closeBrandingModal() {
+    document.getElementById('branding-modal').classList.remove('open');
+    brandingVendorId = null;
+  }
+
+  function saveBrandingModal() {
+    if (!brandingVendorId) return;
+    var color = document.getElementById('bm-color-hex').value.trim() || null;
+    var logo  = document.getElementById('bm-logo-url').value.trim()  || null;
+    if (color && !/^#[0-9a-fA-F]{6}$/.test(color)) { showToast('Enter a valid hex colour e.g. #7c3aed', true); return; }
+
+    sbFetch('vendors?id=eq.' + brandingVendorId, {
+      method: 'PATCH',
+      body: JSON.stringify({ brand_color: color, logo_url: logo }),
+    })
+    .then(function(r) {
+      if (r.ok) {
+        // Update local allVendors cache
+        var v = allVendors.find(function(v){ return v.id === brandingVendorId; });
+        if (v) { v.brand_color = color; v.logo_url = logo; }
+        showToast('Branding updated ✓');
+        closeBrandingModal();
+        renderVendorsTable();
+      } else { showToast('Save failed', true); }
+    })
+    .catch(function() { showToast('Could not save', true); });
   }
 
   /* ── TOAST ── */
