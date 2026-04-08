@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Klinpal — Driver</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:#0d1b2a;--navy2:#162032;--navy3:#1e2e42;
+    --teal:#00c9a7;--teal2:#00a88a;--sky:#5bc4f5;
+    --white:#f4f8ff;--gray:#8a9ab5;--gray2:#4a5a72;
+    --red:#ff5757;--amber:#ffb347;--green:#3dd68c;
+    --font-head:'Syne',sans-serif;--font-body:'DM Sans',sans-serif;
+    --font-mono:'DM Mono',monospace;--radius:10px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:var(--font-body);background:var(--navy);color:var(--white);min-height:100vh;}
+
+  #login-screen{position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;z-index:1000;}
+  .login-card{background:var(--navy2);border:1px solid var(--navy3);border-radius:16px;padding:48px 40px;width:100%;max-width:400px;}
+  .login-logo{font-family:var(--font-head);font-size:28px;font-weight:800;color:var(--teal);margin-bottom:4px;}
+  .login-badge{display:inline-block;background:rgba(0,201,167,0.12);color:var(--teal);font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;margin-bottom:28px;letter-spacing:1px;text-transform:uppercase;}
+  .login-label{font-size:11px;font-weight:500;color:var(--gray);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;display:block;}
+  .login-input{width:100%;background:var(--navy3);border:1px solid var(--gray2);border-radius:var(--radius);padding:12px 16px;color:var(--white);font-family:var(--font-body);font-size:15px;margin-bottom:20px;outline:none;transition:border-color 0.2s;}
+  .login-input:focus{border-color:var(--teal);}
+  .login-btn{width:100%;background:var(--teal);color:var(--navy);border:none;border-radius:var(--radius);padding:14px;font-family:var(--font-head);font-size:15px;font-weight:700;cursor:pointer;}
+  .login-btn:hover{background:var(--teal2);}
+  .login-error{color:var(--red);font-size:13px;margin-top:12px;display:none;text-align:center;}
+
+  #app{display:none;max-width:600px;margin:0 auto;padding:24px 16px;}
+  .app-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;}
+  .app-logo{font-family:var(--font-head);font-size:20px;font-weight:800;color:var(--teal);}
+  .driver-info{text-align:right;}
+  .driver-name{font-size:14px;font-weight:600;color:var(--white);}
+  .driver-sub{font-size:11px;color:var(--gray);margin-top:2px;}
+  .logout-btn{background:none;border:none;color:var(--gray);font-size:12px;cursor:pointer;margin-top:4px;font-family:var(--font-body);}
+  .logout-btn:hover{color:var(--white);}
+
+  .earnings-card{background:linear-gradient(135deg,rgba(0,201,167,0.15),rgba(0,201,167,0.05));border:1px solid rgba(0,201,167,0.3);border-radius:var(--radius);padding:20px 24px;margin-bottom:20px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+  .earn-label{font-size:11px;color:var(--teal);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;margin-bottom:4px;}
+  .earn-value{font-family:var(--font-head);font-size:22px;font-weight:800;color:var(--green);letter-spacing:-0.5px;}
+  .earn-value.dim{color:var(--white);font-size:18px;}
+
+  .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .section-title{font-family:var(--font-head);font-size:16px;font-weight:700;}
+  .refresh-btn{background:var(--navy3);border:none;border-radius:6px;padding:6px 12px;color:var(--gray);font-size:12px;cursor:pointer;font-family:var(--font-body);}
+  .refresh-btn:hover{color:var(--white);}
+
+  .order-card{background:var(--navy2);border:1px solid var(--navy3);border-radius:var(--radius);padding:18px 20px;margin-bottom:12px;}
+  .order-card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;}
+  .order-id-tag{font-family:var(--font-mono);font-size:12px;color:var(--teal);}
+  .order-date{font-size:11px;color:var(--gray);margin-top:2px;}
+  .status-badge{font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;}
+  .s-pending{background:rgba(255,179,71,0.15);color:var(--amber);}
+  .s-onway{background:rgba(91,196,245,0.15);color:var(--sky);}
+  .s-pickedup{background:rgba(0,201,167,0.15);color:var(--teal);}
+  .s-delivered{background:rgba(61,214,140,0.15);color:var(--green);}
+  .s-other{background:rgba(138,154,181,0.15);color:var(--gray);}
+
+  .cust-name{font-size:15px;font-weight:600;margin-bottom:3px;}
+  .cust-phone{font-size:12px;color:var(--gray);margin-bottom:8px;}
+  .addr-box{font-size:12px;color:var(--gray);background:var(--navy3);border-radius:6px;padding:8px 12px;margin-bottom:10px;line-height:1.5;}
+  .items-line{font-size:12px;color:var(--gray);margin-bottom:8px;}
+  .earn-line{font-size:12px;color:var(--teal);font-weight:600;margin-bottom:14px;}
+
+  .action-btns{display:grid;gap:8px;}
+  .btn-action{border:none;border-radius:8px;padding:14px;font-family:var(--font-head);font-size:14px;font-weight:700;cursor:pointer;transition:all 0.15s;width:100%;}
+  .btn-primary{background:var(--teal);color:var(--navy);}
+  .btn-primary:hover{background:var(--teal2);}
+  .btn-secondary{background:var(--navy3);color:var(--white);}
+  .btn-secondary:hover{background:var(--gray2);}
+  .btn-done{background:rgba(61,214,140,0.1);color:var(--green);border:1px solid rgba(61,214,140,0.2);cursor:default;}
+
+  .empty-state{text-align:center;padding:48px 20px;color:var(--gray);font-size:14px;}
+  .loading-state{text-align:center;padding:48px 20px;color:var(--gray);font-size:14px;}
+
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--teal);color:var(--navy);padding:12px 20px;border-radius:8px;font-size:13px;font-weight:600;z-index:9999;opacity:0;transition:all 0.3s;pointer-events:none;white-space:nowrap;}
+  .toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+  .toast.error{background:var(--red);color:white;}
+
+  @media(max-width:480px){
+    .login-card{padding:36px 24px;}
+    #app{padding:16px 12px;}
+    .earnings-card{grid-template-columns:1fr 1fr;}
+  }
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">klinpal</div>
+    <div class="login-badge">Driver</div>
+    <label class="login-label">Phone Number</label>
+    <input class="login-input" id="login-phone" type="tel" placeholder="e.g. 08012345678" autocomplete="off">
+    <label class="login-label">PIN</label>
+    <div style="position:relative">
+      <input class="login-input" id="login-pin" type="password" placeholder="Enter your PIN" style="padding-right:48px;margin-bottom:20px">
+      <button onclick="togglePin(this)" type="button" style="position:absolute;right:14px;top:38%;transform:translateY(-50%);background:none;border:none;color:var(--gray);cursor:pointer;font-size:13px;padding:0">Show</button>
+    </div>
+    <button class="login-btn" onclick="doLogin()">Sign In</button>
+    <div class="login-error" id="login-error">Invalid credentials. Try again.</div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="app-header">
+    <div class="app-logo">klinpal</div>
+    <div class="driver-info">
+      <div class="driver-name" id="driver-name">—</div>
+      <div class="driver-sub" id="driver-phone-display">—</div>
+      <button class="logout-btn" onclick="doLogout()">Sign out</button>
+    </div>
+  </div>
+
+  <div class="earnings-card">
+    <div><div class="earn-label">Today</div><div class="earn-value" id="earn-today">₦0</div></div>
+    <div><div class="earn-label">This week</div><div class="earn-value dim" id="earn-week">₦0</div></div>
+    <div><div class="earn-label">All time</div><div class="earn-value dim" id="earn-total">₦0</div></div>
+  </div>
+
+  <div class="section-header">
+    <div class="section-title">My Orders</div>
+    <button class="refresh-btn" onclick="loadOrders()">↻ Refresh</button>
+  </div>
+  <div id="orders-wrap"><div class="loading-state">Loading orders...</div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+  var SUPABASE_URL = 'https://mlgdqxqzpzfzndjhywqf.supabase.co';
+  var SUPABASE_KEY = 'sb_publishable_TS5uGf7KzLKxeQw8bxDKYw_HwBNNBeA';
+
+  var currentDriver   = null;
+  var allOrders       = [];
+  var realtimeChannel = null;
+
+  function sbFetch(path, opts) {
+    var defaults = { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' } };
+    var o = Object.assign({}, defaults, opts || {});
+    if (opts && opts.headers) o.headers = Object.assign({}, defaults.headers, opts.headers);
+    return fetch(SUPABASE_URL + '/rest/v1/' + path, o);
+  }
+
+  function togglePin(btn) {
+    var input = document.getElementById('login-pin');
+    if (input.type === 'password') { input.type = 'text'; btn.textContent = 'Hide'; }
+    else { input.type = 'password'; btn.textContent = 'Show'; }
+  }
+
+  /* ── LOGIN ── */
+  function doLogin() {
+    var phone = document.getElementById('login-phone').value.trim().replace(/\s+/g,'');
+    var pin   = document.getElementById('login-pin').value.trim();
+    var err   = document.getElementById('login-error');
+    if (!phone || !pin) { err.style.display = 'block'; return; }
+    if (phone.startsWith('+234')) phone = '0' + phone.slice(4);
+
+    sbFetch('drivers?phone=eq.' + encodeURIComponent(phone) + '&pin=eq.' + encodeURIComponent(pin) + '&active=eq.true&limit=1&select=*')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!Array.isArray(data) || !data.length) { err.style.display = 'block'; return; }
+        currentDriver = data[0];
+        err.style.display = 'none';
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        document.getElementById('driver-name').textContent          = currentDriver.name;
+        document.getElementById('driver-phone-display').textContent = currentDriver.phone;
+        loadOrders();
+        startRealtime();
+      })
+      .catch(function() { err.style.display = 'block'; });
+  }
+
+  document.getElementById('login-phone').addEventListener('keydown', function(e) { if (e.key === 'Enter') document.getElementById('login-pin').focus(); });
+  document.getElementById('login-pin').addEventListener('keydown',   function(e) { if (e.key === 'Enter') doLogin(); });
+
+  function doLogout() {
+    stopRealtime();
+    currentDriver = null; allOrders = [];
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('login-phone').value = '';
+    document.getElementById('login-pin').value   = '';
+    document.getElementById('login-error').style.display = 'none';
+  }
+
+  /* ── ORDERS ── */
+  function loadOrders() {
+    document.getElementById('orders-wrap').innerHTML = '<div class="loading-state">Loading...</div>';
+    sbFetch('orders?driver_id=eq.' + currentDriver.id + '&order=created_at.desc&select=*')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        allOrders = Array.isArray(data) ? data : [];
+        renderOrders();
+        updateEarnings();
+      })
+      .catch(function() {
+        document.getElementById('orders-wrap').innerHTML = '<div class="empty-state">Could not load orders.</div>';
+      });
+  }
+
+  function updateEarnings() {
+    var now = new Date(), today = now.toDateString();
+    var weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+    var t = 0, w = 0, total = 0;
+    allOrders.forEach(function(o) {
+      var fee = Number(o.rider_fee) || 0;
+      total += fee;
+      var d = new Date(o.created_at);
+      if (d.toDateString() === today) t += fee;
+      if (d >= weekAgo) w += fee;
+    });
+    document.getElementById('earn-today').textContent = '\u20A6' + t.toLocaleString();
+    document.getElementById('earn-week').textContent  = '\u20A6' + w.toLocaleString();
+    document.getElementById('earn-total').textContent = '\u20A6' + total.toLocaleString();
+  }
+
+  function statusBadge(status) {
+    var cls = { 'Pending': 's-pending', 'On the Way': 's-onway', 'Picked Up': 's-pickedup', 'Delivered': 's-delivered' };
+    return '<span class="status-badge ' + (cls[status] || 's-other') + '">' + (status || 'Pending') + '</span>';
+  }
+
+  function renderOrders() {
+    var wrap = document.getElementById('orders-wrap');
+    var active    = allOrders.filter(function(o) { return o.status !== 'Delivered' && o.status !== 'Cancelled'; });
+    var delivered = allOrders.filter(function(o) { return o.status === 'Delivered' || o.status === 'Cancelled'; });
+    var sorted    = active.concat(delivered);
+
+    if (!sorted.length) {
+      wrap.innerHTML = '<div class="empty-state">No orders assigned yet.</div>';
+      return;
+    }
+
+    wrap.innerHTML = sorted.map(function(o) {
+      var date     = o.created_at ? new Date(o.created_at).toLocaleDateString('en-GB') : '';
+      var earn     = Number(o.rider_fee) || 0;
+      var isDone   = o.status === 'Delivered' || o.status === 'Cancelled';
+      var btns     = '';
+
+      if (isDone) {
+        btns = '<div class="btn-action btn-done">' + (o.status === 'Delivered' ? '✓ Delivered' : 'Cancelled') + '</div>';
+      } else if (o.status === 'Picked Up') {
+        btns = '<button class="btn-action btn-primary" onclick="updateStatus(\'' + o.order_id + '\',\'Delivered\')">Mark as Delivered</button>';
+      } else if (o.status === 'On the Way') {
+        btns = '<button class="btn-action btn-primary" onclick="updateStatus(\'' + o.order_id + '\',\'Picked Up\')">Mark as Picked Up</button>'
+             + '<button class="btn-action btn-secondary" onclick="updateStatus(\'' + o.order_id + '\',\'Delivered\')">Skip to Delivered</button>';
+      } else {
+        btns = '<button class="btn-action btn-primary" onclick="updateStatus(\'' + o.order_id + '\',\'On the Way\')">On the Way</button>';
+      }
+
+      return '<div class="order-card">'
+        + '<div class="order-card-top">'
+        +   '<div><div class="order-id-tag">' + (o.order_id || '—') + '</div><div class="order-date">' + date + '</div></div>'
+        +   statusBadge(o.status)
+        + '</div>'
+        + '<div class="cust-name">' + (o.customer_name || '—') + '</div>'
+        + '<div class="cust-phone">' + (o.phone || '') + '</div>'
+        + '<div class="addr-box">' + (o.address || '—') + '</div>'
+        + '<div class="items-line">' + (o.items || '—') + '</div>'
+        + (earn > 0 ? '<div class="earn-line">Your cut: \u20A6' + earn.toLocaleString() + '</div>' : '')
+        + '<div class="action-btns">' + btns + '</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  function updateStatus(orderId, newStatus) {
+    var order = allOrders.find(function(o) { return o.order_id === orderId; });
+    if (order) { order.status = newStatus; }
+    renderOrders();
+    sbFetch('orders?order_id=eq.' + orderId, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: newStatus, last_updated_by: currentDriver.name }),
+    })
+    .then(function(r) {
+      if (r.ok) { showToast('Status updated \u2713'); if (newStatus === 'Delivered') updateEarnings(); }
+      else showToast('Update failed', true);
+    })
+    .catch(function() { showToast('Could not update', true); });
+  }
+
+  /* ── REALTIME ── */
+  function startRealtime() {
+    if (realtimeChannel) stopRealtime();
+    var sc = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    realtimeChannel = sc.channel('driver-' + currentDriver.id)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: 'driver_id=eq.' + currentDriver.id }, function(payload) {
+        if (payload.eventType === 'INSERT') {
+          allOrders.unshift(payload.new);
+          showToast('New order assigned!');
+        } else if (payload.eventType === 'UPDATE') {
+          var idx = allOrders.findIndex(function(o) { return o.id === payload.new.id; });
+          if (idx > -1) allOrders[idx] = payload.new; else allOrders.unshift(payload.new);
+        } else if (payload.eventType === 'DELETE') {
+          allOrders = allOrders.filter(function(o) { return o.id !== payload.old.id; });
+        }
+        renderOrders();
+        updateEarnings();
+      })
+      .subscribe();
+  }
+
+  function stopRealtime() {
+    if (realtimeChannel) { realtimeChannel.unsubscribe(); realtimeChannel = null; }
+  }
+
+  function showToast(msg, isError) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast' + (isError ? ' error' : '');
+    t.classList.add('show');
+    setTimeout(function() { t.classList.remove('show'); }, 3000);
+  }
+</script>
+</body>
+</html>
