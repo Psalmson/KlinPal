@@ -213,6 +213,7 @@
       <button class="nav-item" onclick="showPage('services')" id="nav-services"><span class="icon">⚙️</span> Services & Pricing</button>
       <button class="nav-item" onclick="showPage('notifications')" id="nav-notifications"><span class="icon">🔔</span> Notifications</button>
       <button class="nav-item" onclick="showPage('staff')" id="nav-staff"><span class="icon">👥</span> Staff</button>
+      <button class="nav-item" onclick="showPage('branding')" id="nav-branding"><span class="icon">🎨</span> Branding</button>
     </nav>
     <div class="sidebar-foot">
       <button class="nav-item" onclick="doLogout()"><span class="icon">🚪</span> Sign Out</button>
@@ -407,6 +408,58 @@
       </div>
     </div>
 
+    <!-- BRANDING -->
+    <div class="page" id="page-branding">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Branding</div>
+          <div class="page-subtitle">Customise how your customer order page looks</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-header"><div class="card-title">Brand Colour</div></div>
+        <div class="card-body">
+          <p style="font-size:13px;color:var(--gray);margin-bottom:20px;line-height:1.6">This colour replaces the default teal on your customer order page — buttons, accents, and highlights.</p>
+          <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
+            <input type="color" id="brand-color-picker" value="#00c9a7"
+              style="width:48px;height:48px;border:none;border-radius:8px;cursor:pointer;background:none;padding:0"
+              oninput="syncColorInput(this.value)">
+            <div>
+              <label class="field-label">Hex code</label>
+              <input class="field-input" id="brand-color-hex" value="#00c9a7" placeholder="#000000"
+                style="width:140px;margin-bottom:0;font-family:var(--font-mono)"
+                oninput="syncColorPicker(this.value)">
+            </div>
+            <div id="brand-color-preview" style="width:120px;height:48px;border-radius:8px;background:#00c9a7;display:flex;align-items:center;justify-content:center;font-size:12px;color:#0d1b2a;font-weight:600">Preview</div>
+          </div>
+          <button class="save-btn" onclick="saveBranding()">💾 Save Colour</button>
+          <button onclick="resetBrandColor()" style="background:none;border:none;color:var(--gray);font-size:13px;cursor:pointer;margin-left:12px">Reset to default</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">Logo</div></div>
+        <div class="card-body">
+          <p style="font-size:13px;color:var(--gray);margin-bottom:20px;line-height:1.6">
+            Paste a direct image URL. We recommend uploading your logo to Google Drive, right-clicking → Get link, then converting it to a direct link.<br>
+            <span style="font-size:11px;color:var(--gray)">Tip: use a PNG or SVG with transparent background for best results.</span>
+          </p>
+          <label class="field-label">Logo URL</label>
+          <input class="field-input" id="brand-logo-url" placeholder="https://drive.google.com/uc?id=..." style="margin-bottom:16px">
+          <div id="logo-preview" style="display:none;margin-bottom:16px">
+            <div style="font-size:11px;color:var(--gray);margin-bottom:8px">Preview</div>
+            <img id="logo-preview-img" src="" alt="Logo preview" style="max-height:64px;max-width:200px;border-radius:8px;background:var(--navy3);padding:8px">
+          </div>
+          <div style="display:flex;gap:10px">
+            <button class="save-btn" onclick="saveBranding()">💾 Save Logo</button>
+            <button onclick="previewLogo()" style="background:var(--navy3);border:none;border-radius:var(--radius);padding:12px 20px;color:var(--gray);font-size:13px;cursor:pointer">Preview</button>
+            <button onclick="clearLogo()" style="background:none;border:none;color:var(--gray);font-size:13px;cursor:pointer">Clear logo</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -425,16 +478,18 @@
 
 <div class="toast" id="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
   /* ── CONFIG ── */
   var SUPABASE_URL = 'https://mlgdqxqzpzfzndjhywqf.supabase.co';
   var SUPABASE_KEY = 'sb_publishable_TS5uGf7KzLKxeQw8bxDKYw_HwBNNBeA';
 
-  var currentVendor = null;
-  var allOrders     = [];
-  var isStaffSession = false;
-  var currentStaff  = null;
-  var loginMode     = 'vendor';
+  var currentVendor    = null;
+  var allOrders        = [];
+  var isStaffSession   = false;
+  var currentStaff     = null;
+  var loginMode        = 'vendor';
+  var realtimeChannel  = null;
   var services      = [
     { id: 'express', name: 'Express Wash', price: 300, active: true },
     { id: 'fold',    name: 'Wash + Fold',  price: 300, active: true },
@@ -526,6 +581,15 @@
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
 
+    // Apply brand colour to vendor dashboard
+    if (currentVendor.brand_color) {
+      document.documentElement.style.setProperty('--teal',  currentVendor.brand_color);
+      document.documentElement.style.setProperty('--teal2', currentVendor.brand_color);
+    } else {
+      document.documentElement.style.removeProperty('--teal');
+      document.documentElement.style.removeProperty('--teal2');
+    }
+
     // Sidebar
     document.getElementById('sidebar-name').textContent = isStaffSession
       ? currentStaff.name
@@ -540,6 +604,7 @@
     document.getElementById('nav-services').style.display      = staffOnly ? 'none' : '';
     document.getElementById('nav-notifications').style.display = staffOnly ? 'none' : '';
     document.getElementById('nav-staff').style.display         = staffOnly ? 'none' : '';
+    document.getElementById('nav-branding').style.display      = staffOnly ? 'none' : '';
 
     // Customer link
     var customerUrl = window.location.origin + '/?vendor=' + currentVendor.slug;
@@ -558,6 +623,7 @@
     }
 
     loadOrders();
+    startRealtime();
   }
 
   document.getElementById('login-slug').addEventListener('keydown', function(e) { if (e.key === 'Enter') document.getElementById('login-pass').focus(); });
@@ -565,6 +631,10 @@
   document.getElementById('login-pin').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
 
   function doLogout() {
+    stopRealtime();
+    // Reset branding to default
+    document.documentElement.style.removeProperty('--teal');
+    document.documentElement.style.removeProperty('--teal2');
     currentVendor  = null;
     currentStaff   = null;
     isStaffSession = false;
@@ -594,6 +664,7 @@
     if (name === 'revenue')  renderRevenue();
     if (name === 'services') renderServicesEditor();
     if (name === 'staff')    loadStaff();
+    if (name === 'branding') loadBranding();
   }
 
   /* ── LOAD ORDERS ── */
@@ -839,6 +910,45 @@
     .catch(function() { showToast('Could not save', true); });
   }
 
+  /* ── REALTIME ── */
+  function startRealtime() {
+    if (realtimeChannel) stopRealtime();
+    var supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    realtimeChannel = supabaseClient
+      .channel('orders-vendor-' + currentVendor.id)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'orders',
+        filter: 'vendor_id=eq.' + currentVendor.id,
+      }, function(payload) {
+        // Update the matching order in allOrders, or reload if new/deleted
+        if (payload.eventType === 'UPDATE') {
+          var idx = allOrders.findIndex(function(o) { return o.id === payload.new.id; });
+          if (idx > -1) {
+            allOrders[idx] = payload.new;
+          } else {
+            allOrders.unshift(payload.new);
+          }
+          updateStats();
+          renderRevenue();
+          // Re-apply current filters
+          applyFilters();
+        } else {
+          // INSERT or DELETE — full reload
+          loadOrders();
+        }
+      })
+      .subscribe();
+  }
+
+  function stopRealtime() {
+    if (realtimeChannel) {
+      realtimeChannel.unsubscribe();
+      realtimeChannel = null;
+    }
+  }
+
   /* ── STAFF MANAGEMENT ── */
   function loadStaff() {
     document.getElementById('staff-list').innerHTML = '<div class="loading-state">Loading...</div>';
@@ -905,6 +1015,79 @@
       .then(function(r) { showToast(r.ok ? 'Staff removed ✓' : 'Could not remove', !r.ok); loadStaff(); })
       .catch(function() { showToast('Could not remove', true); });
   }
+  /* ── BRANDING ── */
+  function loadBranding() {
+    var color = currentVendor.brand_color || '#00c9a7';
+    var logo  = currentVendor.logo_url    || '';
+    document.getElementById('brand-color-picker').value = color;
+    document.getElementById('brand-color-hex').value    = color;
+    document.getElementById('brand-color-preview').style.background = color;
+    document.getElementById('brand-logo-url').value     = logo;
+    if (logo) {
+      document.getElementById('logo-preview-img').src   = logo;
+      document.getElementById('logo-preview').style.display = 'block';
+    } else {
+      document.getElementById('logo-preview').style.display = 'none';
+    }
+  }
+
+  function syncColorInput(val) {
+    document.getElementById('brand-color-hex').value = val;
+    document.getElementById('brand-color-preview').style.background = val;
+    document.documentElement.style.setProperty('--teal', val);
+    document.documentElement.style.setProperty('--teal2', val);
+  }
+
+  function syncColorPicker(val) {
+    if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+      document.getElementById('brand-color-picker').value = val;
+      document.getElementById('brand-color-preview').style.background = val;
+      document.documentElement.style.setProperty('--teal', val);
+      document.documentElement.style.setProperty('--teal2', val);
+    }
+  }
+
+  function resetBrandColor() {
+    var def = '#00c9a7';
+    document.getElementById('brand-color-picker').value = def;
+    document.getElementById('brand-color-hex').value    = def;
+    document.getElementById('brand-color-preview').style.background = def;
+    document.documentElement.style.setProperty('--teal', def);
+    document.documentElement.style.setProperty('--teal2', def);
+  }
+
+  function previewLogo() {
+    var url = document.getElementById('brand-logo-url').value.trim();
+    if (!url) { showToast('Enter a logo URL first', true); return; }
+    var img = document.getElementById('logo-preview-img');
+    img.src = url;
+    img.onerror = function() { showToast('Could not load image — check the URL', true); document.getElementById('logo-preview').style.display = 'none'; };
+    img.onload  = function() { document.getElementById('logo-preview').style.display = 'block'; };
+  }
+
+  function clearLogo() {
+    document.getElementById('brand-logo-url').value = '';
+    document.getElementById('logo-preview').style.display = 'none';
+  }
+
+  function saveBranding() {
+    var color = document.getElementById('brand-color-hex').value.trim() || null;
+    var logo  = document.getElementById('brand-logo-url').value.trim()  || null;
+    if (color && !/^#[0-9a-fA-F]{6}$/.test(color)) { showToast('Enter a valid hex colour e.g. #7c3aed', true); return; }
+    sbFetch('vendors?id=eq.' + currentVendor.id, {
+      method: 'PATCH',
+      body: JSON.stringify({ brand_color: color, logo_url: logo }),
+    })
+    .then(function(r) {
+      if (r.ok) {
+        currentVendor.brand_color = color;
+        currentVendor.logo_url    = logo;
+        showToast('Branding saved ✓');
+      } else { showToast('Save failed', true); }
+    })
+    .catch(function() { showToast('Could not save', true); });
+  }
+
   function showToast(msg, isError) {
     var t = document.getElementById('toast');
     t.textContent = msg;
