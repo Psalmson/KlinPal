@@ -407,51 +407,12 @@
         <div class="stat-card"><div class="stat-label">Klinpal Delivery Revenue</div><div class="stat-value green" id="rider-stat-klinpal">—</div><div class="stat-sub">Delivery − rider cut</div></div>
       </div>
 
-      <!-- Add rider form -->
-      <div class="card" style="margin-bottom:20px">
-        <div class="card-header"><div class="card-title">Add New Rider</div></div>
-        <div class="card-body">
-          <div class="form-grid">
-            <div>
-              <label class="field-label">Full Name</label>
-              <input class="field-input" id="rider-name" placeholder="e.g. Emeka Eze">
-            </div>
-            <div>
-              <label class="field-label">Email</label>
-              <input class="field-input" id="rider-email" type="email" placeholder="emeka@email.com">
-            </div>
-          </div>
-          <div class="form-grid">
-            <div>
-              <label class="field-label">Phone Number</label>
-              <input class="field-input" id="rider-phone" type="tel" placeholder="e.g. 08012345678">
-            </div>
-            <div>
-              <label class="field-label">PIN</label>
-              <div style="position:relative">
-                <input class="field-input" id="rider-pin" type="password" placeholder="Set a numeric PIN" style="padding-right:48px">
-                <button onclick="togglePwd('rider-pin',this)" type="button" style="position:absolute;right:14px;top:38%;transform:translateY(-50%);background:none;border:none;color:var(--gray);cursor:pointer;font-size:13px;padding:0">Show</button>
-              </div>
-            </div>
-          </div>
-          <div class="form-grid">
-            <div>
-              <label class="field-label">Earnings % (of delivery fee)</label>
-              <input class="field-input" id="rider-percentage" type="number" min="1" max="100" placeholder="e.g. 60">
-            </div>
-            <div>
-              <label class="field-label">Telegram Chat ID</label>
-              <input class="field-input" id="rider-telegram" placeholder="e.g. 1234567890">
-              <div class="field-note">Driver's personal Telegram ID — for order assignment alerts.</div>
-            </div>
-          </div>
-          <button class="btn btn-teal" onclick="addRider()" id="add-rider-btn">Add Rider</button>
-        </div>
-      </div>
-
       <!-- Riders list -->
       <div class="card">
-        <div class="card-header"><div class="card-title">All Riders</div></div>
+        <div class="card-header">
+          <div class="card-title">All Riders</div>
+          <button class="btn btn-teal btn-sm" onclick="openAddRiderModal()">+ Add New Rider</button>
+        </div>
         <div id="riders-list"><div class="loading-state">Loading...</div></div>
       </div>
 
@@ -476,6 +437,51 @@
     </div>
 
   </main>
+</div>
+
+<!-- ADD RIDER MODAL -->
+<div class="modal-overlay" id="add-rider-modal">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-title">Add New Rider</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+      <div>
+        <div class="modal-field-label">Full Name</div>
+        <input class="field-input" id="rider-name" placeholder="e.g. Emeka Eze" style="margin-top:6px">
+      </div>
+      <div>
+        <div class="modal-field-label">Email</div>
+        <input class="field-input" id="rider-email" type="email" placeholder="emeka@email.com" style="margin-top:6px">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+      <div>
+        <div class="modal-field-label">Phone Number</div>
+        <input class="field-input" id="rider-phone" type="tel" placeholder="e.g. 08012345678" style="margin-top:6px">
+      </div>
+      <div>
+        <div class="modal-field-label">PIN</div>
+        <div style="position:relative;margin-top:6px">
+          <input class="field-input" id="rider-pin" type="password" placeholder="Set a numeric PIN" style="padding-right:48px">
+          <button onclick="togglePwd('rider-pin',this)" type="button" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--gray);cursor:pointer;font-size:13px;padding:0">Show</button>
+        </div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px">
+      <div>
+        <div class="modal-field-label">Earnings % (of delivery fee)</div>
+        <input class="field-input" id="rider-percentage" type="number" min="1" max="100" placeholder="e.g. 60" style="margin-top:6px">
+      </div>
+      <div>
+        <div class="modal-field-label">Telegram Chat ID</div>
+        <input class="field-input" id="rider-telegram" placeholder="e.g. 1234567890" style="margin-top:6px">
+        <div style="font-size:11px;color:var(--gray);margin-top:4px">Personal Telegram ID for assignment alerts.</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="save-btn" onclick="addRider()" id="add-rider-btn">Add Rider</button>
+      <button class="modal-close" onclick="closeAddRiderModal()">Cancel</button>
+    </div>
+  </div>
 </div>
 
 <!-- EDIT VENDOR MODAL -->
@@ -1063,6 +1069,15 @@
     }).catch(function(e){ console.error('Telegram error:', e); });
   }
 
+  function openAddRiderModal() {
+    ['rider-name','rider-email','rider-phone','rider-pin','rider-percentage','rider-telegram'].forEach(function(id){ document.getElementById(id).value = ''; });
+    document.getElementById('add-rider-modal').classList.add('open');
+  }
+
+  function closeAddRiderModal() {
+    document.getElementById('add-rider-modal').classList.remove('open');
+  }
+
   /* ── RIDERS ── */
   function loadRiders() {
     document.getElementById('riders-list').innerHTML = '<div class="loading-state">Loading...</div>';
@@ -1194,7 +1209,7 @@
         .then(function(r){
           if (r.ok) {
             showToast(name + ' added ✓');
-            ['rider-name','rider-email','rider-phone','rider-pin','rider-percentage','rider-telegram'].forEach(function(id){ document.getElementById(id).value = ''; });
+            closeAddRiderModal();
             loadRiders();
           } else {
             return r.json().then(function(e){ showToast(e.message && e.message.indexOf('unique')>-1 ? 'Email or phone already registered' : 'Could not add rider', true); });
