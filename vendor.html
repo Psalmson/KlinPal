@@ -595,7 +595,7 @@
         .then(function(result) {
           if (result.error) { err.style.display = 'block'; return; }
           // Fetch vendor record by email
-          return sbFetch('vendors?email=eq.' + encodeURIComponent(email) + '&limit=1&select=*')
+          return sbFetch('vendors?email=eq.' + encodeURIComponent(email) + '&active=eq.true&limit=1&select=*')
             .then(function(r) { return r.json(); })
             .then(function(data) {
               if (!Array.isArray(data) || !data.length) { err.style.display = 'block'; sb.auth.signOut(); return; }
