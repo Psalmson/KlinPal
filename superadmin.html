@@ -239,8 +239,10 @@
       </div>
       <div class="card">
         <div class="card-header"><div class="card-title">New Laundromat Details</div></div>
-        <div style="padding:28px">
-          <div class="form-grid">
+        <div style="padding:28px;max-width:860px">
+
+          <div style="margin-bottom:6px;font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;font-weight:600">Basic Info</div>
+          <div class="form-grid" style="margin-bottom:20px">
             <div>
               <label class="field-label">Laundromat Name</label>
               <input class="field-input" id="ob-name" placeholder="e.g. Fresh Press Laundry">
@@ -248,10 +250,12 @@
             <div>
               <label class="field-label">Slug (URL identifier)</label>
               <input class="field-input" id="ob-slug" placeholder="e.g. freshpress" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9]/g,'')">
-              <div class="field-note">Lowercase letters and numbers only. Used in the customer URL.</div>
+              <div class="field-note">Lowercase letters and numbers only. Used in the customer link.</div>
             </div>
           </div>
-          <div class="form-grid">
+
+          <div style="margin-bottom:6px;font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;font-weight:600">Owner &amp; Login</div>
+          <div class="form-grid" style="margin-bottom:8px">
             <div>
               <label class="field-label">Owner Email</label>
               <input class="field-input" id="ob-email" type="email" placeholder="owner@email.com">
@@ -261,49 +265,55 @@
               <input class="field-input" id="ob-phone" placeholder="e.g. 08012345678">
             </div>
           </div>
-          <div class="form-grid">
+          <div class="form-grid" style="margin-bottom:20px">
             <div>
               <label class="field-label">Dashboard Password</label>
               <div style="position:relative">
                 <input class="field-input" id="ob-password" placeholder="Set a secure password" type="password" style="padding-right:48px">
-                <button onclick="togglePwd('ob-password',this)" type="button" style="position:absolute;right:14px;top:38%;transform:translateY(-50%);background:none;border:none;color:var(--gray);cursor:pointer;font-size:13px;padding:0">Show</button>
+                <button onclick="togglePwd('ob-password',this)" type="button" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--gray);cursor:pointer;font-size:13px;padding:0">Show</button>
               </div>
             </div>
+            <div></div>
+          </div>
+
+          <div style="margin-bottom:6px;font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;font-weight:600">Address</div>
+          <div class="form-grid" style="margin-bottom:20px">
             <div>
               <label class="field-label">House / Unit No.</label>
               <input class="field-input" id="ob-house" placeholder="e.g. 12B">
             </div>
-          <div class="form-grid">
             <div style="position:relative">
               <label class="field-label">Street / Area</label>
               <input class="field-input" id="ob-address" placeholder="Start typing street..." autocomplete="off" oninput="onAddressInput()">
               <div id="ob-addr-dropdown" style="display:none;position:fixed;background:#162032;border:1px solid #1e2e42;border-radius:8px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.5);overflow-y:auto;max-height:240px;"></div>
               <div id="ob-addr-status" style="font-size:11px;margin-top:5px;color:var(--gray)"></div>
-              <div class="field-note">Select from suggestions — coordinates captured automatically</div>
+              <div class="field-note">Select from suggestions — coordinates captured automatically.</div>
             </div>
-            <div></div>
           </div>
-          <div class="form-grid">
+
+          <div style="margin-bottom:6px;font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;font-weight:600">Notifications &amp; Branding</div>
+          <div class="form-grid" style="margin-bottom:8px">
             <div>
               <label class="field-label">Telegram Group Chat ID</label>
               <input class="field-input" id="ob-telegram" placeholder="e.g. -1234567890">
               <div class="field-note">Add the bot to a group and get the Chat ID from getUpdates.</div>
             </div>
-            <div></div>
-          </div>
-          <div class="form-grid">
             <div>
               <label class="field-label">Brand Colour (hex)</label>
               <input class="field-input" id="ob-brand-color" placeholder="e.g. #7c3aed" style="font-family:var(--font-mono)">
               <div class="field-note">Leave blank to use the Klinpal default teal.</div>
             </div>
+          </div>
+          <div class="form-grid" style="margin-bottom:28px">
             <div>
               <label class="field-label">Logo URL</label>
-              <input class="field-input" id="ob-logo-url" placeholder="https://i.ibb.co/...  or  https://raw.githubusercontent.com/...">
-              <div class="field-note">Use a direct image URL — recommended: <strong style="color:var(--white)">imgbb.com</strong> (free upload, instant link) or a GitHub raw URL. Google Drive links will not work.</div>
+              <input class="field-input" id="ob-logo-url" placeholder="https://i.ibb.co/...">
+              <div class="field-note">Recommended: <strong style="color:var(--white)">imgbb.com</strong> — free upload, instant direct link. Google Drive links will not work.</div>
             </div>
+            <div></div>
           </div>
-          <button class="btn btn-teal" onclick="onboardVendor()" id="ob-btn">Onboard Laundromat</button>
+
+          <button class="btn btn-teal" onclick="onboardVendor()" id="ob-btn" style="padding:14px 32px;font-size:15px">Onboard Laundromat</button>
         </div>
       </div>
     </div>
