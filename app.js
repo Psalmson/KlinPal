@@ -197,10 +197,9 @@ function calculateDeliveryFee(coords) {
       if (!routes || !routes.length) throw new Error('No route found');
       var metres      = routes[0].distance;
       var km          = parseFloat((metres / 1000).toFixed(1));
-      var roundTripKm = km * 2; // pickup + delivery = two journeys
-      var baseFee     = Math.round(CONFIG.BASE_DELIVERY_FEE + CONFIG.RATE_PER_KM * roundTripKm);
-      serviceFee      = Math.min(Math.round(baseFee * 0.2), 1000); // global var
-      deliveryFee     = baseFee + serviceFee;
+      var roundTripKm = km * 2;
+      deliveryFee     = Math.round(CONFIG.BASE_DELIVERY_FEE + CONFIG.RATE_PER_KM * roundTripKm);
+      serviceFee      = Math.min(Math.round(deliveryFee * 0.2), 1000);
       deliveryLabel   = km + ' km';
       setAddrStatus('\u2713 ' + km + ' km away', 'ok');
     })
@@ -479,8 +478,8 @@ function proceedFromOrder() {
 function renderSummary() {
   var items = SERVICES.filter(function(s) { return s.qty > 0; });
   var sub   = items.reduce(function(a, s) { return a + s.price * s.qty; }, 0);
-  platformFee = Math.round(sub * 0.1); // 10% of subtotal
-  var total = sub + deliveryFee;
+  platformFee = Math.round(sub * 0.1);
+  var total = sub + deliveryFee + serviceFee; // base delivery + service fee + subtotal
 
   orderId = genOrderId();
   document.getElementById('order-id-display').textContent = orderId;
@@ -497,7 +496,7 @@ function renderSummary() {
     }).join('')
     + '<div class="summary-row sub-row">'
     +   '<span>Pickup &amp; Delivery <small style="color:var(--gray-500)">' + deliveryLabel + '</small></span>'
-    +   '<span>\u20A6' + (deliveryFee - serviceFee).toLocaleString() + '</span>'
+    +   '<span>\u20A6' + deliveryFee.toLocaleString() + '</span>'
     + '</div>'
     + '<div class="summary-row sub-row">'
     +   '<span>Service Fee</span>'
@@ -516,7 +515,7 @@ function submitOrder() {
 
   var items = SERVICES.filter(function(s) { return s.qty > 0; });
   var sub   = items.reduce(function(a, s) { return a + s.price * s.qty; }, 0);
-  var total = sub + deliveryFee;
+  var total = sub + deliveryFee + serviceFee;
 
   var itemsStr = items.map(function(s) { return s.qty + 'x ' + s.name; }).join(', ');
 
