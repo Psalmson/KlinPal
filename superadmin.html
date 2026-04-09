@@ -215,7 +215,13 @@
           <div class="page-title">Laundromats</div>
           <div class="page-subtitle">All onboarded vendors</div>
         </div>
-        <button class="btn btn-teal" onclick="showPage('onboard')">+ Onboard New</button>
+        <div style="display:flex;gap:10px;align-items:center">
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--gray);cursor:pointer">
+            <input type="checkbox" id="show-inactive" onchange="renderVendorsTable()" style="width:16px;height:16px;accent-color:var(--teal)">
+            Show inactive
+          </label>
+          <button class="btn btn-teal" onclick="showPage('onboard')">+ Onboard New</button>
+        </div>
       </div>
       <div class="card">
         <div class="card-header"><div class="card-title">All Laundromats</div></div>
@@ -436,6 +442,54 @@
   </main>
 </div>
 
+<!-- EDIT VENDOR MODAL -->
+<div class="modal-overlay" id="edit-vendor-modal">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-title">Edit Vendor</div>
+    <div id="edit-vendor-name-display" style="font-size:13px;color:var(--gray);margin-bottom:20px"></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+      <div>
+        <div class="modal-field-label">Name</div>
+        <input class="field-input" id="ev-name" placeholder="Laundromat name" style="margin-top:6px">
+      </div>
+      <div>
+        <div class="modal-field-label">Slug</div>
+        <input class="field-input" id="ev-slug" placeholder="e.g. freshpress" style="margin-top:6px" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9]/g,'')">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+      <div>
+        <div class="modal-field-label">Email</div>
+        <input class="field-input" id="ev-email" type="email" placeholder="owner@email.com" style="margin-top:6px">
+        <div style="font-size:11px;color:var(--gray);margin-top:4px">Updates vendor table only. Vendor updates Auth email via their Profile.</div>
+      </div>
+      <div>
+        <div class="modal-field-label">Phone</div>
+        <input class="field-input" id="ev-phone" type="tel" placeholder="e.g. 08012345678" style="margin-top:6px">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+      <div>
+        <div class="modal-field-label">New Password (leave blank to keep current)</div>
+        <div style="position:relative;margin-top:6px">
+          <input class="field-input" id="ev-password" type="password" placeholder="Set new password" style="padding-right:48px">
+          <button onclick="togglePwd('ev-password',this)" type="button" style="position:absolute;right:14px;top:38%;transform:translateY(-50%);background:none;border:none;color:var(--gray);cursor:pointer;font-size:13px;padding:0">Show</button>
+        </div>
+      </div>
+      <div>
+        <div class="modal-field-label">Telegram Group Chat ID</div>
+        <input class="field-input" id="ev-telegram" placeholder="e.g. -1234567890" style="margin-top:6px">
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:24px">
+      <button class="save-btn" onclick="saveEditVendor()">Save Changes</button>
+      <button class="modal-close" onclick="closeEditVendorModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- BRANDING MODAL -->
 <div class="modal-overlay" id="branding-modal">
   <div class="modal" style="max-width:480px">
@@ -647,25 +701,36 @@
   /* ── VENDORS TABLE ── */
   function renderVendorsTable() {
     var wrap = document.getElementById('vendors-table');
-    if (!allVendors.length) {
-      wrap.innerHTML = '<div class="empty-state"><div style="font-size:40px;margin-bottom:12px">🏪</div><div style="font-size:14px">No laundromats onboarded yet</div></div>';
+    var showInactive = document.getElementById('show-inactive') && document.getElementById('show-inactive').checked;
+    var list = allVendors.filter(function(v) {
+      return showInactive ? true : (v.active !== false);
+    });
+
+    if (!list.length) {
+      wrap.innerHTML = '<div class="empty-state"><div style="font-size:40px;margin-bottom:12px">🏪</div><div style="font-size:14px">' + (showInactive ? 'No laundromats found' : 'No active laundromats') + '</div></div>';
       return;
     }
-    var rows = allVendors.map(function(v) {
-      var date = v.created_at ? new Date(v.created_at).toLocaleDateString('en-GB') : '—';
-      var swatch = v.brand_color
+    var rows = list.map(function(v) {
+      var date     = v.created_at ? new Date(v.created_at).toLocaleDateString('en-GB') : '—';
+      var inactive = v.active === false;
+      var swatch   = v.brand_color
         ? '<span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:' + v.brand_color + ';vertical-align:middle;margin-right:6px;border:1px solid rgba(255,255,255,0.1)"></span>' + v.brand_color
         : '<span style="color:var(--gray);font-size:11px">default</span>';
-      return '<tr>'
-        + '<td><div class="vendor-name">' + v.name + '</div></td>'
+      return '<tr style="opacity:' + (inactive ? '0.5' : '1') + '">'
+        + '<td><div class="vendor-name">' + v.name + '</div>'
+        + (inactive ? '<div style="font-size:11px;color:var(--red);margin-top:2px">Inactive</div>' : '') + '</td>'
         + '<td><span class="mono">' + v.slug + '</span></td>'
         + '<td style="color:var(--gray)">' + (v.phone || '—') + '</td>'
         + '<td style="color:var(--gray);font-size:12px;max-width:160px">' + (v.address || '—') + '</td>'
         + '<td style="font-size:12px;font-family:var(--font-mono)">' + swatch + '</td>'
         + '<td style="color:var(--gray);font-size:12px">' + date + '</td>'
         + '<td style="display:flex;gap:6px;flex-wrap:wrap">'
-        +   '<button class="btn btn-ghost btn-sm" onclick="openVendorOrders(\'' + v.slug + '\')">View Orders</button>'
-        +   '<button class="btn btn-ghost btn-sm" onclick="openBrandingModal(\'' + v.id + '\')">Edit Branding</button>'
+        + (inactive
+          ? '<button class="btn btn-ghost btn-sm" style="color:var(--green)" onclick="reactivateVendor(\'' + v.id + '\',\'' + v.name + '\')">Reactivate</button>'
+          : '<button class="btn btn-ghost btn-sm" onclick="openVendorOrders(\'' + v.slug + '\')">View Orders</button>'
+          + '<button class="btn btn-ghost btn-sm" onclick="openBrandingModal(\'' + v.id + '\')">Edit Branding</button>'
+          + '<button class="btn btn-ghost btn-sm" onclick="openEditVendorModal(\'' + v.id + '\')">Edit</button>'
+          + '<button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteVendor(\'' + v.id + '\',\'' + v.name + '\')">Deactivate</button>')
         + '</td>'
         + '</tr>';
     }).join('');
@@ -1045,6 +1110,94 @@
     sbFetch('drivers?id=eq.' + id, { method: 'DELETE' })
       .then(function(r){ showToast(r.ok ? 'Rider removed ✓' : 'Could not remove', !r.ok); loadRiders(); })
       .catch(function(){ showToast('Could not remove', true); });
+  }
+
+  function reactivateVendor(vendorId, vendorName) {
+    if (!confirm('Reactivate "' + vendorName + '"?\n\nThey will be able to log in again immediately.')) return;
+    sbFetch('vendors?id=eq.' + vendorId, { method: 'PATCH', body: JSON.stringify({ active: true }) })
+      .then(function(r) {
+        if (r.ok) {
+          var v = allVendors.find(function(v){ return v.id === vendorId; });
+          if (v) v.active = true;
+          showToast(vendorName + ' reactivated ✓');
+          renderVendorsTable();
+          loadOverview();
+        } else {
+          showToast('Could not reactivate vendor', true);
+        }
+      })
+      .catch(function(){ showToast('Could not reactivate vendor', true); });
+  }
+
+  /* ── EDIT VENDOR ── */
+  var editVendorId = null;
+
+  function openEditVendorModal(vendorId) {
+    var v = allVendors.find(function(v){ return v.id === vendorId; });
+    if (!v) return;
+    editVendorId = vendorId;
+    document.getElementById('edit-vendor-name-display').textContent = v.name;
+    document.getElementById('ev-name').value     = v.name     || '';
+    document.getElementById('ev-slug').value     = v.slug     || '';
+    document.getElementById('ev-email').value    = v.email    || '';
+    document.getElementById('ev-phone').value    = v.phone    || '';
+    document.getElementById('ev-password').value = '';
+    document.getElementById('ev-telegram').value = v.telegram_chat_id || '';
+    document.getElementById('edit-vendor-modal').classList.add('open');
+  }
+
+  function closeEditVendorModal() {
+    document.getElementById('edit-vendor-modal').classList.remove('open');
+    editVendorId = null;
+  }
+
+  function saveEditVendor() {
+    if (!editVendorId) return;
+    var name     = document.getElementById('ev-name').value.trim();
+    var slug     = document.getElementById('ev-slug').value.trim();
+    var email    = document.getElementById('ev-email').value.trim().toLowerCase();
+    var phone    = document.getElementById('ev-phone').value.trim();
+    var password = document.getElementById('ev-password').value.trim();
+    var telegram = document.getElementById('ev-telegram').value.trim() || null;
+
+    if (!name || !slug) { showToast('Name and slug are required', true); return; }
+
+    var payload = { name: name, slug: slug, email: email, phone: phone, telegram_chat_id: telegram };
+    if (password) payload.password = password;
+
+    sbFetch('vendors?id=eq.' + editVendorId, { method: 'PATCH', body: JSON.stringify(payload) })
+      .then(function(r) {
+        if (r.ok) {
+          // Update local cache
+          var v = allVendors.find(function(v){ return v.id === editVendorId; });
+          if (v) { v.name = name; v.slug = slug; v.email = email; v.phone = phone; v.telegram_chat_id = telegram; }
+          showToast('Vendor updated ✓');
+          closeEditVendorModal();
+          renderVendorsTable();
+        } else {
+          r.json().then(function(e){ showToast(e.message || 'Update failed', true); });
+        }
+      })
+      .catch(function(){ showToast('Could not update vendor', true); });
+  }
+
+  /* ── DELETE VENDOR (soft) ── */
+  function deleteVendor(vendorId, vendorName) {
+    if (!confirm('Deactivate "' + vendorName + '"?\n\nTheir orders and data will be preserved. They will no longer be able to log in.')) return;
+
+    sbFetch('vendors?id=eq.' + vendorId, { method: 'PATCH', body: JSON.stringify({ active: false }) })
+      .then(function(r) {
+        if (r.ok) {
+          // Remove from local list and re-render
+          allVendors = allVendors.filter(function(v){ return v.id !== vendorId; });
+          showToast(vendorName + ' deactivated ✓');
+          renderVendorsTable();
+          loadOverview();
+        } else {
+          showToast('Could not deactivate vendor', true);
+        }
+      })
+      .catch(function(){ showToast('Could not deactivate vendor', true); });
   }
 
   /* ── BRANDING MODAL ── */
