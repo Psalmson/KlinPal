@@ -400,6 +400,13 @@
         </div>
       </div>
 
+      <!-- Overview stats -->
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:24px">
+        <div class="stat-card"><div class="stat-label">Total Riders</div><div class="stat-value teal" id="rider-stat-count">—</div><div class="stat-sub">Registered</div></div>
+        <div class="stat-card"><div class="stat-label">Total Rider Payout</div><div class="stat-value" id="rider-stat-payout">—</div><div class="stat-sub">Across all orders</div></div>
+        <div class="stat-card"><div class="stat-label">Klinpal Delivery Revenue</div><div class="stat-value green" id="rider-stat-klinpal">—</div><div class="stat-sub">Delivery − rider cut</div></div>
+      </div>
+
       <!-- Add rider form -->
       <div class="card" style="margin-bottom:20px">
         <div class="card-header"><div class="card-title">Add New Rider</div></div>
@@ -446,6 +453,25 @@
       <div class="card">
         <div class="card-header"><div class="card-title">All Riders</div></div>
         <div id="riders-list"><div class="loading-state">Loading...</div></div>
+      </div>
+
+      <!-- Rider drill-in -->
+      <div id="rider-drill" style="display:none;margin-top:24px">
+        <button onclick="closeRiderDrill()" style="background:none;border:none;color:var(--gray);cursor:pointer;font-size:13px;margin-bottom:16px;font-family:var(--font-body)">← Back to all riders</button>
+        <div class="page-title" id="rider-drill-name" style="margin-bottom:4px">—</div>
+        <div style="font-size:13px;color:var(--gray);margin-bottom:20px" id="rider-drill-sub">—</div>
+
+        <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px">
+          <div class="stat-card"><div class="stat-label">Assigned Orders</div><div class="stat-value teal" id="rd-orders">—</div></div>
+          <div class="stat-card"><div class="stat-label">Fulfilled</div><div class="stat-value green" id="rd-fulfilled">—</div><div class="stat-sub">Delivered</div></div>
+          <div class="stat-card"><div class="stat-label">Total Earned</div><div class="stat-value" id="rd-earned">—</div><div class="stat-sub">Rider's cut</div></div>
+          <div class="stat-card"><div class="stat-label">Earnings %</div><div class="stat-value teal" id="rd-pct">—</div><div class="stat-sub">Of delivery fee</div></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-title">Order History</div></div>
+          <div id="rider-drill-table"><div class="loading-state">Loading...</div></div>
+        </div>
       </div>
     </div>
 
@@ -638,6 +664,7 @@
   function showPage(name) {
     if (name === 'riders') loadRiders();
     if (name !== 'vendor-orders') stopDrillRealtime();
+    if (name !== 'riders') closeRiderDrill();
     document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
     document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
     document.getElementById('page-' + name).classList.add('active');
@@ -1039,32 +1066,101 @@
   /* ── RIDERS ── */
   function loadRiders() {
     document.getElementById('riders-list').innerHTML = '<div class="loading-state">Loading...</div>';
-    sbFetch('drivers?order=created_at.desc&select=*')
-      .then(function(r){ return r.json(); })
-      .then(function(data){
-        allDrivers = Array.isArray(data) ? data : [];
-        renderRidersList();
-      })
-      .catch(function(){ document.getElementById('riders-list').innerHTML = '<div class="empty-state"><div style="font-size:13px">Could not load riders</div></div>'; });
+    // Fetch riders and all orders with rider_fee in parallel
+    Promise.all([
+      sbFetch('drivers?order=created_at.desc&select=*').then(function(r){ return r.json(); }),
+      sbFetch('orders?driver_id=not.is.null&select=driver_id,rider_fee,klinpal_delivery_revenue,status').then(function(r){ return r.json(); })
+    ])
+    .then(function(results) {
+      allDrivers = Array.isArray(results[0]) ? results[0] : [];
+      var allRiderOrders = Array.isArray(results[1]) ? results[1] : [];
+
+      // Overview stats
+      var totalPayout  = allRiderOrders.reduce(function(a,o){ return a + (Number(o.rider_fee)||0); }, 0);
+      var totalKlinpal = allRiderOrders.reduce(function(a,o){ return a + (Number(o.klinpal_delivery_revenue)||0); }, 0);
+      document.getElementById('rider-stat-count').textContent   = allDrivers.length;
+      document.getElementById('rider-stat-payout').textContent  = '₦' + totalPayout.toLocaleString();
+      document.getElementById('rider-stat-klinpal').textContent = '₦' + totalKlinpal.toLocaleString();
+
+      renderRidersList(allRiderOrders);
+    })
+    .catch(function(){ document.getElementById('riders-list').innerHTML = '<div class="empty-state"><div style="font-size:13px">Could not load riders</div></div>'; });
   }
 
-  function renderRidersList() {
+  function renderRidersList(allRiderOrders) {
     var wrap = document.getElementById('riders-list');
     if (!allDrivers.length) {
       wrap.innerHTML = '<div class="empty-state"><div style="font-size:40px;margin-bottom:12px">🛵</div><div style="font-size:14px">No riders added yet</div></div>';
       return;
     }
     var rows = allDrivers.map(function(d) {
+      var dOrders    = allRiderOrders.filter(function(o){ return o.driver_id === d.id; });
+      var earned     = dOrders.reduce(function(a,o){ return a + (Number(o.rider_fee)||0); }, 0);
+      var fulfilled  = dOrders.filter(function(o){ return o.status === 'Delivered'; }).length;
       return '<tr>'
         + '<td style="font-weight:600">' + d.name + '</td>'
         + '<td style="color:var(--gray)">' + d.phone + '</td>'
         + '<td><span style="font-family:var(--font-mono);color:var(--teal)">' + d.percentage + '%</span><span style="font-size:11px;color:var(--gray)"> of delivery</span></td>'
+        + '<td style="font-family:var(--font-mono)">' + dOrders.length + ' assigned · ' + fulfilled + ' delivered</td>'
+        + '<td style="font-family:var(--font-mono);color:var(--green)">₦' + earned.toLocaleString() + '</td>'
         + '<td style="font-size:12px;color:var(--gray)">' + (d.telegram_chat_id || '—') + '</td>'
         + '<td><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"' + (d.active?' checked':'') + ' onchange="toggleRider(\'' + d.id + '\',this.checked)" style="width:16px;height:16px;accent-color:var(--teal)"><span style="font-size:13px;color:' + (d.active?'var(--green)':'var(--gray)') + '">' + (d.active?'Active':'Inactive') + '</span></label></td>'
-        + '<td><button class="btn btn-ghost btn-sm" onclick="removeRider(\'' + d.id + '\',\'' + d.name + '\')">Remove</button></td>'
+        + '<td style="display:flex;gap:6px">'
+        +   '<button class="btn btn-ghost btn-sm" onclick="openRiderDrill(\'' + d.id + '\')">View</button>'
+        +   '<button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="removeRider(\'' + d.id + '\',\'' + d.name + '\')">Remove</button>'
+        + '</td>'
         + '</tr>';
     }).join('');
-    wrap.innerHTML = '<table><thead><tr><th>Name</th><th>Phone</th><th>Earnings</th><th>Telegram ID</th><th>Status</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>';
+    wrap.innerHTML = '<table><thead><tr><th>Name</th><th>Phone</th><th>Earnings</th><th>Orders</th><th>Total Earned</th><th>Telegram ID</th><th>Status</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>';
+  }
+
+  /* ── RIDER DRILL-IN ── */
+  var currentRiderId = null;
+
+  function openRiderDrill(driverId) {
+    var driver = allDrivers.find(function(d){ return d.id === driverId; });
+    if (!driver) return;
+    currentRiderId = driverId;
+    document.getElementById('rider-drill').style.display = 'block';
+    document.getElementById('rider-drill-name').textContent = driver.name;
+    document.getElementById('rider-drill-sub').textContent  = driver.phone + ' · ' + driver.percentage + '% of delivery fee';
+    document.getElementById('rd-pct').textContent = driver.percentage + '%';
+    document.getElementById('rider-drill-table').innerHTML = '<div class="loading-state">Loading...</div>';
+
+    sbFetch('orders?driver_id=eq.' + driverId + '&order=created_at.desc&select=order_id,customer_name,address,items,delivery_fee,rider_fee,status,created_at,payment_status')
+      .then(function(r){ return r.json(); })
+      .then(function(orders) {
+        orders = Array.isArray(orders) ? orders : [];
+        var fulfilled = orders.filter(function(o){ return o.status === 'Delivered'; }).length;
+        var earned    = orders.reduce(function(a,o){ return a + (Number(o.rider_fee)||0); }, 0);
+        document.getElementById('rd-orders').textContent    = orders.length;
+        document.getElementById('rd-fulfilled').textContent = fulfilled;
+        document.getElementById('rd-earned').textContent    = '₦' + earned.toLocaleString();
+
+        if (!orders.length) {
+          document.getElementById('rider-drill-table').innerHTML = '<div class="empty-state"><div style="font-size:14px;color:var(--gray)">No orders assigned yet</div></div>';
+          return;
+        }
+        var rows = orders.map(function(o) {
+          var date = o.created_at ? new Date(o.created_at).toLocaleDateString('en-GB') : '';
+          var statusColor = o.status === 'Delivered' ? 'var(--green)' : o.status === 'Cancelled' ? 'var(--red)' : 'var(--amber)';
+          return '<tr>'
+            + '<td><div class="mono" style="color:var(--teal)">' + (o.order_id||'—') + '</div><div style="font-size:11px;color:var(--gray)">' + date + '</div></td>'
+            + '<td><div style="font-weight:600">' + (o.customer_name||'—') + '</div><div style="font-size:11px;color:var(--gray);max-width:160px">' + (o.address||'') + '</div></td>'
+            + '<td style="font-size:12px;color:var(--gray)">' + (o.items||'—') + '</td>'
+            + '<td><div style="font-family:var(--font-mono)">₦' + (Number(o.delivery_fee)||0).toLocaleString() + '</div><div style="font-size:11px;color:var(--green)">Rider cut: ₦' + (Number(o.rider_fee)||0).toLocaleString() + '</div></td>'
+            + '<td><span style="color:' + statusColor + ';font-size:13px;font-weight:600">' + (o.status||'—') + '</span></td>'
+            + '</tr>';
+        }).join('');
+        document.getElementById('rider-drill-table').innerHTML =
+          '<table><thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Delivery / Cut</th><th>Status</th></tr></thead><tbody>' + rows + '</tbody></table>';
+      })
+      .catch(function(){ document.getElementById('rider-drill-table').innerHTML = '<div class="empty-state"><div style="font-size:13px;color:var(--gray)">Could not load orders</div></div>'; });
+  }
+
+  function closeRiderDrill() {
+    document.getElementById('rider-drill').style.display = 'none';
+    currentRiderId = null;
   }
 
   function addRider() {
