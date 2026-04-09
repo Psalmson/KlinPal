@@ -92,8 +92,8 @@
   <div class="login-card">
     <div class="login-logo">klinpal</div>
     <div class="login-badge">Driver</div>
-    <label class="login-label">Phone Number</label>
-    <input class="login-input" id="login-phone" type="tel" placeholder="e.g. 08012345678" autocomplete="off">
+    <label class="login-label">Email</label>
+    <input class="login-input" id="login-email" type="email" placeholder="your@email.com" autocomplete="off">
     <label class="login-label">PIN</label>
     <div style="position:relative">
       <input class="login-input" id="login-pin" type="password" placeholder="Enter your PIN" style="padding-right:48px;margin-bottom:20px">
@@ -110,7 +110,10 @@
     <div class="driver-info">
       <div class="driver-name" id="driver-name">—</div>
       <div class="driver-sub" id="driver-phone-display">—</div>
-      <button class="logout-btn" onclick="doLogout()">Sign out</button>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px">
+        <button class="logout-btn" onclick="showProfile()">My Profile</button>
+        <button class="logout-btn" onclick="doLogout()">Sign out</button>
+      </div>
     </div>
   </div>
 
@@ -129,10 +132,39 @@
 
 <div class="toast" id="toast"></div>
 
+<!-- PROFILE MODAL -->
+<div id="profile-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:500;align-items:center;justify-content:center">
+  <div style="background:var(--navy2);border:1px solid var(--navy3);border-radius:16px;padding:32px;width:100%;max-width:400px;margin:16px">
+    <div style="font-family:var(--font-head);font-size:18px;font-weight:800;margin-bottom:24px">My Profile</div>
+
+    <div style="margin-bottom:16px">
+      <label class="login-label">New Email</label>
+      <input class="login-input" id="profile-email" type="email" placeholder="your@email.com" style="margin-bottom:8px">
+      <button onclick="updateEmail()" style="background:var(--teal);color:var(--navy);border:none;border-radius:6px;padding:8px 16px;font-family:var(--font-head);font-size:13px;font-weight:700;cursor:pointer">Update Email</button>
+      <div style="font-size:11px;color:var(--gray);margin-top:6px">A confirmation link will be sent to your new email.</div>
+    </div>
+
+    <div style="border-top:1px solid var(--navy3);padding-top:16px;margin-bottom:16px">
+      <label class="login-label">New PIN</label>
+      <input class="login-input" id="profile-pin" type="password" placeholder="Enter new PIN" style="margin-bottom:8px">
+      <button onclick="updatePin()" style="background:var(--teal);color:var(--navy);border:none;border-radius:6px;padding:8px 16px;font-family:var(--font-head);font-size:13px;font-weight:700;cursor:pointer">Update PIN</button>
+    </div>
+
+    <div style="border-top:1px solid var(--navy3);padding-top:16px;margin-bottom:20px">
+      <label class="login-label">Phone Number</label>
+      <input class="login-input" id="profile-phone" type="tel" placeholder="e.g. 08012345678" style="margin-bottom:8px">
+      <button onclick="updatePhone()" style="background:var(--teal);color:var(--navy);border:none;border-radius:6px;padding:8px 16px;font-family:var(--font-head);font-size:13px;font-weight:700;cursor:pointer">Update Phone</button>
+    </div>
+
+    <button onclick="hideProfile()" style="background:var(--navy3);border:none;border-radius:8px;padding:10px 20px;color:var(--gray);cursor:pointer;font-family:var(--font-body);width:100%">Close</button>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
   var SUPABASE_URL = 'https://mlgdqxqzpzfzndjhywqf.supabase.co';
   var SUPABASE_KEY = 'sb_publishable_TS5uGf7KzLKxeQw8bxDKYw_HwBNNBeA';
+  var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   var currentDriver   = null;
   var allOrders       = [];
@@ -153,39 +185,83 @@
 
   /* ── LOGIN ── */
   function doLogin() {
-    var phone = document.getElementById('login-phone').value.trim().replace(/\s+/g,'');
+    var email = document.getElementById('login-email').value.trim().toLowerCase();
     var pin   = document.getElementById('login-pin').value.trim();
     var err   = document.getElementById('login-error');
-    if (!phone || !pin) { err.style.display = 'block'; return; }
-    if (phone.startsWith('+234')) phone = '0' + phone.slice(4);
+    if (!email || !pin) { err.style.display = 'block'; return; }
 
-    sbFetch('drivers?phone=eq.' + encodeURIComponent(phone) + '&pin=eq.' + encodeURIComponent(pin) + '&active=eq.true&limit=1&select=*')
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (!Array.isArray(data) || !data.length) { err.style.display = 'block'; return; }
-        currentDriver = data[0];
-        err.style.display = 'none';
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('app').style.display = 'block';
-        document.getElementById('driver-name').textContent          = currentDriver.name;
-        document.getElementById('driver-phone-display').textContent = currentDriver.phone;
-        loadOrders();
-        startRealtime();
+    sb.auth.signInWithPassword({ email: email, password: pin })
+      .then(function(result) {
+        if (result.error) { err.style.display = 'block'; return; }
+        // Fetch driver record by email
+        return sbFetch('drivers?email=eq.' + encodeURIComponent(email) + '&active=eq.true&limit=1&select=*')
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            if (!Array.isArray(data) || !data.length) { err.style.display = 'block'; sb.auth.signOut(); return; }
+            currentDriver = data[0];
+            err.style.display = 'none';
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+            document.getElementById('driver-name').textContent          = currentDriver.name;
+            document.getElementById('driver-phone-display').textContent = currentDriver.phone || email;
+            // Prefill profile
+            document.getElementById('profile-email').value = email;
+            document.getElementById('profile-phone').value = currentDriver.phone || '';
+            loadOrders();
+            startRealtime();
+          });
       })
       .catch(function() { err.style.display = 'block'; });
   }
 
-  document.getElementById('login-phone').addEventListener('keydown', function(e) { if (e.key === 'Enter') document.getElementById('login-pin').focus(); });
+  document.getElementById('login-email').addEventListener('keydown', function(e) { if (e.key === 'Enter') document.getElementById('login-pin').focus(); });
   document.getElementById('login-pin').addEventListener('keydown',   function(e) { if (e.key === 'Enter') doLogin(); });
 
   function doLogout() {
     stopRealtime();
+    sb.auth.signOut();
     currentDriver = null; allOrders = [];
     document.getElementById('app').style.display = 'none';
     document.getElementById('login-screen').style.display = 'flex';
-    document.getElementById('login-phone').value = '';
+    document.getElementById('login-email').value = '';
     document.getElementById('login-pin').value   = '';
     document.getElementById('login-error').style.display = 'none';
+  }
+
+  /* ── PROFILE ── */
+  function showProfile() {
+    document.getElementById('profile-modal').style.display = 'flex';
+  }
+  function hideProfile() {
+    document.getElementById('profile-modal').style.display = 'none';
+  }
+  function updateEmail() {
+    var email = document.getElementById('profile-email').value.trim().toLowerCase();
+    if (!email) { showToast('Enter a valid email', true); return; }
+    sb.auth.updateUser({ email: email }).then(function(r) {
+      if (r.error) { showToast('Could not update: ' + r.error.message, true); return; }
+      sbFetch('drivers?id=eq.' + currentDriver.id, { method: 'PATCH', body: JSON.stringify({ email: email }) });
+      showToast('Email updated — check inbox to confirm ✓');
+    });
+  }
+  function updatePin() {
+    var pin = document.getElementById('profile-pin').value.trim();
+    if (!pin || pin.length < 4) { showToast('PIN must be at least 4 characters', true); return; }
+    sb.auth.updateUser({ password: pin }).then(function(r) {
+      if (r.error) { showToast('Could not update PIN: ' + r.error.message, true); return; }
+      sbFetch('drivers?id=eq.' + currentDriver.id, { method: 'PATCH', body: JSON.stringify({ pin: pin }) });
+      document.getElementById('profile-pin').value = '';
+      showToast('PIN updated ✓');
+    });
+  }
+  function updatePhone() {
+    var phone = document.getElementById('profile-phone').value.trim().replace(/\s+/g,'');
+    if (!phone) { showToast('Enter a phone number', true); return; }
+    sbFetch('drivers?id=eq.' + currentDriver.id, { method: 'PATCH', body: JSON.stringify({ phone: phone }) })
+      .then(function(r) {
+        if (r.ok) { currentDriver.phone = phone; document.getElementById('driver-phone-display').textContent = phone; showToast('Phone updated ✓'); }
+        else showToast('Update failed', true);
+      });
   }
 
   /* ── ORDERS ── */
