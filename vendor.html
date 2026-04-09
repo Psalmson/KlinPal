@@ -171,8 +171,8 @@
       <button id="toggle-staff" onclick="setLoginMode('staff')" style="flex:1;padding:8px;border:none;border-radius:6px;font-family:var(--font-head);font-size:13px;font-weight:700;cursor:pointer;background:transparent;color:var(--gray);transition:all 0.15s">Staff</button>
     </div>
 
-    <label class="login-label">Laundromat Slug</label>
-    <input class="login-input" id="login-slug" type="text" placeholder="e.g. capperberry" autocomplete="off">
+    <label class="login-label">Email</label>
+    <input class="login-input" id="login-email" type="email" placeholder="your@email.com" autocomplete="off">
 
     <!-- Vendor fields -->
     <div id="vendor-fields">
@@ -181,12 +181,13 @@
         <input class="login-input" id="login-pass" type="password" placeholder="Enter your password" style="padding-right:48px">
         <button onclick="togglePwd('login-pass',this)" type="button" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--gray);cursor:pointer;font-size:13px;padding:0">Show</button>
       </div>
+      <div style="text-align:right;margin-top:-12px;margin-bottom:16px">
+        <button onclick="forgotPassword()" type="button" style="background:none;border:none;color:var(--gray);font-size:12px;cursor:pointer;font-family:var(--font-body)">Forgot password?</button>
+      </div>
     </div>
 
     <!-- Staff fields -->
     <div id="staff-fields" style="display:none">
-      <label class="login-label">Phone Number</label>
-      <input class="login-input" id="login-phone" type="tel" placeholder="e.g. 08012345678" autocomplete="off">
       <label class="login-label">PIN</label>
       <div style="position:relative">
         <input class="login-input" id="login-pin" type="password" placeholder="Enter your PIN" style="padding-right:48px">
@@ -216,6 +217,7 @@
       <button class="nav-item" onclick="showPage('branding')" id="nav-branding"><span class="icon">🎨</span> Branding</button>
     </nav>
     <div class="sidebar-foot">
+      <button class="nav-item" onclick="showPage('profile')" id="nav-profile"><span class="icon">👤</span> My Profile</button>
       <button class="nav-item" onclick="doLogout()"><span class="icon">🚪</span> Sign Out</button>
     </div>
   </aside>
@@ -383,11 +385,15 @@
             <input class="field-input" id="staff-name" placeholder="e.g. Amara Okonkwo">
           </div>
           <div>
-            <label class="field-label">Phone Number</label>
-            <input class="field-input" id="staff-phone" type="tel" placeholder="e.g. 08012345678">
+            <label class="field-label">Email</label>
+            <input class="field-input" id="staff-email" type="email" placeholder="amara@email.com">
           </div>
         </div>
         <div class="field-row">
+          <div>
+            <label class="field-label">Phone Number</label>
+            <input class="field-input" id="staff-phone" type="tel" placeholder="e.g. 08012345678">
+          </div>
           <div>
             <label class="field-label">PIN</label>
             <div style="position:relative">
@@ -395,10 +401,8 @@
               <button onclick="togglePwd('staff-pin',this)" type="button" style="position:absolute;right:14px;top:35%;transform:translateY(-50%);background:none;border:none;color:var(--gray);cursor:pointer;font-size:13px;padding:0">Show</button>
             </div>
           </div>
-          <div style="display:flex;align-items:flex-end">
-            <button class="save-btn" onclick="addStaff()">Add Staff</button>
-          </div>
         </div>
+        <button class="save-btn" onclick="addStaff()">Add Staff</button>
       </div>
 
       <!-- Staff list -->
@@ -460,6 +464,52 @@
       </div>
     </div>
 
+    <!-- PROFILE -->
+    <div class="page" id="page-profile">
+      <div class="page-header">
+        <div>
+          <div class="page-title">My Profile</div>
+          <div class="page-subtitle">Manage your account details</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-header"><div class="card-title">Change Email</div></div>
+        <div class="card-body">
+          <label class="field-label">New Email Address</label>
+          <input class="field-input" id="profile-email" type="email" placeholder="your@email.com" style="max-width:360px">
+          <button class="save-btn" onclick="updateEmail()">Update Email</button>
+          <div style="font-size:11px;color:var(--gray);margin-top:8px">A confirmation link will be sent to your new email address.</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-header"><div class="card-title">Change Password</div></div>
+        <div class="card-body">
+          <label class="field-label">New Password</label>
+          <div style="position:relative;max-width:360px">
+            <input class="field-input" id="profile-password" type="password" placeholder="Enter new password" style="padding-right:48px">
+            <button onclick="togglePwd('profile-password',this)" type="button" style="position:absolute;right:14px;top:38%;transform:translateY(-50%);background:none;border:none;color:var(--gray);cursor:pointer;font-size:13px;padding:0">Show</button>
+          </div>
+          <label class="field-label" style="margin-top:4px">Confirm New Password</label>
+          <div style="position:relative;max-width:360px">
+            <input class="field-input" id="profile-password-confirm" type="password" placeholder="Confirm new password" style="padding-right:48px">
+            <button onclick="togglePwd('profile-password-confirm',this)" type="button" style="position:absolute;right:14px;top:38%;transform:translateY(-50%);background:none;border:none;color:var(--gray);cursor:pointer;font-size:13px;padding:0">Show</button>
+          </div>
+          <button class="save-btn" onclick="updatePassword()">Update Password</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">Update Phone Number</div></div>
+        <div class="card-body">
+          <label class="field-label">Phone Number</label>
+          <input class="field-input" id="profile-phone" type="tel" placeholder="e.g. 08012345678" style="max-width:360px">
+          <button class="save-btn" onclick="updatePhone()">Update Phone</button>
+        </div>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -483,6 +533,7 @@
   /* ── CONFIG ── */
   var SUPABASE_URL = 'https://mlgdqxqzpzfzndjhywqf.supabase.co';
   var SUPABASE_KEY = 'sb_publishable_TS5uGf7KzLKxeQw8bxDKYw_HwBNNBeA';
+  var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   var currentVendor    = null;
   var allOrders        = [];
@@ -533,46 +584,63 @@
 
   /* ── LOGIN ── */
   function doLogin() {
-    var slug = document.getElementById('login-slug').value.trim().toLowerCase();
-    var err  = document.getElementById('login-error');
+    var email = document.getElementById('login-email').value.trim().toLowerCase();
+    var err   = document.getElementById('login-error');
 
     if (loginMode === 'vendor') {
       var pass = document.getElementById('login-pass').value.trim();
-      if (!slug || !pass) { err.style.display = 'block'; return; }
+      if (!email || !pass) { err.style.display = 'block'; return; }
 
-      sbFetch('vendors?slug=eq.' + encodeURIComponent(slug) + '&password=eq.' + encodeURIComponent(pass) + '&limit=1&select=*')
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-          if (!Array.isArray(data) || !data.length) { err.style.display = 'block'; return; }
-          isStaffSession = false;
-          currentStaff   = null;
-          bootVendorSession(data[0]);
+      sb.auth.signInWithPassword({ email: email, password: pass })
+        .then(function(result) {
+          if (result.error) { err.style.display = 'block'; return; }
+          // Fetch vendor record by email
+          return sbFetch('vendors?email=eq.' + encodeURIComponent(email) + '&limit=1&select=*')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+              if (!Array.isArray(data) || !data.length) { err.style.display = 'block'; sb.auth.signOut(); return; }
+              isStaffSession = false;
+              currentStaff   = null;
+              bootVendorSession(data[0]);
+            });
         })
         .catch(function() { err.style.display = 'block'; });
 
     } else {
-      var phone = document.getElementById('login-phone').value.trim().replace(/\s+/g,'');
-      var pin   = document.getElementById('login-pin').value.trim();
-      if (!slug || !phone || !pin) { err.style.display = 'block'; return; }
+      var pin = document.getElementById('login-pin').value.trim();
+      if (!email || !pin) { err.style.display = 'block'; return; }
 
-      // First find the vendor by slug
-      sbFetch('vendors?slug=eq.' + encodeURIComponent(slug) + '&limit=1&select=*')
-        .then(function(r) { return r.json(); })
-        .then(function(vdata) {
-          if (!Array.isArray(vdata) || !vdata.length) { err.style.display = 'block'; return; }
-          var vendor = vdata[0];
-          // Then check staff record
-          return sbFetch('vendor_staff?vendor_id=eq.' + vendor.id + '&phone=eq.' + encodeURIComponent(phone) + '&pin=eq.' + encodeURIComponent(pin) + '&active=eq.true&limit=1&select=*')
+      sb.auth.signInWithPassword({ email: email, password: pin })
+        .then(function(result) {
+          if (result.error) { err.style.display = 'block'; return; }
+          // Fetch staff record by email
+          return sbFetch('vendor_staff?email=eq.' + encodeURIComponent(email) + '&active=eq.true&limit=1&select=*')
             .then(function(r) { return r.json(); })
             .then(function(sdata) {
-              if (!Array.isArray(sdata) || !sdata.length) { err.style.display = 'block'; return; }
-              isStaffSession = true;
-              currentStaff   = sdata[0];
-              bootVendorSession(vendor);
+              if (!Array.isArray(sdata) || !sdata.length) { err.style.display = 'block'; sb.auth.signOut(); return; }
+              currentStaff = sdata[0];
+              // Fetch their vendor
+              return sbFetch('vendors?id=eq.' + sdata[0].vendor_id + '&limit=1&select=*')
+                .then(function(r) { return r.json(); })
+                .then(function(vdata) {
+                  if (!Array.isArray(vdata) || !vdata.length) { err.style.display = 'block'; sb.auth.signOut(); return; }
+                  isStaffSession = true;
+                  bootVendorSession(vdata[0]);
+                });
             });
         })
         .catch(function() { err.style.display = 'block'; });
     }
+  }
+
+  function forgotPassword() {
+    var email = document.getElementById('login-email').value.trim();
+    if (!email) { showToast('Enter your email address first', true); return; }
+    sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + '/vendor.html' })
+      .then(function(r) {
+        if (r.error) { showToast('Could not send reset email', true); }
+        else { showToast('Password reset email sent ✓'); }
+      });
   }
 
   function bootVendorSession(vendor) {
@@ -581,7 +649,7 @@
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
 
-    // Apply brand colour to vendor dashboard
+    // Apply brand colour
     if (currentVendor.brand_color) {
       document.documentElement.style.setProperty('--teal',  currentVendor.brand_color);
       document.documentElement.style.setProperty('--teal2', currentVendor.brand_color);
@@ -591,14 +659,10 @@
     }
 
     // Sidebar
-    document.getElementById('sidebar-name').textContent = isStaffSession
-      ? currentStaff.name
-      : currentVendor.name;
-    document.getElementById('sidebar-slug').textContent = isStaffSession
-      ? 'Staff · /' + currentVendor.slug
-      : '/' + currentVendor.slug;
+    document.getElementById('sidebar-name').textContent = isStaffSession ? currentStaff.name : currentVendor.name;
+    document.getElementById('sidebar-slug').textContent = isStaffSession ? 'Staff · /' + currentVendor.slug : '/' + currentVendor.slug;
 
-    // Hide/show nav items based on session type
+    // Hide/show nav items for staff
     var staffOnly = isStaffSession;
     document.getElementById('nav-revenue').style.display       = staffOnly ? 'none' : '';
     document.getElementById('nav-services').style.display      = staffOnly ? 'none' : '';
@@ -607,32 +671,40 @@
     document.getElementById('nav-branding').style.display      = staffOnly ? 'none' : '';
 
     // Customer link
-    var customerUrl = window.location.origin + '/?vendor=' + currentVendor.slug;
-    document.getElementById('customer-link').textContent = customerUrl;
+    document.getElementById('customer-link').textContent = window.location.origin + '/?vendor=' + currentVendor.slug;
 
-    // Telegram & services (vendor only)
+    // Vendor-only setup
     if (!isStaffSession) {
-      if (currentVendor.telegram_chat_id) {
-        document.getElementById('telegram-chat-id').value = currentVendor.telegram_chat_id;
-      }
-      if (currentVendor.services && currentVendor.services.length) {
-        services = currentVendor.services;
-      }
+      if (currentVendor.telegram_chat_id) document.getElementById('telegram-chat-id').value = currentVendor.telegram_chat_id;
+      if (currentVendor.services && currentVendor.services.length) services = currentVendor.services;
       renderServicesEditor();
       loadStaff();
     }
+
+    // Populate profile fields
+    sb.auth.getUser().then(function(res) {
+      if (res.data && res.data.user) {
+        document.getElementById('profile-email').value = res.data.user.email || '';
+      }
+    });
+    document.getElementById('profile-phone').value = isStaffSession ? (currentStaff.phone || '') : (currentVendor.phone || '');
 
     loadOrders();
     startRealtime();
   }
 
-  document.getElementById('login-slug').addEventListener('keydown', function(e) { if (e.key === 'Enter') document.getElementById('login-pass').focus(); });
+  document.getElementById('login-email').addEventListener('keydown', function(e) { if (e.key === 'Enter') document.getElementById('login-pass').focus(); });
   document.getElementById('login-pass').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
-  document.getElementById('login-pin').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
+  document.getElementById('login-pin').addEventListener('keydown',  function(e) { if (e.key === 'Enter') doLogin(); });
+
+  // Restore session on page reload
+  sb.auth.onAuthStateChange(function(event, session) {
+    if (event === 'PASSWORD_RECOVERY') showPage('profile');
+  });
 
   function doLogout() {
     stopRealtime();
-    // Reset branding to default
+    sb.auth.signOut();
     document.documentElement.style.removeProperty('--teal');
     document.documentElement.style.removeProperty('--teal2');
     currentVendor  = null;
@@ -643,11 +715,9 @@
     setLoginMode('vendor');
     document.getElementById('app').style.display = 'none';
     document.getElementById('login-screen').style.display = 'flex';
-    document.getElementById('login-slug').value  = '';
+    document.getElementById('login-email').value = '';
     document.getElementById('login-pass').value  = '';
-    document.getElementById('login-phone').value = '';
     document.getElementById('login-pin').value   = '';
-    // Reset nav
     document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
     document.getElementById('nav-orders').classList.add('active');
     document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
@@ -665,6 +735,7 @@
     if (name === 'services') renderServicesEditor();
     if (name === 'staff')    loadStaff();
     if (name === 'branding') loadBranding();
+    if (name === 'profile')  {} // fields populated on boot
   }
 
   /* ── LOAD ORDERS ── */
@@ -949,6 +1020,50 @@
     }
   }
 
+  /* ── PROFILE ── */
+  function updateEmail() {
+    var email = document.getElementById('profile-email').value.trim().toLowerCase();
+    if (!email) { showToast('Enter a valid email', true); return; }
+    sb.auth.updateUser({ email: email })
+      .then(function(r) {
+        if (r.error) { showToast('Could not update email: ' + r.error.message, true); return; }
+        // Also update in vendors/vendor_staff table
+        if (isStaffSession) {
+          sbFetch('vendor_staff?id=eq.' + currentStaff.id, { method: 'PATCH', body: JSON.stringify({ email: email }) });
+        } else {
+          sbFetch('vendors?id=eq.' + currentVendor.id, { method: 'PATCH', body: JSON.stringify({ email: email }) });
+        }
+        showToast('Email updated — check your inbox to confirm ✓');
+      });
+  }
+
+  function updatePassword() {
+    var pass    = document.getElementById('profile-password').value.trim();
+    var confirm = document.getElementById('profile-password-confirm').value.trim();
+    if (!pass)              { showToast('Enter a new password', true); return; }
+    if (pass !== confirm)   { showToast('Passwords do not match', true); return; }
+    if (pass.length < 6)    { showToast('Password must be at least 6 characters', true); return; }
+    sb.auth.updateUser({ password: pass })
+      .then(function(r) {
+        if (r.error) { showToast('Could not update password: ' + r.error.message, true); return; }
+        document.getElementById('profile-password').value         = '';
+        document.getElementById('profile-password-confirm').value = '';
+        showToast('Password updated ✓');
+      });
+  }
+
+  function updatePhone() {
+    var phone = document.getElementById('profile-phone').value.trim().replace(/\s+/g,'');
+    if (!phone) { showToast('Enter a phone number', true); return; }
+    if (isStaffSession) {
+      sbFetch('vendor_staff?id=eq.' + currentStaff.id, { method: 'PATCH', body: JSON.stringify({ phone: phone }) })
+        .then(function(r) { if (r.ok) { currentStaff.phone = phone; showToast('Phone updated ✓'); } else showToast('Update failed', true); });
+    } else {
+      sbFetch('vendors?id=eq.' + currentVendor.id, { method: 'PATCH', body: JSON.stringify({ phone: phone }) })
+        .then(function(r) { if (r.ok) { currentVendor.phone = phone; showToast('Phone updated ✓'); } else showToast('Update failed', true); });
+    }
+  }
+
   /* ── STAFF MANAGEMENT ── */
   function loadStaff() {
     document.getElementById('staff-list').innerHTML = '<div class="loading-state">Loading...</div>';
@@ -979,28 +1094,40 @@
 
   function addStaff() {
     var name  = document.getElementById('staff-name').value.trim();
+    var email = document.getElementById('staff-email').value.trim().toLowerCase();
     var phone = document.getElementById('staff-phone').value.trim().replace(/\s+/g,'');
     var pin   = document.getElementById('staff-pin').value.trim();
     if (!name)  { showToast('Enter staff name', true); return; }
+    if (!email) { showToast('Enter staff email', true); return; }
     if (!phone) { showToast('Enter phone number', true); return; }
     if (!pin)   { showToast('Set a PIN', true); return; }
 
-    sbFetch('vendor_staff', {
-      method: 'POST',
-      body: JSON.stringify({ vendor_id: currentVendor.id, name: name, phone: phone, pin: pin, role: 'orders_only', active: true }),
-    })
-    .then(function(r) {
-      if (r.ok) {
-        document.getElementById('staff-name').value  = '';
-        document.getElementById('staff-phone').value = '';
-        document.getElementById('staff-pin').value   = '';
-        showToast('Staff added ✓');
-        loadStaff();
-      } else {
-        r.json().then(function(e) { showToast(e.message && e.message.indexOf('unique') > -1 ? 'This phone number is already registered' : 'Could not add staff', true); });
-      }
-    })
-    .catch(function() { showToast('Could not add staff', true); });
+    // Create Supabase Auth account for staff (PIN is their password)
+    sb.auth.signUp({ email: email, password: pin })
+      .then(function(authResult) {
+        if (authResult.error) {
+          showToast(authResult.error.message.indexOf('already')>-1 ? 'Email already registered' : 'Could not create account: ' + authResult.error.message, true);
+          return;
+        }
+        // Save staff record in vendor_staff table
+        return sbFetch('vendor_staff', {
+          method: 'POST',
+          body: JSON.stringify({ vendor_id: currentVendor.id, name: name, email: email, phone: phone, pin: pin, role: 'orders_only', active: true }),
+        })
+        .then(function(r) {
+          if (r.ok) {
+            document.getElementById('staff-name').value  = '';
+            document.getElementById('staff-email').value = '';
+            document.getElementById('staff-phone').value = '';
+            document.getElementById('staff-pin').value   = '';
+            showToast('Staff added ✓');
+            loadStaff();
+          } else {
+            return r.json().then(function(e) { showToast(e.message && e.message.indexOf('unique')>-1 ? 'Email or phone already registered' : 'Could not add staff', true); });
+          }
+        });
+      })
+      .catch(function() { showToast('Could not add staff', true); });
   }
 
   function toggleStaff(id, active) {
