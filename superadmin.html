@@ -247,11 +247,8 @@
           </div>
           <div class="form-grid">
             <div>
-              <label class="field-label">Dashboard Password</label>
-              <div style="position:relative">
-                <input class="field-input" id="ob-password" placeholder="Set a secure password" type="password" style="padding-right:48px">
-                <button onclick="togglePwd('ob-password',this)" type="button" style="position:absolute;right:14px;top:38%;transform:translateY(-50%);background:none;border:none;color:var(--gray);cursor:pointer;font-size:13px;padding:0">Show</button>
-              </div>
+              <label class="field-label">Owner Email</label>
+              <input class="field-input" id="ob-email" type="email" placeholder="owner@email.com">
             </div>
             <div>
               <label class="field-label">Owner Phone</label>
@@ -260,9 +257,17 @@
           </div>
           <div class="form-grid">
             <div>
+              <label class="field-label">Dashboard Password</label>
+              <div style="position:relative">
+                <input class="field-input" id="ob-password" placeholder="Set a secure password" type="password" style="padding-right:48px">
+                <button onclick="togglePwd('ob-password',this)" type="button" style="position:absolute;right:14px;top:38%;transform:translateY(-50%);background:none;border:none;color:var(--gray);cursor:pointer;font-size:13px;padding:0">Show</button>
+              </div>
+            </div>
+            <div>
               <label class="field-label">House / Unit No.</label>
               <input class="field-input" id="ob-house" placeholder="e.g. 12B">
             </div>
+          <div class="form-grid">
             <div style="position:relative">
               <label class="field-label">Street / Area</label>
               <input class="field-input" id="ob-address" placeholder="Start typing street..." autocomplete="off" oninput="onAddressInput()">
@@ -270,6 +275,7 @@
               <div id="ob-addr-status" style="font-size:11px;margin-top:5px;color:var(--gray)"></div>
               <div class="field-note">Select from suggestions — coordinates captured automatically</div>
             </div>
+            <div></div>
           </div>
           <div class="form-grid">
             <div>
@@ -388,11 +394,15 @@
               <input class="field-input" id="rider-name" placeholder="e.g. Emeka Eze">
             </div>
             <div>
-              <label class="field-label">Phone Number</label>
-              <input class="field-input" id="rider-phone" type="tel" placeholder="e.g. 08012345678">
+              <label class="field-label">Email</label>
+              <input class="field-input" id="rider-email" type="email" placeholder="emeka@email.com">
             </div>
           </div>
           <div class="form-grid">
+            <div>
+              <label class="field-label">Phone Number</label>
+              <input class="field-input" id="rider-phone" type="tel" placeholder="e.g. 08012345678">
+            </div>
             <div>
               <label class="field-label">PIN</label>
               <div style="position:relative">
@@ -400,18 +410,17 @@
                 <button onclick="togglePwd('rider-pin',this)" type="button" style="position:absolute;right:14px;top:38%;transform:translateY(-50%);background:none;border:none;color:var(--gray);cursor:pointer;font-size:13px;padding:0">Show</button>
               </div>
             </div>
+          </div>
+          <div class="form-grid">
             <div>
               <label class="field-label">Earnings % (of delivery fee)</label>
               <input class="field-input" id="rider-percentage" type="number" min="1" max="100" placeholder="e.g. 60">
             </div>
-          </div>
-          <div class="form-grid">
             <div>
               <label class="field-label">Telegram Chat ID</label>
               <input class="field-input" id="rider-telegram" placeholder="e.g. 1234567890">
-              <div class="field-note">Driver's personal Telegram Chat ID — for order assignment alerts.</div>
+              <div class="field-note">Driver's personal Telegram ID — for order assignment alerts.</div>
             </div>
-            <div></div>
           </div>
           <button class="btn btn-teal" onclick="addRider()" id="add-rider-btn">Add Rider</button>
         </div>
@@ -461,6 +470,7 @@
   var SUPERADMIN_PASSWORD = 'klinpal2024';
   var SUPABASE_URL        = 'https://mlgdqxqzpzfzndjhywqf.supabase.co';
   var SUPABASE_KEY        = 'sb_publishable_TS5uGf7KzLKxeQw8bxDKYw_HwBNNBeA';
+  var sb                  = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   var LOCATIONIQ_TOKEN    = 'pk.ec47de1300ad77f86deab165cce9bbe2';
 
   var allVendors          = [];
@@ -863,6 +873,7 @@
   function onboardVendor() {
     var name       = document.getElementById('ob-name').value.trim();
     var slug       = document.getElementById('ob-slug').value.trim();
+    var email      = document.getElementById('ob-email').value.trim().toLowerCase();
     var password   = document.getElementById('ob-password').value.trim();
     var phone      = document.getElementById('ob-phone').value.trim();
     var house      = document.getElementById('ob-house').value.trim();
@@ -871,7 +882,7 @@
     var brandColor = document.getElementById('ob-brand-color').value.trim() || null;
     var logoUrl    = document.getElementById('ob-logo-url').value.trim()    || null;
 
-    if (!name || !slug || !password) { showToast('Name, slug and password are required', true); return; }
+    if (!name || !slug || !email || !password) { showToast('Name, slug, email and password are required', true); return; }
     if (!obAddressConfirmed || !obLat || !obLng) { showToast('Please select a street from the suggestions', true); return; }
     if (brandColor && !/^#[0-9a-fA-F]{6}$/.test(brandColor)) { showToast('Brand colour must be a valid hex e.g. #7c3aed', true); return; }
 
@@ -879,24 +890,34 @@
     var btn = document.getElementById('ob-btn');
     btn.disabled = true; btn.textContent = 'Onboarding...';
 
-    sbFetch('vendors', {
-      method: 'POST',
-      body: JSON.stringify({ name: name, slug: slug, password: password, phone: phone, address: address, lat: obLat, lng: obLng, telegram_chat_id: telegram || null, brand_color: brandColor, logo_url: logoUrl }),
-    })
-    .then(function(r){
-      if (r.ok) {
-        showToast(name + ' onboarded ✓');
-        ['ob-name','ob-slug','ob-password','ob-phone','ob-house','ob-address','ob-telegram','ob-brand-color','ob-logo-url'].forEach(function(id){ document.getElementById(id).value = ''; });
-        obLat = null; obLng = null; obAddressConfirmed = false;
-        document.getElementById('ob-addr-status').textContent = '';
-        loadOverview();
-        setTimeout(function(){ showPage('vendors'); }, 1500);
-      } else {
-        return r.json().then(function(e){ showToast(e.message || 'Onboarding failed', true); });
-      }
-    })
-    .catch(function(){ showToast('Could not onboard vendor', true); })
-    .finally(function(){ btn.disabled = false; btn.textContent = 'Onboard Laundromat'; });
+    // 1. Create Supabase Auth account
+    sb.auth.signUp({ email: email, password: password })
+      .then(function(authResult) {
+        if (authResult.error) {
+          showToast(authResult.error.message.indexOf('already')>-1 ? 'Email already registered' : authResult.error.message, true);
+          btn.disabled = false; btn.textContent = 'Onboard Laundromat';
+          return;
+        }
+        // 2. Save vendor record
+        return sbFetch('vendors', {
+          method: 'POST',
+          body: JSON.stringify({ name: name, slug: slug, email: email, password: password, phone: phone, address: address, lat: obLat, lng: obLng, telegram_chat_id: telegram || null, brand_color: brandColor, logo_url: logoUrl }),
+        })
+        .then(function(r){
+          if (r.ok) {
+            showToast(name + ' onboarded ✓');
+            ['ob-name','ob-slug','ob-email','ob-password','ob-phone','ob-house','ob-address','ob-telegram','ob-brand-color','ob-logo-url'].forEach(function(id){ document.getElementById(id).value = ''; });
+            obLat = null; obLng = null; obAddressConfirmed = false;
+            document.getElementById('ob-addr-status').textContent = '';
+            loadOverview();
+            setTimeout(function(){ showPage('vendors'); }, 1500);
+          } else {
+            return r.json().then(function(e){ showToast(e.message || 'Onboarding failed', true); });
+          }
+        });
+      })
+      .catch(function(){ showToast('Could not onboard vendor', true); })
+      .finally(function(){ btn.disabled = false; btn.textContent = 'Onboard Laundromat'; });
   }
 
   /* ── ASSIGN DRIVER ── */
@@ -973,32 +994,44 @@
 
   function addRider() {
     var name       = document.getElementById('rider-name').value.trim();
+    var email      = document.getElementById('rider-email').value.trim().toLowerCase();
     var phone      = document.getElementById('rider-phone').value.trim().replace(/\s+/g,'');
     var pin        = document.getElementById('rider-pin').value.trim();
     var pct        = parseInt(document.getElementById('rider-percentage').value) || 60;
     var telegram   = document.getElementById('rider-telegram').value.trim() || null;
     if (!name)  { showToast('Enter rider name', true); return; }
+    if (!email) { showToast('Enter rider email', true); return; }
     if (!phone) { showToast('Enter phone number', true); return; }
     if (!pin)   { showToast('Set a PIN', true); return; }
 
     var btn = document.getElementById('add-rider-btn');
     btn.disabled = true; btn.textContent = 'Adding...';
 
-    sbFetch('drivers', {
-      method: 'POST',
-      body: JSON.stringify({ name: name, phone: phone, pin: pin, percentage: pct, telegram_chat_id: telegram, active: true }),
-    })
-    .then(function(r){
-      if (r.ok) {
-        showToast(name + ' added ✓');
-        ['rider-name','rider-phone','rider-pin','rider-percentage','rider-telegram'].forEach(function(id){ document.getElementById(id).value = ''; });
-        loadRiders();
-      } else {
-        return r.json().then(function(e){ showToast(e.message && e.message.indexOf('unique')>-1 ? 'Phone already registered' : 'Could not add rider', true); });
-      }
-    })
-    .catch(function(){ showToast('Could not add rider', true); })
-    .finally(function(){ btn.disabled = false; btn.textContent = 'Add Rider'; });
+    // 1. Create Supabase Auth account
+    sb.auth.signUp({ email: email, password: pin })
+      .then(function(authResult) {
+        if (authResult.error) {
+          showToast(authResult.error.message.indexOf('already')>-1 ? 'Email already registered' : authResult.error.message, true);
+          btn.disabled = false; btn.textContent = 'Add Rider';
+          return;
+        }
+        // 2. Save driver record
+        return sbFetch('drivers', {
+          method: 'POST',
+          body: JSON.stringify({ name: name, email: email, phone: phone, pin: pin, percentage: pct, telegram_chat_id: telegram, active: true }),
+        })
+        .then(function(r){
+          if (r.ok) {
+            showToast(name + ' added ✓');
+            ['rider-name','rider-email','rider-phone','rider-pin','rider-percentage','rider-telegram'].forEach(function(id){ document.getElementById(id).value = ''; });
+            loadRiders();
+          } else {
+            return r.json().then(function(e){ showToast(e.message && e.message.indexOf('unique')>-1 ? 'Email or phone already registered' : 'Could not add rider', true); });
+          }
+        });
+      })
+      .catch(function(){ showToast('Could not add rider', true); })
+      .finally(function(){ btn.disabled = false; btn.textContent = 'Add Rider'; });
   }
 
   function toggleRider(id, active) {
