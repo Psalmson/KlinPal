@@ -548,21 +548,22 @@
     { id: 'dry',     name: 'Dry-clean',    price: 300, active: true },
   ];
 
-  /* ── SUPABASE ── */
+  /* ── SUPABASE FETCH (attaches Auth session token) ── */
   function sbFetch(path, options) {
-    var defaults = {
-      headers: {
-        'apikey':        SUPABASE_KEY,
-        'Authorization': 'Bearer ' + SUPABASE_KEY,
-        'Content-Type':  'application/json',
-        'Prefer':        'return=representation',
-      },
-    };
-    var opts = Object.assign({}, defaults, options || {});
-    if (options && options.headers) {
-      opts.headers = Object.assign({}, defaults.headers, options.headers);
-    }
-    return fetch(SUPABASE_URL + '/rest/v1/' + path, opts);
+    return sb.auth.getSession().then(function(res) {
+      var token = (res.data && res.data.session) ? res.data.session.access_token : SUPABASE_KEY;
+      var defaults = {
+        headers: {
+          'apikey':        SUPABASE_KEY,
+          'Authorization': 'Bearer ' + token,
+          'Content-Type':  'application/json',
+          'Prefer':        'return=representation',
+        },
+      };
+      var opts = Object.assign({}, defaults, options || {});
+      if (options && options.headers) opts.headers = Object.assign({}, defaults.headers, options.headers);
+      return fetch(SUPABASE_URL + '/rest/v1/' + path, opts);
+    });
   }
 
   function togglePwd(id, btn) {
