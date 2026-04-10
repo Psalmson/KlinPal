@@ -20,15 +20,14 @@ var CONFIG = {
 
 /* ─── SUPABASE HELPER ─── */
 function sbFetch(path, options) {
-  var url  = CONFIG.SUPABASE_URL + '/rest/v1/' + path;
-  var opts = Object.assign({
-    headers: {
-      'apikey':        CONFIG.SUPABASE_KEY,
-      'Authorization': 'Bearer ' + CONFIG.SUPABASE_KEY,
-      'Content-Type':  'application/json',
-      'Prefer':        'return=representation',
-    },
-  }, options || {});
+  var url      = CONFIG.SUPABASE_URL + '/rest/v1/' + path;
+  var headers  = Object.assign({
+    'apikey':        CONFIG.SUPABASE_KEY,
+    'Authorization': 'Bearer ' + CONFIG.SUPABASE_KEY,
+    'Content-Type':  'application/json',
+    'Prefer':        'return=representation',
+  }, (options && options.headers) || {});
+  var opts = Object.assign({}, options || {}, { headers: headers });
   return fetch(url, opts);
 }
 
@@ -339,12 +338,7 @@ function submitNewCustomer() {
   // Upsert customer to Supabase
   sbFetch('customers', {
     method: 'POST',
-    headers: {
-      'apikey':        CONFIG.SUPABASE_KEY,
-      'Authorization': 'Bearer ' + CONFIG.SUPABASE_KEY,
-      'Content-Type':  'application/json',
-      'Prefer':        'resolution=merge-duplicates',
-    },
+    headers: { 'Prefer': 'resolution=merge-duplicates' },
     body: JSON.stringify({
       vendor_id:  VENDOR.id,
       phone:      currentUser.phone,
