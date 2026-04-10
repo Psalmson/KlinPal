@@ -171,10 +171,13 @@
   var realtimeChannel = null;
 
   function sbFetch(path, opts) {
-    var defaults = { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' } };
-    var o = Object.assign({}, defaults, opts || {});
-    if (opts && opts.headers) o.headers = Object.assign({}, defaults.headers, opts.headers);
-    return fetch(SUPABASE_URL + '/rest/v1/' + path, o);
+    return sb.auth.getSession().then(function(res) {
+      var token = (res.data && res.data.session) ? res.data.session.access_token : SUPABASE_KEY;
+      var defaults = { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', 'Prefer': 'return=representation' } };
+      var o = Object.assign({}, defaults, opts || {});
+      if (opts && opts.headers) o.headers = Object.assign({}, defaults.headers, opts.headers);
+      return fetch(SUPABASE_URL + '/rest/v1/' + path, o);
+    });
   }
 
   function togglePin(btn) {
