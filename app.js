@@ -40,7 +40,10 @@ var VENDOR = {
   lat:              6.5244,
   lng:              3.3792,
   telegram_chat_id: null,
+  platform_fee_pct: null, // null = use global rate
 };
+
+var GLOBAL_PLATFORM_FEE_PCT = 10; // fallback, overwritten on bootstrap
 
 /* ─── APP STATE ─── */
 var SERVICES = [
@@ -478,7 +481,8 @@ function proceedFromOrder() {
 function renderSummary() {
   var items = SERVICES.filter(function(s) { return s.qty > 0; });
   var sub   = items.reduce(function(a, s) { return a + s.price * s.qty; }, 0);
-  platformFee = Math.round(sub * 0.1);
+  var effectivePct = VENDOR.platform_fee_pct != null ? VENDOR.platform_fee_pct : GLOBAL_PLATFORM_FEE_PCT;
+  platformFee = Math.round(sub * effectivePct / 100);
   var total = sub + deliveryFee + serviceFee; // base delivery + service fee + subtotal
 
   orderId = genOrderId();
@@ -620,53 +624,65 @@ function bootstrapVendor() {
     return;
   }
 
-  sbFetch('vendors?slug=eq.' + encodeURIComponent(slug) + '&limit=1&select=*')
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      if (!data || !data.length) {
-        showVendorError('Vendor not found. Please check your link.');
-        return;
-      }
-      var vendor = data[0];
+  // Fetch vendor and global platform fee in parallel
+  Promise.all([
+    sbFetch('vendors?slug=eq.' + encodeURIComponent(slug) + '&limit=1&select=*').then(function(r){ return r.json(); }),
+    sbFetch('platform_settings?key=eq.platform_fee_pct&limit=1&select=value').then(function(r){ return r.json(); })
+  ])
+  .then(function(results) {
+    var data     = results[0];
+    var settings = results[1];
 
-      VENDOR.id               = vendor.id;
-      VENDOR.slug             = vendor.slug;
-      VENDOR.name             = vendor.name;
-      VENDOR.lat              = vendor.lat  || 6.5244;
-      VENDOR.lng              = vendor.lng  || 3.3792;
-      VENDOR.telegram_chat_id = vendor.telegram_chat_id || null;
-      VENDOR.brand_color      = vendor.brand_color || null;
-      VENDOR.logo_url         = vendor.logo_url     || null;
+    if (!data || !data.length) {
+      showVendorError('Vendor not found. Please check your link.');
+      return;
+    }
+    var vendor = data[0];
 
-      // Apply brand colour — swaps the teal accent across the whole customer page
-      if (VENDOR.brand_color) {
-        document.documentElement.style.setProperty('--teal', VENDOR.brand_color);
-        document.documentElement.style.setProperty('--teal-dark', VENDOR.brand_color);
-      }
+    // Set global rate (fallback 10)
+    if (Array.isArray(settings) && settings.length) {
+      GLOBAL_PLATFORM_FEE_PCT = parseFloat(settings[0].value) || 10;
+    }
 
-      // Apply vendor logo — replaces Klinpal logo images with vendor's logo
-      if (VENDOR.logo_url) {
-        document.querySelectorAll('.logo-img').forEach(function(img) {
-          img.src = VENDOR.logo_url;
-          img.alt = VENDOR.name;
-        });
-      }
+    VENDOR.id               = vendor.id;
+    VENDOR.slug             = vendor.slug;
+    VENDOR.name             = vendor.name;
+    VENDOR.lat              = vendor.lat  || 6.5244;
+    VENDOR.lng              = vendor.lng  || 3.3792;
+    VENDOR.telegram_chat_id = vendor.telegram_chat_id || null;
+    VENDOR.brand_color      = vendor.brand_color || null;
+    VENDOR.logo_url         = vendor.logo_url     || null;
+    VENDOR.platform_fee_pct = vendor.platform_fee_pct != null ? parseFloat(vendor.platform_fee_pct) : null;
 
-      document.title = VENDOR.name + ' — Laundry';
-      var brandEls = document.querySelectorAll('.vendor-name-placeholder');
-      brandEls.forEach(function(el) { el.textContent = VENDOR.name; });
+    // Apply brand colour
+    if (VENDOR.brand_color) {
+      document.documentElement.style.setProperty('--teal', VENDOR.brand_color);
+      document.documentElement.style.setProperty('--teal-dark', VENDOR.brand_color);
+    }
 
-      // Load active services
-      if (vendor.services && vendor.services.length) {
-        SERVICES = vendor.services
-          .filter(function(s) { return s.active; })
-          .map(function(s) { return { id: s.id, name: s.name, price: s.price, qty: 0 }; });
-      }
-      go('s-landing');
-    })
-    .catch(function() {
-      showVendorError('Could not load vendor. Please try again.');
-    });
+    // Apply vendor logo
+    if (VENDOR.logo_url) {
+      document.querySelectorAll('.logo-img').forEach(function(img) {
+        img.src = VENDOR.logo_url;
+        img.alt = VENDOR.name;
+      });
+    }
+
+    document.title = VENDOR.name + ' — Laundry';
+    var brandEls = document.querySelectorAll('.vendor-name-placeholder');
+    brandEls.forEach(function(el) { el.textContent = VENDOR.name; });
+
+    // Load active services
+    if (vendor.services && vendor.services.length) {
+      SERVICES = vendor.services
+        .filter(function(s) { return s.active; })
+        .map(function(s) { return { id: s.id, name: s.name, price: s.price, qty: 0 }; });
+    }
+    go('s-landing');
+  })
+  .catch(function() {
+    showVendorError('Could not load vendor. Please try again.');
+  });
 }
 
 function showVendorError(msg) {
