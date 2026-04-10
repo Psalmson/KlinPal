@@ -1001,8 +1001,7 @@
   /* ── REALTIME ── */
   function startRealtime() {
     if (realtimeChannel) stopRealtime();
-    var supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    realtimeChannel = supabaseClient
+    realtimeChannel = sb
       .channel('orders-vendor-' + currentVendor.id)
       .on('postgres_changes', {
         event: '*',
