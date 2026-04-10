@@ -1113,37 +1113,45 @@
     var email = document.getElementById('staff-email').value.trim().toLowerCase();
     var phone = document.getElementById('staff-phone').value.trim().replace(/\s+/g,'');
     var pin   = document.getElementById('staff-pin').value.trim();
-    if (!name)  { showToast('Enter staff name', true); return; }
-    if (!email) { showToast('Enter staff email', true); return; }
-    if (!phone) { showToast('Enter phone number', true); return; }
-    if (!pin)   { showToast('Set a PIN', true); return; }
+    if (!name)         { showToast('Enter staff name', true); return; }
+    if (!email)        { showToast('Enter staff email', true); return; }
+    if (!phone)        { showToast('Enter phone number', true); return; }
+    if (!pin)          { showToast('Set a PIN', true); return; }
+    if (pin.length < 6){ showToast('PIN must be at least 6 characters', true); return; }
 
-    // Create Supabase Auth account for staff (PIN is their password)
-    sb.auth.signUp({ email: email, password: pin })
-      .then(function(authResult) {
-        if (authResult.error) {
-          showToast(authResult.error.message.indexOf('already')>-1 ? 'Email already registered' : 'Could not create account: ' + authResult.error.message, true);
-          return;
-        }
-        // Save staff record in vendor_staff table
-        return sbFetch('vendor_staff', {
+    // Step 1: Save staff record first (uses vendor session)
+    sbFetch('vendor_staff', {
+      method: 'POST',
+      body: JSON.stringify({ vendor_id: currentVendor.id, name: name, email: email, phone: phone, pin: pin, role: 'orders_only', active: true }),
+    })
+    .then(function(r) {
+      if (!r.ok) {
+        return r.json().then(function(e) { showToast(e.message && e.message.indexOf('unique')>-1 ? 'Email or phone already registered' : 'Could not add staff', true); });
+      }
+      // Step 2: Create Auth account via Edge Function (no session hijack)
+      return sb.auth.getSession().then(function(res) {
+        var token = res.data.session ? res.data.session.access_token : SUPABASE_KEY;
+        return fetch(SUPABASE_URL + '/functions/v1/create-auth-user', {
           method: 'POST',
-          body: JSON.stringify({ vendor_id: currentVendor.id, name: name, email: email, phone: phone, pin: pin, role: 'orders_only', active: true }),
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'apikey': SUPABASE_KEY },
+          body: JSON.stringify({ email: email, password: pin }),
         })
-        .then(function(r) {
-          if (r.ok) {
-            document.getElementById('staff-name').value  = '';
-            document.getElementById('staff-email').value = '';
-            document.getElementById('staff-phone').value = '';
-            document.getElementById('staff-pin').value   = '';
-            showToast('Staff added ✓');
-            loadStaff();
+        .then(function(r) { return r.json(); })
+        .then(function(result) {
+          document.getElementById('staff-name').value  = '';
+          document.getElementById('staff-email').value = '';
+          document.getElementById('staff-phone').value = '';
+          document.getElementById('staff-pin').value   = '';
+          if (result.error) {
+            showToast('Staff saved (Auth: ' + result.error + ')', true);
           } else {
-            return r.json().then(function(e) { showToast(e.message && e.message.indexOf('unique')>-1 ? 'Email or phone already registered' : 'Could not add staff', true); });
+            showToast('Staff added ✓');
           }
+          loadStaff();
         });
-      })
-      .catch(function() { showToast('Could not add staff', true); });
+      });
+    })
+    .catch(function() { showToast('Could not add staff', true); });
   }
 
   function toggleStaff(id, active) {
