@@ -364,8 +364,7 @@
   /* ── REALTIME ── */
   function startRealtime() {
     if (realtimeChannel) stopRealtime();
-    var sc = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    realtimeChannel = sc.channel('driver-' + currentDriver.id)
+    realtimeChannel = sb.channel('driver-' + currentDriver.id)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: 'driver_id=eq.' + currentDriver.id }, function(payload) {
         if (payload.eventType === 'INSERT') {
           allOrders.unshift(payload.new);
