@@ -726,10 +726,8 @@
   /* ── REALTIME ── */
   function startOverviewRealtime() {
     if (realtimeChannel) stopOverviewRealtime();
-    var sc = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    realtimeChannel = sc.channel('superadmin-orders-overview')
+    realtimeChannel = sb.channel('superadmin-orders-overview')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, function() {
-        // Any order change — reload overview silently
         loadOverview();
       })
       .subscribe();
@@ -741,8 +739,7 @@
 
   function startDrillRealtime(vendorId) {
     if (drillRealtimeChannel) stopDrillRealtime();
-    var sc = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    drillRealtimeChannel = sc.channel('superadmin-drill-' + vendorId)
+    drillRealtimeChannel = sb.channel('superadmin-drill-' + vendorId)
       .on('postgres_changes', {
         event: '*', schema: 'public', table: 'orders',
         filter: 'vendor_id=eq.' + vendorId,
