@@ -128,13 +128,15 @@
   <div class="login-card">
     <div class="login-logo">klinpal</div>
     <div class="login-badge">Superadmin</div>
-    <label class="login-label">Master Password</label>
+    <label class="login-label">Email</label>
+    <input class="login-input" id="login-email" type="email" placeholder="admin@email.com" autocomplete="off">
+    <label class="login-label">Password</label>
     <div style="position:relative">
       <input class="login-input" id="login-pass" type="password" placeholder="Enter superadmin password" style="padding-right:48px">
       <button onclick="togglePwd('login-pass',this)" type="button" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--gray);cursor:pointer;font-size:13px;padding:0">Show</button>
     </div>
     <button class="login-btn" onclick="doLogin()">Sign In</button>
-    <div class="login-error" id="login-error">Incorrect password. Try again.</div>
+    <div class="login-error" id="login-error">Invalid credentials. Try again.</div>
   </div>
 </div>
 
@@ -151,6 +153,7 @@
       <button class="nav-item" onclick="showPage('settings')" id="nav-settings"><span class="icon">⚙️</span> Settings</button>
     </nav>
     <div class="sidebar-foot">
+      <button class="nav-item" onclick="openChangePasswordModal()"><span class="icon">🔑</span> Change Password</button>
       <button class="nav-item" onclick="doLogout()"><span class="icon">🚪</span> Sign Out</button>
     </div>
   </aside>
@@ -470,6 +473,31 @@
   </main>
 </div>
 
+<!-- CHANGE PASSWORD MODAL -->
+<div class="modal-overlay" id="change-password-modal">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-title">Change Password</div>
+    <div class="modal-field">
+      <div class="modal-field-label">New Password</div>
+      <div style="position:relative;margin-top:6px">
+        <input class="field-input" id="new-password" type="password" placeholder="Enter new password" style="padding-right:48px">
+        <button onclick="togglePwd('new-password',this)" type="button" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--gray);cursor:pointer;font-size:13px;padding:0">Show</button>
+      </div>
+    </div>
+    <div class="modal-field" style="margin-top:14px">
+      <div class="modal-field-label">Confirm New Password</div>
+      <div style="position:relative;margin-top:6px">
+        <input class="field-input" id="new-password-confirm" type="password" placeholder="Confirm new password" style="padding-right:48px">
+        <button onclick="togglePwd('new-password-confirm',this)" type="button" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--gray);cursor:pointer;font-size:13px;padding:0">Show</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:24px">
+      <button class="save-btn" onclick="changePassword()">Update Password</button>
+      <button class="modal-close" onclick="closeChangePasswordModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- ADD RIDER MODAL -->
 <div class="modal-overlay" id="add-rider-modal">
   <div class="modal" style="max-width:520px">
@@ -601,7 +629,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
   /* ── CONFIG ── */
-  var SUPERADMIN_PASSWORD = 'klinpal2024';
   var SUPABASE_URL        = 'https://mlgdqxqzpzfzndjhywqf.supabase.co';
   var SUPABASE_KEY        = 'sb_publishable_TS5uGf7KzLKxeQw8bxDKYw_HwBNNBeA';
   var sb                  = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -614,21 +641,22 @@
   var realtimeChannel     = null;
   var drillRealtimeChannel = null;
 
-  /* ── SUPABASE ── */
+  /* ── SUPABASE FETCH (attaches Auth session token when available) ── */
   function sbFetch(path, options) {
-    var defaults = {
-      headers: {
-        'apikey':        SUPABASE_KEY,
-        'Authorization': 'Bearer ' + SUPABASE_KEY,
-        'Content-Type':  'application/json',
-        'Prefer':        'return=representation',
-      },
-    };
-    var opts = Object.assign({}, defaults, options || {});
-    if (options && options.headers) {
-      opts.headers = Object.assign({}, defaults.headers, options.headers);
-    }
-    return fetch(SUPABASE_URL + '/rest/v1/' + path, opts);
+    return sb.auth.getSession().then(function(res) {
+      var token = (res.data && res.data.session) ? res.data.session.access_token : SUPABASE_KEY;
+      var defaults = {
+        headers: {
+          'apikey':        SUPABASE_KEY,
+          'Authorization': 'Bearer ' + token,
+          'Content-Type':  'application/json',
+          'Prefer':        'return=representation',
+        },
+      };
+      var opts = Object.assign({}, defaults, options || {});
+      if (options && options.headers) opts.headers = Object.assign({}, defaults.headers, options.headers);
+      return fetch(SUPABASE_URL + '/rest/v1/' + path, opts);
+    });
   }
 
   function togglePwd(id, btn) {
@@ -639,29 +667,60 @@
 
   /* ── LOGIN ── */
   function doLogin() {
-    var pass = document.getElementById('login-pass').value.trim();
-    if (pass !== SUPERADMIN_PASSWORD) {
-      document.getElementById('login-error').style.display = 'block';
-      return;
-    }
-    document.getElementById('login-error').style.display = 'none';
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    loadOverview();
-    startOverviewRealtime();
+    var email = document.getElementById('login-email').value.trim().toLowerCase();
+    var pass  = document.getElementById('login-pass').value.trim();
+    var err   = document.getElementById('login-error');
+    if (!email || !pass) { err.style.display = 'block'; return; }
+
+    sb.auth.signInWithPassword({ email: email, password: pass })
+      .then(function(result) {
+        if (result.error) { err.style.display = 'block'; return; }
+        err.style.display = 'none';
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        loadOverview();
+        startOverviewRealtime();
+      })
+      .catch(function() { err.style.display = 'block'; });
   }
 
-  document.getElementById('login-pass').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') doLogin();
-  });
+  document.getElementById('login-email').addEventListener('keydown', function(e) { if (e.key === 'Enter') document.getElementById('login-pass').focus(); });
+  document.getElementById('login-pass').addEventListener('keydown',  function(e) { if (e.key === 'Enter') doLogin(); });
 
   function doLogout() {
+    sb.auth.signOut();
     stopOverviewRealtime();
     stopDrillRealtime();
     allVendors = []; currentDrillVendor = null;
     document.getElementById('app').style.display = 'none';
     document.getElementById('login-screen').style.display = 'flex';
-    document.getElementById('login-pass').value = '';
+    document.getElementById('login-email').value = '';
+    document.getElementById('login-pass').value  = '';
+  }
+
+  /* ── CHANGE PASSWORD ── */
+  function openChangePasswordModal() {
+    document.getElementById('new-password').value         = '';
+    document.getElementById('new-password-confirm').value = '';
+    document.getElementById('change-password-modal').classList.add('open');
+  }
+
+  function closeChangePasswordModal() {
+    document.getElementById('change-password-modal').classList.remove('open');
+  }
+
+  function changePassword() {
+    var pass    = document.getElementById('new-password').value.trim();
+    var confirm = document.getElementById('new-password-confirm').value.trim();
+    if (!pass)            { showToast('Enter a new password', true); return; }
+    if (pass !== confirm) { showToast('Passwords do not match', true); return; }
+    if (pass.length < 6) { showToast('Password must be at least 6 characters', true); return; }
+    sb.auth.updateUser({ password: pass })
+      .then(function(r) {
+        if (r.error) { showToast('Could not update: ' + r.error.message, true); return; }
+        closeChangePasswordModal();
+        showToast('Password updated ✓');
+      });
   }
 
   /* ── REALTIME ── */
