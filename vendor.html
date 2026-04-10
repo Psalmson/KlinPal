@@ -283,7 +283,7 @@
       <div class="highlight-card">
         <div class="highlight-label">Vendor Earnings</div>
         <div class="highlight-value" id="rev-total">—</div>
-        <div class="highlight-sub">Subtotal minus platform fee (10%)</div>
+        <div class="highlight-sub" id="rev-platform-fee-note">Subtotal minus platform fee</div>
         <div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(0,201,167,0.2);display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
           <div>
             <div style="font-size:11px;color:var(--green);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;margin-bottom:4px">Paid</div>
@@ -643,6 +643,8 @@
       });
   }
 
+  var globalPlatformFeePct = 10; // fetched on boot
+
   function bootVendorSession(vendor) {
     currentVendor = vendor;
     document.getElementById('login-error').style.display = 'none';
@@ -679,6 +681,20 @@
       if (currentVendor.services && currentVendor.services.length) services = currentVendor.services;
       renderServicesEditor();
       loadStaff();
+
+      // Fetch global platform fee then update revenue subtitle
+      sbFetch('platform_settings?key=eq.platform_fee_pct&limit=1&select=value')
+        .then(function(r){ return r.json(); })
+        .then(function(data) {
+          if (Array.isArray(data) && data.length) globalPlatformFeePct = parseFloat(data[0].value) || 10;
+          var effectivePct = currentVendor.platform_fee_pct != null ? currentVendor.platform_fee_pct : globalPlatformFeePct;
+          var note = 'Subtotal minus platform fee (' + effectivePct + '%';
+          note += currentVendor.platform_fee_pct != null ? ' — custom rate)' : ' — global rate)';
+          document.getElementById('rev-platform-fee-note').textContent = note;
+        })
+        .catch(function(){
+          document.getElementById('rev-platform-fee-note').textContent = 'Subtotal minus platform fee';
+        });
     }
 
     // Populate profile fields
