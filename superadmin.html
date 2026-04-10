@@ -1093,34 +1093,40 @@
     var btn = document.getElementById('ob-btn');
     btn.disabled = true; btn.textContent = 'Onboarding...';
 
-    // 1. Create Supabase Auth account
-    sb.auth.signUp({ email: email, password: password })
-      .then(function(authResult) {
-        if (authResult.error) {
-          showToast(authResult.error.message.indexOf('already')>-1 ? 'Email already registered' : authResult.error.message, true);
-          btn.disabled = false; btn.textContent = 'Onboard Laundromat';
-          return;
-        }
-        // 2. Save vendor record
-        return sbFetch('vendors', {
+    // Step 1: Save vendor record first (uses superadmin session)
+    sbFetch('vendors', {
+      method: 'POST',
+      body: JSON.stringify({ name: name, slug: slug, email: email, password: password, phone: phone, address: address, lat: obLat, lng: obLng, telegram_chat_id: telegram || null, brand_color: brandColor, logo_url: logoUrl }),
+    })
+    .then(function(r) {
+      if (!r.ok) {
+        return r.json().then(function(e){ showToast(e.message || 'Onboarding failed', true); });
+      }
+      // Step 2: Create Auth account via Edge Function (no session hijack)
+      return sb.auth.getSession().then(function(res) {
+        var token = res.data.session ? res.data.session.access_token : SUPABASE_KEY;
+        return fetch(SUPABASE_URL + '/functions/v1/create-auth-user', {
           method: 'POST',
-          body: JSON.stringify({ name: name, slug: slug, email: email, password: password, phone: phone, address: address, lat: obLat, lng: obLng, telegram_chat_id: telegram || null, brand_color: brandColor, logo_url: logoUrl }),
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({ email: email, password: password }),
         })
-        .then(function(r){
-          if (r.ok) {
-            showToast(name + ' onboarded ✓');
-            ['ob-name','ob-slug','ob-email','ob-password','ob-phone','ob-house','ob-address','ob-telegram','ob-brand-color','ob-logo-url'].forEach(function(id){ document.getElementById(id).value = ''; });
-            obLat = null; obLng = null; obAddressConfirmed = false;
-            document.getElementById('ob-addr-status').textContent = '';
-            loadOverview();
-            setTimeout(function(){ showPage('vendors'); }, 1500);
+        .then(function(r) { return r.json(); })
+        .then(function(result) {
+          if (result.error) {
+            showToast(name + ' onboarded (Auth: ' + result.error + ')', true);
           } else {
-            return r.json().then(function(e){ showToast(e.message || 'Onboarding failed', true); });
+            showToast(name + ' onboarded ✓');
           }
+          ['ob-name','ob-slug','ob-email','ob-password','ob-phone','ob-house','ob-address','ob-telegram','ob-brand-color','ob-logo-url'].forEach(function(id){ document.getElementById(id).value = ''; });
+          obLat = null; obLng = null; obAddressConfirmed = false;
+          document.getElementById('ob-addr-status').textContent = '';
+          loadOverview();
+          setTimeout(function(){ showPage('vendors'); }, 1500);
         });
-      })
-      .catch(function(){ showToast('Could not onboard vendor', true); })
-      .finally(function(){ btn.disabled = false; btn.textContent = 'Onboard Laundromat'; });
+      });
+    })
+    .catch(function(){ showToast('Could not onboard vendor', true); })
+    .finally(function(){ btn.disabled = false; btn.textContent = 'Onboard Laundromat'; });
   }
 
   /* ── ASSIGN DRIVER ── */
@@ -1280,39 +1286,52 @@
     var pin        = document.getElementById('rider-pin').value.trim();
     var pct        = parseInt(document.getElementById('rider-percentage').value) || 60;
     var telegram   = document.getElementById('rider-telegram').value.trim() || null;
-    if (!name)  { showToast('Enter rider name', true); return; }
-    if (!email) { showToast('Enter rider email', true); return; }
-    if (!phone) { showToast('Enter phone number', true); return; }
-    if (!pin)   { showToast('Set a PIN', true); return; }
+    if (!name)         { showToast('Enter rider name', true); return; }
+    if (!email)        { showToast('Enter rider email', true); return; }
+    if (!phone)        { showToast('Enter phone number', true); return; }
+    if (!pin)          { showToast('Set a PIN', true); return; }
+    if (pin.length < 6){ showToast('PIN must be at least 6 characters', true); return; }
 
     var btn = document.getElementById('add-rider-btn');
     btn.disabled = true; btn.textContent = 'Adding...';
 
-    // 1. Create Supabase Auth account
-    sb.auth.signUp({ email: email, password: pin })
-      .then(function(authResult) {
-        if (authResult.error) {
-          showToast(authResult.error.message.indexOf('already')>-1 ? 'Email already registered' : authResult.error.message, true);
-          btn.disabled = false; btn.textContent = 'Add Rider';
-          return;
-        }
-        // 2. Save driver record
-        return sbFetch('drivers', {
-          method: 'POST',
-          body: JSON.stringify({ name: name, email: email, phone: phone, pin: pin, percentage: pct, telegram_chat_id: telegram, active: true }),
-        })
-        .then(function(r){
-          if (r.ok) {
-            showToast(name + ' added ✓');
-            closeAddRiderModal();
-            loadRiders();
-          } else {
-            return r.json().then(function(e){ showToast(e.message && e.message.indexOf('unique')>-1 ? 'Email or phone already registered' : 'Could not add rider', true); });
-          }
+    // Step 1: Insert driver record first (uses superadmin session — no session hijack)
+    sbFetch('drivers', {
+      method: 'POST',
+      body: JSON.stringify({ name: name, email: email, phone: phone, pin: pin, percentage: pct, telegram_chat_id: telegram, active: true }),
+    })
+    .then(function(r) {
+      if (!r.ok) {
+        return r.json().then(function(e) {
+          showToast(e.message && e.message.indexOf('unique') > -1 ? 'Email or phone already registered' : 'Could not add rider', true);
         });
-      })
-      .catch(function(){ showToast('Could not add rider', true); })
-      .finally(function(){ btn.disabled = false; btn.textContent = 'Add Rider'; });
+      }
+      // Step 2: Create Auth account via Edge Function (service role — no session hijack)
+      return sb.auth.getSession().then(function(res) {
+        var token = res.data.session ? res.data.session.access_token : SUPABASE_KEY;
+        return fetch(SUPABASE_URL + '/functions/v1/create-auth-user', {
+          method: 'POST',
+          headers: {
+            'Content-Type':  'application/json',
+            'Authorization': 'Bearer ' + token,
+          },
+          body: JSON.stringify({ email: email, password: pin }),
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(result) {
+          if (result.error) {
+            // Driver row saved but Auth account failed — show warning but don't block
+            showToast(name + ' added (Auth account: ' + result.error + ')', true);
+          } else {
+            showToast(name + ' added ✓');
+          }
+          closeAddRiderModal();
+          loadRiders();
+        });
+      });
+    })
+    .catch(function() { showToast('Could not add rider', true); })
+    .finally(function() { btn.disabled = false; btn.textContent = 'Add Rider'; });
   }
 
   function toggleRider(id, active) {
