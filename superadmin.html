@@ -148,6 +148,7 @@
       <button class="nav-item" onclick="showPage('vendors')" id="nav-vendors"><span class="icon">🏪</span> Laundromats</button>
       <button class="nav-item" onclick="showPage('onboard')" id="nav-onboard"><span class="icon">➕</span> Onboard New</button>
       <button class="nav-item" onclick="showPage('riders')" id="nav-riders"><span class="icon">🛵</span> Riders</button>
+      <button class="nav-item" onclick="showPage('settings')" id="nav-settings"><span class="icon">⚙️</span> Settings</button>
     </nav>
     <div class="sidebar-foot">
       <button class="nav-item" onclick="doLogout()"><span class="icon">🚪</span> Sign Out</button>
@@ -436,6 +437,36 @@
       </div>
     </div>
 
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Settings</div>
+          <div class="page-subtitle">Platform-wide configuration</div>
+        </div>
+      </div>
+
+      <div class="card" style="max-width:540px">
+        <div class="card-header"><div class="card-title">Platform Fee</div></div>
+        <div class="card-body">
+          <p style="font-size:13px;color:var(--gray);margin-bottom:20px;line-height:1.6">
+            This is the global platform fee percentage charged on every order's laundry subtotal. Individual vendors can have a custom rate set in their Edit modal — if set, the vendor's rate overrides this global rate.
+          </p>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+            <div style="flex:1">
+              <label class="field-label">Global Platform Fee (%)</label>
+              <div style="display:flex;align-items:center;gap:10px;margin-top:6px">
+                <input class="field-input" id="settings-platform-fee" type="number" min="0" max="100" step="0.5" placeholder="e.g. 10" style="max-width:160px;margin-bottom:0">
+                <span style="font-size:20px;color:var(--teal);font-family:var(--font-head);font-weight:700" id="settings-fee-preview">—%</span>
+              </div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--gray);margin-bottom:20px">Applies to all new orders where no vendor-specific rate is set. Existing orders are not affected.</div>
+          <button class="save-btn" onclick="saveGlobalPlatformFee()">💾 Save</button>
+        </div>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -523,6 +554,13 @@
         <div class="modal-field-label">Telegram Group Chat ID</div>
         <input class="field-input" id="ev-telegram" placeholder="e.g. -1234567890" style="margin-top:6px">
       </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px">
+      <div>
+        <div class="modal-field-label">Custom Platform Fee % <span style="color:var(--gray);font-weight:400">(leave blank to use global rate)</span></div>
+        <input class="field-input" id="ev-platform-fee-pct" type="number" min="0" max="100" step="0.5" placeholder="e.g. 8" style="margin-top:6px">
+      </div>
+      <div></div>
     </div>
 
     <div style="display:flex;gap:10px;margin-top:24px">
@@ -668,7 +706,8 @@
 
   /* ── NAVIGATION ── */
   function showPage(name) {
-    if (name === 'riders') loadRiders();
+    if (name === 'settings') loadSettings();
+    if (name === 'riders')   loadRiders();
     if (name !== 'vendor-orders') stopDrillRealtime();
     if (name !== 'riders') closeRiderDrill();
     document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
@@ -1250,6 +1289,34 @@
       .catch(function(){ showToast('Could not reactivate vendor', true); });
   }
 
+  /* ── SETTINGS ── */
+  var globalPlatformFeePct = 10;
+
+  function loadSettings() {
+    sbFetch('platform_settings?key=eq.platform_fee_pct&limit=1&select=value')
+      .then(function(r){ return r.json(); })
+      .then(function(data) {
+        var pct = Array.isArray(data) && data.length ? parseFloat(data[0].value) : 10;
+        globalPlatformFeePct = pct;
+        document.getElementById('settings-platform-fee').value = pct;
+        document.getElementById('settings-fee-preview').textContent = pct + '%';
+      })
+      .catch(function(){ showToast('Could not load settings', true); });
+  }
+
+  function saveGlobalPlatformFee() {
+    var pct = parseFloat(document.getElementById('settings-platform-fee').value);
+    if (isNaN(pct) || pct < 0 || pct > 100) { showToast('Enter a valid percentage (0–100)', true); return; }
+    sbFetch('platform_settings?key=eq.platform_fee_pct', {
+      method: 'PATCH', body: JSON.stringify({ value: String(pct) }),
+    })
+    .then(function(r) {
+      if (r.ok) { globalPlatformFeePct = pct; document.getElementById('settings-fee-preview').textContent = pct + '%'; showToast('Platform fee updated to ' + pct + '% ✓'); }
+      else showToast('Save failed', true);
+    })
+    .catch(function(){ showToast('Could not save settings', true); });
+  }
+
   /* ── EDIT VENDOR ── */
   var editVendorId = null;
 
@@ -1258,12 +1325,13 @@
     if (!v) return;
     editVendorId = vendorId;
     document.getElementById('edit-vendor-name-display').textContent = v.name;
-    document.getElementById('ev-name').value     = v.name     || '';
-    document.getElementById('ev-slug').value     = v.slug     || '';
-    document.getElementById('ev-email').value    = v.email    || '';
-    document.getElementById('ev-phone').value    = v.phone    || '';
-    document.getElementById('ev-password').value = '';
-    document.getElementById('ev-telegram').value = v.telegram_chat_id || '';
+    document.getElementById('ev-name').value             = v.name     || '';
+    document.getElementById('ev-slug').value             = v.slug     || '';
+    document.getElementById('ev-email').value            = v.email    || '';
+    document.getElementById('ev-phone').value            = v.phone    || '';
+    document.getElementById('ev-password').value         = '';
+    document.getElementById('ev-telegram').value         = v.telegram_chat_id || '';
+    document.getElementById('ev-platform-fee-pct').value = v.platform_fee_pct != null ? v.platform_fee_pct : '';
     document.getElementById('edit-vendor-modal').classList.add('open');
   }
 
@@ -1274,16 +1342,19 @@
 
   function saveEditVendor() {
     if (!editVendorId) return;
-    var name     = document.getElementById('ev-name').value.trim();
-    var slug     = document.getElementById('ev-slug').value.trim();
-    var email    = document.getElementById('ev-email').value.trim().toLowerCase();
-    var phone    = document.getElementById('ev-phone').value.trim();
-    var password = document.getElementById('ev-password').value.trim();
-    var telegram = document.getElementById('ev-telegram').value.trim() || null;
+    var name          = document.getElementById('ev-name').value.trim();
+    var slug          = document.getElementById('ev-slug').value.trim();
+    var email         = document.getElementById('ev-email').value.trim().toLowerCase();
+    var phone         = document.getElementById('ev-phone').value.trim();
+    var password      = document.getElementById('ev-password').value.trim();
+    var telegram      = document.getElementById('ev-telegram').value.trim() || null;
+    var feePctRaw     = document.getElementById('ev-platform-fee-pct').value.trim();
+    var feePct        = feePctRaw !== '' ? parseFloat(feePctRaw) : null;
 
     if (!name || !slug) { showToast('Name and slug are required', true); return; }
+    if (feePct !== null && (isNaN(feePct) || feePct < 0 || feePct > 100)) { showToast('Platform fee must be 0–100', true); return; }
 
-    var payload = { name: name, slug: slug, email: email, phone: phone, telegram_chat_id: telegram };
+    var payload = { name: name, slug: slug, email: email, phone: phone, telegram_chat_id: telegram, platform_fee_pct: feePct };
     if (password) payload.password = password;
 
     sbFetch('vendors?id=eq.' + editVendorId, { method: 'PATCH', body: JSON.stringify(payload) })
@@ -1291,7 +1362,7 @@
         if (r.ok) {
           // Update local cache
           var v = allVendors.find(function(v){ return v.id === editVendorId; });
-          if (v) { v.name = name; v.slug = slug; v.email = email; v.phone = phone; v.telegram_chat_id = telegram; }
+          if (v) { v.name = name; v.slug = slug; v.email = email; v.phone = phone; v.telegram_chat_id = telegram; v.platform_fee_pct = feePct; }
           showToast('Vendor updated ✓');
           closeEditVendorModal();
           renderVendorsTable();
