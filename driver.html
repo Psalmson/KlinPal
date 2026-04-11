@@ -164,21 +164,29 @@
 <script>
   var SUPABASE_URL = 'https://mlgdqxqzpzfzndjhywqf.supabase.co';
   var SUPABASE_KEY = 'sb_publishable_TS5uGf7KzLKxeQw8bxDKYw_HwBNNBeA';
-  var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false }
+  });
+  var _sessionToken = null;
 
   var currentDriver   = null;
   var allOrders       = [];
   var realtimeChannel = null;
 
   function sbFetch(path, opts) {
-    return sb.auth.getSession().then(function(res) {
-      var token = (res.data && res.data.session) ? res.data.session.access_token : SUPABASE_KEY;
-      var defaults = { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', 'Prefer': 'return=representation' } };
-      var o = Object.assign({}, defaults, opts || {});
-      if (opts && opts.headers) o.headers = Object.assign({}, defaults.headers, opts.headers);
-      return fetch(SUPABASE_URL + '/rest/v1/' + path, o);
-    });
+    var token = _sessionToken || SUPABASE_KEY;
+    var headers = Object.assign(
+      { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      (opts && opts.headers) || {}
+    );
+    var o = Object.assign({}, opts || {}, { headers: headers });
+    return fetch(SUPABASE_URL + '/rest/v1/' + path, o);
   }
+
+  sb.auth.onAuthStateChange(function(event, session) {
+    if (session) _sessionToken = session.access_token;
+    if (event === 'SIGNED_OUT') _sessionToken = null;
+  });
 
   function togglePin(btn) {
     var input = document.getElementById('login-pin');
@@ -197,6 +205,7 @@
       .then(function(result) {
         if (result.error) { err.style.display = 'block'; return; }
         var token = result.data.session.access_token;
+        _sessionToken = token;
         // Fetch driver record using fresh session token directly
         return fetch(SUPABASE_URL + '/rest/v1/drivers?email=eq.' + encodeURIComponent(email) + '&active=eq.true&limit=1&select=*', {
           headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
@@ -224,6 +233,7 @@
 
   function doLogout() {
     stopRealtime();
+    _sessionToken = null;
     sb.auth.signOut();
     currentDriver = null; allOrders = [];
     document.getElementById('app').style.display = 'none';
