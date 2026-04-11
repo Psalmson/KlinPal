@@ -385,22 +385,12 @@
             <input class="field-input" id="staff-name" placeholder="e.g. Amara Okonkwo">
           </div>
           <div>
-            <label class="field-label">Email</label>
-            <input class="field-input" id="staff-email" type="email" placeholder="amara@email.com">
-          </div>
-        </div>
-        <div class="field-row">
-          <div>
             <label class="field-label">Phone Number</label>
             <input class="field-input" id="staff-phone" type="tel" placeholder="e.g. 08012345678">
           </div>
-          <div>
-            <label class="field-label">PIN</label>
-            <div style="position:relative">
-              <input class="field-input" id="staff-pin" type="password" placeholder="Set a numeric PIN" style="padding-right:48px">
-              <button onclick="togglePwd('staff-pin',this)" type="button" style="position:absolute;right:14px;top:35%;transform:translateY(-50%);background:none;border:none;color:var(--gray);cursor:pointer;font-size:13px;padding:0">Show</button>
-            </div>
-          </div>
+        </div>
+        <div style="background:rgba(0,201,167,0.08);border:1px solid rgba(0,201,167,0.2);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--gray);margin-bottom:16px;line-height:1.5">
+          🔑 Staff sets their own email &amp; PIN at <strong style="color:var(--teal)">klin-pal.vercel.app/register.html</strong> using their phone number.
         </div>
         <button class="save-btn" onclick="addStaff()">Add Staff</button>
       </div>
@@ -1110,46 +1100,23 @@
 
   function addStaff() {
     var name  = document.getElementById('staff-name').value.trim();
-    var email = document.getElementById('staff-email').value.trim().toLowerCase();
     var phone = document.getElementById('staff-phone').value.trim().replace(/\s+/g,'');
-    var pin   = document.getElementById('staff-pin').value.trim();
-    if (!name)         { showToast('Enter staff name', true); return; }
-    if (!email)        { showToast('Enter staff email', true); return; }
-    if (!phone)        { showToast('Enter phone number', true); return; }
-    if (!pin)          { showToast('Set a PIN', true); return; }
-    if (pin.length < 6){ showToast('PIN must be at least 6 characters', true); return; }
+    if (!name)  { showToast('Enter staff name', true); return; }
+    if (!phone) { showToast('Enter phone number', true); return; }
 
-    // Step 1: Save staff record first (uses vendor session)
     sbFetch('vendor_staff', {
       method: 'POST',
-      body: JSON.stringify({ vendor_id: currentVendor.id, name: name, email: email, phone: phone, pin: pin, role: 'orders_only', active: true }),
+      body: JSON.stringify({ vendor_id: currentVendor.id, name: name, phone: phone, role: 'orders_only', active: true }),
     })
     .then(function(r) {
-      if (!r.ok) {
-        return r.json().then(function(e) { showToast(e.message && e.message.indexOf('unique')>-1 ? 'Email or phone already registered' : 'Could not add staff', true); });
+      if (r.ok) {
+        document.getElementById('staff-name').value  = '';
+        document.getElementById('staff-phone').value = '';
+        showToast('Staff added ✓ — share register.html link with them');
+        loadStaff();
+      } else {
+        return r.json().then(function(e) { showToast(e.message && e.message.indexOf('unique')>-1 ? 'Phone already registered' : 'Could not add staff', true); });
       }
-      // Step 2: Create Auth account via Edge Function (no session hijack)
-      return sb.auth.getSession().then(function(res) {
-        var token = res.data.session ? res.data.session.access_token : SUPABASE_KEY;
-        return fetch(SUPABASE_URL + '/functions/v1/create-auth-user', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'apikey': SUPABASE_KEY },
-          body: JSON.stringify({ email: email, password: pin }),
-        })
-        .then(function(r) { return r.json(); })
-        .then(function(result) {
-          document.getElementById('staff-name').value  = '';
-          document.getElementById('staff-email').value = '';
-          document.getElementById('staff-phone').value = '';
-          document.getElementById('staff-pin').value   = '';
-          if (result.error) {
-            showToast('Staff saved (Auth: ' + result.error + ')', true);
-          } else {
-            showToast('Staff added ✓');
-          }
-          loadStaff();
-        });
-      });
     })
     .catch(function() { showToast('Could not add staff', true); });
   }
