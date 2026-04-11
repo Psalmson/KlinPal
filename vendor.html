@@ -523,10 +523,27 @@
   /* ── CONFIG ── */
   var SUPABASE_URL = 'https://mlgdqxqzpzfzndjhywqf.supabase.co';
   var SUPABASE_KEY = 'sb_publishable_TS5uGf7KzLKxeQw8bxDKYw_HwBNNBeA';
-  var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false }
-  });
-  var _sessionToken = null; // set on login, used by sbFetch
+  var SESSION_KEY  = 'klinpal_vendor_session';
+
+  /* ── JWT SESSION ── */
+  function getSession() {
+    try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch(e) { return null; }
+  }
+  function setSession(token, user) {
+    localStorage.setItem(SESSION_KEY, JSON.stringify({ token: token, user: user }));
+  }
+  function clearSession() {
+    localStorage.removeItem(SESSION_KEY);
+  }
+  function decodeJwt(token) {
+    try { return JSON.parse(atob(token.split('.')[1])); } catch(e) { return null; }
+  }
+  function isSessionValid() {
+    var s = getSession();
+    if (!s || !s.token) return false;
+    var p = decodeJwt(s.token);
+    return p && p.exp && (p.exp * 1000 > Date.now());
+  }
 
   var currentVendor    = null;
   var allOrders        = [];
@@ -541,9 +558,10 @@
     { id: 'dry',     name: 'Dry-clean',    price: 300, active: true },
   ];
 
-  /* ── SUPABASE FETCH ── */
+  /* ── SUPABASE FETCH (uses JWT token from session) ── */
   function sbFetch(path, options) {
-    var token = _sessionToken || SUPABASE_KEY;
+    var s = getSession();
+    var token = (s && s.token) ? s.token : SUPABASE_KEY;
     var headers = Object.assign({
       'apikey':        SUPABASE_KEY,
       'Authorization': 'Bearer ' + token,
@@ -552,6 +570,16 @@
     }, (options && options.headers) || {});
     var opts = Object.assign({}, options || {}, { headers: headers });
     return fetch(SUPABASE_URL + '/rest/v1/' + path, opts);
+  }
+
+  function callEdge(fnName, body) {
+    var s = getSession();
+    var token = (s && s.token) ? s.token : SUPABASE_KEY;
+    return fetch(SUPABASE_URL + '/functions/v1/' + fnName, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify(body)
+    }).then(function(r) { return r.json(); });
   }
 
   function togglePwd(id, btn) {
@@ -575,68 +603,43 @@
   function doLogin() {
     var email = document.getElementById('login-email').value.trim().toLowerCase();
     var err   = document.getElementById('login-error');
+    var utype = loginMode === 'vendor' ? 'vendor' : 'staff';
+    var pass  = loginMode === 'vendor'
+      ? document.getElementById('login-pass').value.trim()
+      : document.getElementById('login-pin').value.trim();
 
-    function fetchWithToken(url, token) {
-      return fetch(url, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' } });
-    }
+    if (!email || !pass) { err.style.display = 'block'; return; }
 
-    if (loginMode === 'vendor') {
-      var pass = document.getElementById('login-pass').value.trim();
-      if (!email || !pass) { err.style.display = 'block'; return; }
+    callEdge('verify-login', { email: email, password: pass, user_type: utype })
+      .then(function(result) {
+        if (result.error) { err.style.display = 'block'; return; }
+        setSession(result.token, result.user);
 
-      // Sign out any stale session first then sign in fresh
-      sb.auth.signOut().finally(function() {
-        sb.auth.signInWithPassword({ email: email, password: pass })
-          .then(function(result) {
-            if (result.error) { err.style.display = 'block'; return; }
-            _sessionToken = result.data.session.access_token;
-            return fetchWithToken(SUPABASE_URL + '/rest/v1/vendors?email=eq.' + encodeURIComponent(email) + '&active=eq.true&limit=1&select=*', _sessionToken)
-              .then(function(r) { return r.json(); })
-              .then(function(data) {
-                if (!Array.isArray(data) || !data.length) { err.style.display = 'block'; sb.auth.signOut(); _sessionToken = null; return; }
-                isStaffSession = false; currentStaff = null;
-                bootVendorSession(data[0]);
-              });
-          })
-          .catch(function() { err.style.display = 'block'; });
-      });
-
-    } else {
-      var pin = document.getElementById('login-pin').value.trim();
-      if (!email || !pin) { err.style.display = 'block'; return; }
-
-      sb.auth.signOut().finally(function() {
-        sb.auth.signInWithPassword({ email: email, password: pin })
-          .then(function(result) {
-            if (result.error) { err.style.display = 'block'; return; }
-            _sessionToken = result.data.session.access_token;
-            return fetchWithToken(SUPABASE_URL + '/rest/v1/vendor_staff?email=eq.' + encodeURIComponent(email) + '&active=eq.true&limit=1&select=*', _sessionToken)
-              .then(function(r) { return r.json(); })
-              .then(function(sdata) {
-                if (!Array.isArray(sdata) || !sdata.length) { err.style.display = 'block'; sb.auth.signOut(); _sessionToken = null; return; }
-                currentStaff = sdata[0];
-                return fetchWithToken(SUPABASE_URL + '/rest/v1/vendors?id=eq.' + sdata[0].vendor_id + '&limit=1&select=*', _sessionToken)
-                  .then(function(r) { return r.json(); })
-                  .then(function(vdata) {
-                    if (!Array.isArray(vdata) || !vdata.length) { err.style.display = 'block'; sb.auth.signOut(); _sessionToken = null; return; }
-                    isStaffSession = true;
-                    bootVendorSession(vdata[0]);
-                  });
-              });
-          })
-          .catch(function() { err.style.display = 'block'; });
-      });
-    }
+        if (utype === 'vendor') {
+          // Fetch full vendor row for branding/services
+          return sbFetch('vendors?id=eq.' + result.user.id + '&limit=1&select=*')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+              if (!Array.isArray(data) || !data.length) { err.style.display = 'block'; clearSession(); return; }
+              isStaffSession = false; currentStaff = null;
+              bootVendorSession(data[0]);
+            });
+        } else {
+          currentStaff = result.user;
+          return sbFetch('vendors?id=eq.' + result.user.vendor_id + '&limit=1&select=*')
+            .then(function(r) { return r.json(); })
+            .then(function(vdata) {
+              if (!Array.isArray(vdata) || !vdata.length) { err.style.display = 'block'; clearSession(); return; }
+              isStaffSession = true;
+              bootVendorSession(vdata[0]);
+            });
+        }
+      })
+      .catch(function() { err.style.display = 'block'; });
   }
 
-  function forgotPassword() {
-    var email = document.getElementById('login-email').value.trim();
-    if (!email) { showToast('Enter your email address first', true); return; }
-    sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + '/vendor.html' })
-      .then(function(r) {
-        if (r.error) { showToast('Could not send reset email', true); }
-        else { showToast('Password reset email sent ✓'); }
-      });
+    function forgotPassword() {
+    showToast('Contact Klinpal to reset your password.', false);
   }
 
   var globalPlatformFeePct = 10; // fetched on boot
@@ -693,12 +696,11 @@
         });
     }
 
-    // Populate profile fields
-    sb.auth.getUser().then(function(res) {
-      if (res.data && res.data.user) {
-        document.getElementById('profile-email').value = res.data.user.email || '';
-      }
-    });
+    // Populate profile fields from session
+    var sess = getSession();
+    if (sess && sess.user) {
+      document.getElementById('profile-email').value = sess.user.email || '';
+    }
     document.getElementById('profile-phone').value = isStaffSession ? (currentStaff.phone || '') : (currentVendor.phone || '');
 
     loadOrders();
@@ -709,17 +711,37 @@
   document.getElementById('login-pass').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
   document.getElementById('login-pin').addEventListener('keydown',  function(e) { if (e.key === 'Enter') doLogin(); });
 
-  // Restore session on page reload and keep token fresh
-  sb.auth.onAuthStateChange(function(event, session) {
-    if (event === 'PASSWORD_RECOVERY') showPage('profile');
-    if (session) _sessionToken = session.access_token;
-    if (event === 'SIGNED_OUT') _sessionToken = null;
-  });
+  // Check for existing valid session on page load
+  (function() {
+    if (isSessionValid()) {
+      var s = getSession();
+      var utype = s.user.role;
+      if (utype === 'vendor') {
+        sbFetch('vendors?id=eq.' + s.user.id + '&limit=1&select=*')
+          .then(function(r){ return r.json(); })
+          .then(function(data){
+            if (Array.isArray(data) && data.length) {
+              isStaffSession = false; currentStaff = null;
+              bootVendorSession(data[0]);
+            }
+          }).catch(function(){});
+      } else {
+        currentStaff = s.user;
+        sbFetch('vendors?id=eq.' + s.user.vendor_id + '&limit=1&select=*')
+          .then(function(r){ return r.json(); })
+          .then(function(vdata){
+            if (Array.isArray(vdata) && vdata.length) {
+              isStaffSession = true;
+              bootVendorSession(vdata[0]);
+            }
+          }).catch(function(){});
+      }
+    }
+  })();
 
   function doLogout() {
     stopRealtime();
-    _sessionToken = null;
-    sb.auth.signOut();
+    clearSession();
     document.documentElement.style.removeProperty('--teal');
     document.documentElement.style.removeProperty('--teal2');
     currentVendor  = null;
@@ -1038,31 +1060,40 @@
   function updateEmail() {
     var email = document.getElementById('profile-email').value.trim().toLowerCase();
     if (!email) { showToast('Enter a valid email', true); return; }
-    sb.auth.updateUser({ email: email })
+    var table = isStaffSession ? 'vendor_staff?id=eq.' + currentStaff.id : 'vendors?id=eq.' + currentVendor.id;
+    sbFetch(table, { method: 'PATCH', body: JSON.stringify({ email: email }) })
       .then(function(r) {
-        if (r.error) { showToast('Could not update email: ' + r.error.message, true); return; }
-        // Also update in vendors/vendor_staff table
-        if (isStaffSession) {
-          sbFetch('vendor_staff?id=eq.' + currentStaff.id, { method: 'PATCH', body: JSON.stringify({ email: email }) });
-        } else {
-          sbFetch('vendors?id=eq.' + currentVendor.id, { method: 'PATCH', body: JSON.stringify({ email: email }) });
-        }
-        showToast('Email updated — check your inbox to confirm ✓');
+        if (r.ok) {
+          // Update session
+          var s = getSession();
+          if (s && s.user) { s.user.email = email; setSession(s.token, s.user); }
+          showToast('Email updated ✓');
+        } else { showToast('Could not update email', true); }
       });
   }
 
   function updatePassword() {
     var pass    = document.getElementById('profile-password').value.trim();
     var confirm = document.getElementById('profile-password-confirm').value.trim();
-    if (!pass)              { showToast('Enter a new password', true); return; }
-    if (pass !== confirm)   { showToast('Passwords do not match', true); return; }
-    if (pass.length < 6)    { showToast('Password must be at least 6 characters', true); return; }
-    sb.auth.updateUser({ password: pass })
-      .then(function(r) {
-        if (r.error) { showToast('Could not update password: ' + r.error.message, true); return; }
-        document.getElementById('profile-password').value         = '';
-        document.getElementById('profile-password-confirm').value = '';
-        showToast('Password updated ✓');
+    if (!pass)            { showToast('Enter a new password', true); return; }
+    if (pass !== confirm) { showToast('Passwords do not match', true); return; }
+    if (pass.length < 6)  { showToast('Password must be at least 6 characters', true); return; }
+
+    callEdge('hash-password', { password: pass })
+      .then(function(result) {
+        if (result.error) { showToast('Could not hash password', true); return; }
+        var field = isStaffSession ? 'pin' : 'password';
+        var table = isStaffSession ? 'vendor_staff?id=eq.' + currentStaff.id : 'vendors?id=eq.' + currentVendor.id;
+        var body = {};
+        body[field] = result.hash;
+        return sbFetch(table, { method: 'PATCH', body: JSON.stringify(body) })
+          .then(function(r) {
+            if (r.ok) {
+              document.getElementById('profile-password').value         = '';
+              document.getElementById('profile-password-confirm').value = '';
+              showToast('Password updated ✓');
+            } else { showToast('Could not update password', true); }
+          });
       });
   }
 
