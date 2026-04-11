@@ -613,9 +613,15 @@
   var SUPABASE_URL        = 'https://mlgdqxqzpzfzndjhywqf.supabase.co';
   var SUPABASE_KEY        = 'sb_publishable_TS5uGf7KzLKxeQw8bxDKYw_HwBNNBeA';
   var sb                  = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false }
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, storageKey: 'klinpal-superadmin-auth' }
   });
   var _sessionToken       = null;
+
+  function clearAuthStorage() {
+    Object.keys(localStorage).forEach(function(key) {
+      if (key.startsWith('klinpal-')) localStorage.removeItem(key);
+    });
+  }
   var LOCATIONIQ_TOKEN    = 'pk.ec47de1300ad77f86deab165cce9bbe2';
 
   var allVendors          = [];
@@ -650,6 +656,8 @@
     var pass  = document.getElementById('login-pass').value.trim();
     var err   = document.getElementById('login-error');
     if (!email || !pass) { err.style.display = 'block'; return; }
+
+    clearAuthStorage();
 
     sb.auth.signInWithPassword({ email: email, password: pass })
       .then(function(result) {
