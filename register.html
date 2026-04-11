@@ -123,9 +123,11 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
   var SUPABASE_URL = 'https://mlgdqxqzpzfzndjhywqf.supabase.co';
   var SUPABASE_KEY = 'sb_publishable_TS5uGf7KzLKxeQw8bxDKYw_HwBNNBeA';
+  var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   var currentMode   = 'vendor'; // vendor | staff | rider
   var verifiedRow   = null;     // the matched row from DB
@@ -238,56 +240,63 @@
     var btn     = document.getElementById('create-btn');
     hideError('create-error');
 
-    if (!email)          { showError('create-error', 'Enter your email address.'); return; }
-    if (!pass)           { showError('create-error', 'Enter a ' + (currentMode === 'vendor' ? 'password' : 'PIN') + '.'); return; }
-    if (pass.length < 6) { showError('create-error', (currentMode === 'vendor' ? 'Password' : 'PIN') + ' must be at least 6 characters.'); return; }
-    if (pass !== confirm) { showError('create-error', (currentMode === 'vendor' ? 'Passwords' : 'PINs') + ' do not match.'); return; }
+    if (!email)           { showError('create-error', 'Enter your email address.'); return; }
+    if (!pass)            { showError('create-error', 'Enter a ' + (currentMode === 'vendor' ? 'password' : 'PIN') + '.'); return; }
+    if (pass.length < 6)  { showError('create-error', (currentMode === 'vendor' ? 'Password' : 'PIN') + ' must be at least 6 characters.'); return; }
+    if (pass !== confirm)  { showError('create-error', (currentMode === 'vendor' ? 'Passwords' : 'PINs') + ' do not match.'); return; }
 
     btn.disabled = true; btn.textContent = 'Creating account...';
 
-    // Step 1: Hash password via Edge Function (never stored plain text)
-    fetch(SUPABASE_URL + '/functions/v1/hash-password', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
-      body: JSON.stringify({ password: pass })
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(hashResult) {
-      if (hashResult.error) { showError('create-error', 'Could not process password. Try again.'); btn.disabled = false; btn.textContent = 'Create Account'; return; }
+    // Step 1: Create Supabase Auth account
+    sb.auth.signUp({ email: email, password: pass })
+      .then(function(authResult) {
+        if (authResult.error) {
+          showError('create-error', authResult.error.message.indexOf('already') > -1
+            ? 'This email is already registered. Try logging in instead.'
+            : authResult.error.message);
+          btn.disabled = false; btn.textContent = 'Create Account'; return;
+        }
 
-      // Step 2: Save email + hash to the right table
-      var table, body;
-      if (currentMode === 'vendor') {
-        table = 'vendors?id=eq.' + verifiedRow.id;
-        body  = { email: email, password: hashResult.hash };
-      } else if (currentMode === 'staff') {
-        table = 'vendor_staff?id=eq.' + verifiedRow.id;
-        body  = { email: email, pin: hashResult.hash };
-      } else {
-        table = 'drivers?id=eq.' + verifiedRow.id;
-        body  = { email: email, pin: hashResult.hash };
-      }
+        // Step 2: Hash password and save to table
+        return fetch(SUPABASE_URL + '/functions/v1/hash-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+          body: JSON.stringify({ password: pass })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(hashResult) {
+          var table, body;
+          if (currentMode === 'vendor') {
+            table = 'vendors?id=eq.' + verifiedRow.id;
+            body  = { email: email, password: hashResult.hash || pass };
+          } else if (currentMode === 'staff') {
+            table = 'vendor_staff?id=eq.' + verifiedRow.id;
+            body  = { email: email, pin: hashResult.hash || pass };
+          } else {
+            table = 'drivers?id=eq.' + verifiedRow.id;
+            body  = { email: email, pin: hashResult.hash || pass };
+          }
 
-      return fetch(SUPABASE_URL + '/rest/v1/' + table, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=representation' },
-        body: JSON.stringify(body)
+          return fetch(SUPABASE_URL + '/rest/v1/' + table, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Prefer': 'return=representation' },
+            body: JSON.stringify(body)
+          });
+        })
+        .then(function() {
+          // Sign out so no stale session on next page
+          sb.auth.signOut();
+          var loginUrl  = currentMode === 'rider' ? '/driver.html' : '/vendor.html';
+          var loginText = currentMode === 'rider' ? 'Go to Driver Login →' : 'Go to Vendor Login →';
+          document.getElementById('success-body').textContent =
+            'Your account is ready. Log in with ' + email + ' on the ' +
+            (currentMode === 'rider' ? 'driver' : 'vendor') + ' dashboard.';
+          document.getElementById('login-link').href = loginUrl;
+          document.getElementById('login-link').textContent = loginText;
+          showStep('step-success');
+        });
       })
-      .then(function(r) {
-        if (!r.ok) { showError('create-error', 'Could not save your account. Try again.'); btn.disabled = false; btn.textContent = 'Create Account'; return; }
-
-        // Success — show login link
-        var loginUrl  = currentMode === 'rider' ? '/driver.html' : '/vendor.html';
-        var loginText = currentMode === 'rider' ? 'Go to Driver Login →' : 'Go to Vendor Login →';
-        document.getElementById('success-body').textContent =
-          'Your account is ready. Log in with ' + email + ' on the ' +
-          (currentMode === 'rider' ? 'driver' : 'vendor') + ' dashboard.';
-        document.getElementById('login-link').href = loginUrl;
-        document.getElementById('login-link').textContent = loginText;
-        showStep('step-success');
-      });
-    })
-    .catch(function() { showError('create-error', 'Could not create account. Please try again.'); btn.disabled = false; btn.textContent = 'Create Account'; });
+      .catch(function() { showError('create-error', 'Could not create account. Please try again.'); btn.disabled = false; btn.textContent = 'Create Account'; });
   }
 
     function goBack() {
