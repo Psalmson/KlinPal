@@ -209,7 +209,7 @@
       table  = 'vendors?slug=eq.' + encodeURIComponent(val.toLowerCase()) + '&limit=1&select=id,name,slug,email';
       filter = function(row) { return !row.email; }; // unclaimed if no email
     } else if (currentMode === 'staff') {
-      table  = 'vendor_staff?phone=eq.' + encodeURIComponent(val) + '&active=eq.true&limit=1&select=id,name,phone,email';
+      table  = 'vendor_staff?phone=eq.' + encodeURIComponent(val) + '&active=eq.true&limit=1&select=id,name,phone,email,vendor_id';
       filter = function(row) { return !row.email; };
     } else {
       table  = 'drivers?phone=eq.' + encodeURIComponent(val) + '&active=eq.true&limit=1&select=id,name,phone,email';
