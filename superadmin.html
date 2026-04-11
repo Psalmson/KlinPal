@@ -612,7 +612,10 @@
   /* ── CONFIG ── */
   var SUPABASE_URL        = 'https://mlgdqxqzpzfzndjhywqf.supabase.co';
   var SUPABASE_KEY        = 'sb_publishable_TS5uGf7KzLKxeQw8bxDKYw_HwBNNBeA';
-  var sb                  = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  var sb                  = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false }
+  });
+  var _sessionToken       = null;
   var LOCATIONIQ_TOKEN    = 'pk.ec47de1300ad77f86deab165cce9bbe2';
 
   var allVendors          = [];
@@ -622,22 +625,17 @@
   var realtimeChannel     = null;
   var drillRealtimeChannel = null;
 
-  /* ── SUPABASE FETCH (attaches Auth session token when available) ── */
+  /* ── SUPABASE FETCH ── */
   function sbFetch(path, options) {
-    return sb.auth.getSession().then(function(res) {
-      var token = (res.data && res.data.session) ? res.data.session.access_token : SUPABASE_KEY;
-      var defaults = {
-        headers: {
-          'apikey':        SUPABASE_KEY,
-          'Authorization': 'Bearer ' + token,
-          'Content-Type':  'application/json',
-          'Prefer':        'return=representation',
-        },
-      };
-      var opts = Object.assign({}, defaults, options || {});
-      if (options && options.headers) opts.headers = Object.assign({}, defaults.headers, options.headers);
-      return fetch(SUPABASE_URL + '/rest/v1/' + path, opts);
-    });
+    var token = _sessionToken || SUPABASE_KEY;
+    var headers = Object.assign({
+      'apikey':        SUPABASE_KEY,
+      'Authorization': 'Bearer ' + token,
+      'Content-Type':  'application/json',
+      'Prefer':        'return=representation',
+    }, (options && options.headers) || {});
+    var opts = Object.assign({}, options || {}, { headers: headers });
+    return fetch(SUPABASE_URL + '/rest/v1/' + path, opts);
   }
 
   function togglePwd(id, btn) {
@@ -656,6 +654,7 @@
     sb.auth.signInWithPassword({ email: email, password: pass })
       .then(function(result) {
         if (result.error) { err.style.display = 'block'; return; }
+        _sessionToken = result.data.session.access_token;
         err.style.display = 'none';
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('app').style.display = 'block';
@@ -669,6 +668,7 @@
   document.getElementById('login-pass').addEventListener('keydown',  function(e) { if (e.key === 'Enter') doLogin(); });
 
   function doLogout() {
+    _sessionToken = null;
     sb.auth.signOut();
     stopOverviewRealtime();
     stopDrillRealtime();
@@ -740,6 +740,12 @@
   function stopDrillRealtime() {
     if (drillRealtimeChannel) { drillRealtimeChannel.unsubscribe(); drillRealtimeChannel = null; }
   }
+
+  /* ── KEEP TOKEN FRESH ── */
+  sb.auth.onAuthStateChange(function(event, session) {
+    if (session) _sessionToken = session.access_token;
+    if (event === 'SIGNED_OUT') _sessionToken = null;
+  });
 
   /* ── NAVIGATION ── */
   function showPage(name) {
