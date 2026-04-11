@@ -576,58 +576,56 @@
     var email = document.getElementById('login-email').value.trim().toLowerCase();
     var err   = document.getElementById('login-error');
 
+    function fetchWithToken(url, token) {
+      return fetch(url, { headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' } });
+    }
+
     if (loginMode === 'vendor') {
       var pass = document.getElementById('login-pass').value.trim();
       if (!email || !pass) { err.style.display = 'block'; return; }
 
-      sb.auth.signInWithPassword({ email: email, password: pass })
-        .then(function(result) {
-          if (result.error) { err.style.display = 'block'; return; }
-          var token = result.data.session.access_token;
-          _sessionToken = token;
-          // Fetch vendor record using the fresh session token directly
-          return fetch(SUPABASE_URL + '/rest/v1/vendors?email=eq.' + encodeURIComponent(email) + '&active=eq.true&limit=1&select=*', {
-            headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
+      // Sign out any stale session first then sign in fresh
+      sb.auth.signOut().finally(function() {
+        sb.auth.signInWithPassword({ email: email, password: pass })
+          .then(function(result) {
+            if (result.error) { err.style.display = 'block'; return; }
+            _sessionToken = result.data.session.access_token;
+            return fetchWithToken(SUPABASE_URL + '/rest/v1/vendors?email=eq.' + encodeURIComponent(email) + '&active=eq.true&limit=1&select=*', _sessionToken)
+              .then(function(r) { return r.json(); })
+              .then(function(data) {
+                if (!Array.isArray(data) || !data.length) { err.style.display = 'block'; sb.auth.signOut(); _sessionToken = null; return; }
+                isStaffSession = false; currentStaff = null;
+                bootVendorSession(data[0]);
+              });
           })
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-              if (!Array.isArray(data) || !data.length) { err.style.display = 'block'; sb.auth.signOut(); return; }
-              isStaffSession = false;
-              currentStaff   = null;
-              bootVendorSession(data[0]);
-            });
-        })
-        .catch(function() { err.style.display = 'block'; });
+          .catch(function() { err.style.display = 'block'; });
+      });
 
     } else {
       var pin = document.getElementById('login-pin').value.trim();
       if (!email || !pin) { err.style.display = 'block'; return; }
 
-      sb.auth.signInWithPassword({ email: email, password: pin })
-        .then(function(result) {
-          if (result.error) { err.style.display = 'block'; return; }
-          var token = result.data.session.access_token;
-          _sessionToken = token;
-          // Fetch staff record using fresh session token
-          return fetch(SUPABASE_URL + '/rest/v1/vendor_staff?email=eq.' + encodeURIComponent(email) + '&active=eq.true&limit=1&select=*', {
-            headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
+      sb.auth.signOut().finally(function() {
+        sb.auth.signInWithPassword({ email: email, password: pin })
+          .then(function(result) {
+            if (result.error) { err.style.display = 'block'; return; }
+            _sessionToken = result.data.session.access_token;
+            return fetchWithToken(SUPABASE_URL + '/rest/v1/vendor_staff?email=eq.' + encodeURIComponent(email) + '&active=eq.true&limit=1&select=*', _sessionToken)
+              .then(function(r) { return r.json(); })
+              .then(function(sdata) {
+                if (!Array.isArray(sdata) || !sdata.length) { err.style.display = 'block'; sb.auth.signOut(); _sessionToken = null; return; }
+                currentStaff = sdata[0];
+                return fetchWithToken(SUPABASE_URL + '/rest/v1/vendors?id=eq.' + sdata[0].vendor_id + '&limit=1&select=*', _sessionToken)
+                  .then(function(r) { return r.json(); })
+                  .then(function(vdata) {
+                    if (!Array.isArray(vdata) || !vdata.length) { err.style.display = 'block'; sb.auth.signOut(); _sessionToken = null; return; }
+                    isStaffSession = true;
+                    bootVendorSession(vdata[0]);
+                  });
+              });
           })
-            .then(function(r) { return r.json(); })
-            .then(function(sdata) {
-              if (!Array.isArray(sdata) || !sdata.length) { err.style.display = 'block'; sb.auth.signOut(); return; }
-              currentStaff = sdata[0];
-              return fetch(SUPABASE_URL + '/rest/v1/vendors?id=eq.' + sdata[0].vendor_id + '&limit=1&select=*', {
-                headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
-              })
-                .then(function(r) { return r.json(); })
-                .then(function(vdata) {
-                  if (!Array.isArray(vdata) || !vdata.length) { err.style.display = 'block'; sb.auth.signOut(); return; }
-                  isStaffSession = true;
-                  bootVendorSession(vdata[0]);
-                });
-            });
-        })
-        .catch(function() { err.style.display = 'block'; });
+          .catch(function() { err.style.display = 'block'; });
+      });
     }
   }
 
