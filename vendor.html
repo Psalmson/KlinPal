@@ -523,8 +523,21 @@
   /* ── CONFIG ── */
   var SUPABASE_URL = 'https://mlgdqxqzpzfzndjhywqf.supabase.co';
   var SUPABASE_KEY = 'sb_publishable_TS5uGf7KzLKxeQw8bxDKYw_HwBNNBeA';
-  var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  var _token = null; // set immediately on login from signInWithPassword result
+  var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: {
+      persistSession:    true,
+      autoRefreshToken:  true,
+      detectSessionInUrl: false,
+      storageKey:        'klinpal-vendor-auth'
+    }
+  });
+  var _token = null;
+
+  function clearAuthStorage() {
+    Object.keys(localStorage).forEach(function(key) {
+      if (key.startsWith('klinpal-')) localStorage.removeItem(key);
+    });
+  }
 
   var currentVendor    = null;
   var allOrders        = [];
@@ -573,55 +586,67 @@
   function doLogin() {
     var email = document.getElementById('login-email').value.trim().toLowerCase();
     var err   = document.getElementById('login-error');
+    var pass  = loginMode === 'vendor'
+      ? document.getElementById('login-pass').value.trim()
+      : document.getElementById('login-pin').value.trim();
 
-    if (loginMode === 'vendor') {
-      var pass = document.getElementById('login-pass').value.trim();
-      if (!email || !pass) { err.style.display = 'block'; return; }
+    if (!email || !pass) { err.style.display = 'block'; return; }
 
-      sb.auth.signInWithPassword({ email: email, password: pass })
-        .then(function(result) {
-          if (result.error) { err.style.display = 'block'; return; }
-          _token = result.data.session.access_token;
-          return fetch(SUPABASE_URL + '/rest/v1/vendors?email=eq.' + encodeURIComponent(email) + '&active=eq.true&limit=1&select=*', {
-            headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + _token, 'Content-Type': 'application/json' }
-          })
-          .then(function(r) { return r.json(); })
-          .then(function(data) {
-            if (!Array.isArray(data) || !data.length) { err.style.display = 'block'; _token = null; sb.auth.signOut(); return; }
-            isStaffSession = false; currentStaff = null;
-            bootVendorSession(data[0]);
-          });
+    // Clear any stale auth state synchronously before creating session
+    clearAuthStorage();
+
+    sb.auth.signInWithPassword({ email: email, password: pass })
+      .then(function(result) {
+        if (result.error) { err.style.display = 'block'; return; }
+        _token = result.data.session.access_token;
+
+        // Load profile to determine role + vendor_id
+        return fetch(SUPABASE_URL + '/rest/v1/profiles?id=eq.' + result.data.user.id + '&select=*', {
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + _token, 'Content-Type': 'application/json' }
         })
-        .catch(function() { err.style.display = 'block'; });
+        .then(function(r) { return r.json(); })
+        .then(function(profiles) {
+          if (!Array.isArray(profiles) || !profiles.length) {
+            err.style.display = 'block'; _token = null; return;
+          }
+          var profile = profiles[0];
 
-    } else {
-      var pin = document.getElementById('login-pin').value.trim();
-      if (!email || !pin) { err.style.display = 'block'; return; }
-
-      sb.auth.signInWithPassword({ email: email, password: pin })
-        .then(function(result) {
-          if (result.error) { err.style.display = 'block'; return; }
-          _token = result.data.session.access_token;
-          return fetch(SUPABASE_URL + '/rest/v1/vendor_staff?email=eq.' + encodeURIComponent(email) + '&active=eq.true&limit=1&select=*', {
-            headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + _token, 'Content-Type': 'application/json' }
-          })
-          .then(function(r) { return r.json(); })
-          .then(function(sdata) {
-            if (!Array.isArray(sdata) || !sdata.length) { err.style.display = 'block'; _token = null; sb.auth.signOut(); return; }
-            currentStaff = sdata[0];
-            return fetch(SUPABASE_URL + '/rest/v1/vendors?id=eq.' + sdata[0].vendor_id + '&limit=1&select=*', {
+          if (profile.role === 'vendor') {
+            return fetch(SUPABASE_URL + '/rest/v1/vendors?id=eq.' + profile.vendor_id + '&active=eq.true&limit=1&select=*', {
               headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + _token, 'Content-Type': 'application/json' }
             })
             .then(function(r) { return r.json(); })
-            .then(function(vdata) {
-              if (!Array.isArray(vdata) || !vdata.length) { err.style.display = 'block'; _token = null; sb.auth.signOut(); return; }
-              isStaffSession = true;
-              bootVendorSession(vdata[0]);
+            .then(function(data) {
+              if (!Array.isArray(data) || !data.length) { err.style.display = 'block'; return; }
+              isStaffSession = false; currentStaff = null;
+              bootVendorSession(data[0]);
             });
-          });
-        })
-        .catch(function() { err.style.display = 'block'; });
-    }
+
+          } else if (profile.role === 'staff') {
+            isStaffSession = true;
+            return fetch(SUPABASE_URL + '/rest/v1/vendor_staff?id=eq.' + result.data.user.id + '&active=eq.true&limit=1&select=*', {
+              headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + _token, 'Content-Type': 'application/json' }
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(sdata) {
+              if (!Array.isArray(sdata) || !sdata.length) { err.style.display = 'block'; return; }
+              currentStaff = sdata[0];
+              return fetch(SUPABASE_URL + '/rest/v1/vendors?id=eq.' + profile.vendor_id + '&limit=1&select=*', {
+                headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + _token, 'Content-Type': 'application/json' }
+              })
+              .then(function(r) { return r.json(); })
+              .then(function(vdata) {
+                if (!Array.isArray(vdata) || !vdata.length) { err.style.display = 'block'; return; }
+                bootVendorSession(vdata[0]);
+              });
+            });
+
+          } else {
+            err.style.display = 'block';
+          }
+        });
+      })
+      .catch(function() { err.style.display = 'block'; });
   }
 
   function forgotPassword() {
@@ -696,31 +721,38 @@
   document.getElementById('login-pass').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
   document.getElementById('login-pin').addEventListener('keydown',  function(e) { if (e.key === 'Enter') doLogin(); });
 
-  // Restore session on page load
+  // Restore session on page load via profiles table
   sb.auth.getSession().then(function(res) {
     if (!res.data || !res.data.session) return;
     _token = res.data.session.access_token;
-    var email = res.data.session.user.email;
-    // Try vendor first
-    fetch(SUPABASE_URL + '/rest/v1/vendors?email=eq.' + encodeURIComponent(email) + '&active=eq.true&limit=1&select=*', {
+    var userId = res.data.session.user.id;
+
+    fetch(SUPABASE_URL + '/rest/v1/profiles?id=eq.' + userId + '&select=*', {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + _token, 'Content-Type': 'application/json' }
-    }).then(function(r){ return r.json(); }).then(function(data){
-      if (Array.isArray(data) && data.length) {
-        isStaffSession = false; currentStaff = null;
-        bootVendorSession(data[0]); return;
-      }
-      // Try staff
-      fetch(SUPABASE_URL + '/rest/v1/vendor_staff?email=eq.' + encodeURIComponent(email) + '&active=eq.true&limit=1&select=*', {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + _token, 'Content-Type': 'application/json' }
-      }).then(function(r){ return r.json(); }).then(function(sdata){
-        if (!Array.isArray(sdata) || !sdata.length) return;
-        currentStaff = sdata[0];
-        fetch(SUPABASE_URL + '/rest/v1/vendors?id=eq.' + sdata[0].vendor_id + '&limit=1&select=*', {
+    }).then(function(r){ return r.json(); }).then(function(profiles){
+      if (!Array.isArray(profiles) || !profiles.length) return;
+      var profile = profiles[0];
+
+      if (profile.role === 'vendor') {
+        fetch(SUPABASE_URL + '/rest/v1/vendors?id=eq.' + profile.vendor_id + '&active=eq.true&limit=1&select=*', {
           headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + _token, 'Content-Type': 'application/json' }
-        }).then(function(r){ return r.json(); }).then(function(vdata){
-          if (Array.isArray(vdata) && vdata.length) { isStaffSession = true; bootVendorSession(vdata[0]); }
+        }).then(function(r){ return r.json(); }).then(function(data){
+          if (Array.isArray(data) && data.length) { isStaffSession = false; currentStaff = null; bootVendorSession(data[0]); }
         }).catch(function(){});
-      }).catch(function(){});
+
+      } else if (profile.role === 'staff') {
+        fetch(SUPABASE_URL + '/rest/v1/vendor_staff?id=eq.' + userId + '&active=eq.true&limit=1&select=*', {
+          headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + _token, 'Content-Type': 'application/json' }
+        }).then(function(r){ return r.json(); }).then(function(sdata){
+          if (!Array.isArray(sdata) || !sdata.length) return;
+          currentStaff = sdata[0];
+          fetch(SUPABASE_URL + '/rest/v1/vendors?id=eq.' + profile.vendor_id + '&limit=1&select=*', {
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + _token, 'Content-Type': 'application/json' }
+          }).then(function(r){ return r.json(); }).then(function(vdata){
+            if (Array.isArray(vdata) && vdata.length) { isStaffSession = true; bootVendorSession(vdata[0]); }
+          }).catch(function(){});
+        }).catch(function(){});
+      }
     }).catch(function(){});
   });
 
