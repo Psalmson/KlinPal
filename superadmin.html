@@ -259,25 +259,16 @@
           </div>
 
           <div style="margin-bottom:6px;font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;font-weight:600">Owner &amp; Login</div>
-          <div class="form-grid" style="margin-bottom:8px">
-            <div>
-              <label class="field-label">Owner Email</label>
-              <input class="field-input" id="ob-email" type="email" placeholder="owner@email.com">
-            </div>
+          <div class="form-grid" style="margin-bottom:20px">
             <div>
               <label class="field-label">Owner Phone</label>
               <input class="field-input" id="ob-phone" placeholder="e.g. 08012345678">
             </div>
-          </div>
-          <div class="form-grid" style="margin-bottom:20px">
-            <div>
-              <label class="field-label">Dashboard Password</label>
-              <div style="position:relative">
-                <input class="field-input" id="ob-password" placeholder="Set a secure password" type="password" style="padding-right:48px">
-                <button onclick="togglePwd('ob-password',this)" type="button" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--gray);cursor:pointer;font-size:13px;padding:0">Show</button>
+            <div style="display:flex;align-items:center">
+              <div style="background:rgba(0,201,167,0.08);border:1px solid rgba(0,201,167,0.2);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--gray);line-height:1.5">
+                🔑 Vendor sets their own email &amp; password at <strong style="color:var(--teal)">klin-pal.vercel.app/register.html</strong> using their slug.
               </div>
             </div>
-            <div></div>
           </div>
 
           <div style="margin-bottom:6px;font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;font-weight:600">Address</div>
@@ -508,24 +499,11 @@
         <input class="field-input" id="rider-name" placeholder="e.g. Emeka Eze" style="margin-top:6px">
       </div>
       <div>
-        <div class="modal-field-label">Email</div>
-        <input class="field-input" id="rider-email" type="email" placeholder="emeka@email.com" style="margin-top:6px">
-      </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
-      <div>
         <div class="modal-field-label">Phone Number</div>
         <input class="field-input" id="rider-phone" type="tel" placeholder="e.g. 08012345678" style="margin-top:6px">
       </div>
-      <div>
-        <div class="modal-field-label">PIN</div>
-        <div style="position:relative;margin-top:6px">
-          <input class="field-input" id="rider-pin" type="password" placeholder="Set a numeric PIN" style="padding-right:48px">
-          <button onclick="togglePwd('rider-pin',this)" type="button" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--gray);cursor:pointer;font-size:13px;padding:0">Show</button>
-        </div>
-      </div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
       <div>
         <div class="modal-field-label">Earnings % (of delivery fee)</div>
         <input class="field-input" id="rider-percentage" type="number" min="1" max="100" placeholder="e.g. 60" style="margin-top:6px">
@@ -535,6 +513,9 @@
         <input class="field-input" id="rider-telegram" placeholder="e.g. 1234567890" style="margin-top:6px">
         <div style="font-size:11px;color:var(--gray);margin-top:4px">Personal Telegram ID for assignment alerts.</div>
       </div>
+    </div>
+    <div style="background:rgba(0,201,167,0.08);border:1px solid rgba(0,201,167,0.2);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--gray);margin-bottom:20px;line-height:1.5">
+      🔑 Rider sets their own email &amp; PIN at <strong style="color:var(--teal)">klin-pal.vercel.app/register.html</strong> using their phone number.
     </div>
     <div style="display:flex;gap:10px">
       <button class="save-btn" onclick="addRider()" id="add-rider-btn">Add Rider</button>
@@ -1076,8 +1057,6 @@
   function onboardVendor() {
     var name       = document.getElementById('ob-name').value.trim();
     var slug       = document.getElementById('ob-slug').value.trim();
-    var email      = document.getElementById('ob-email').value.trim().toLowerCase();
-    var password   = document.getElementById('ob-password').value.trim();
     var phone      = document.getElementById('ob-phone').value.trim();
     var house      = document.getElementById('ob-house').value.trim();
     var street     = document.getElementById('ob-address').value.trim();
@@ -1085,7 +1064,7 @@
     var brandColor = document.getElementById('ob-brand-color').value.trim() || null;
     var logoUrl    = document.getElementById('ob-logo-url').value.trim()    || null;
 
-    if (!name || !slug || !email || !password) { showToast('Name, slug, email and password are required', true); return; }
+    if (!name || !slug) { showToast('Name and slug are required', true); return; }
     if (!obAddressConfirmed || !obLat || !obLng) { showToast('Please select a street from the suggestions', true); return; }
     if (brandColor && !/^#[0-9a-fA-F]{6}$/.test(brandColor)) { showToast('Brand colour must be a valid hex e.g. #7c3aed', true); return; }
 
@@ -1093,37 +1072,20 @@
     var btn = document.getElementById('ob-btn');
     btn.disabled = true; btn.textContent = 'Onboarding...';
 
-    // Step 1: Save vendor record first (uses superadmin session)
     sbFetch('vendors', {
       method: 'POST',
-      body: JSON.stringify({ name: name, slug: slug, email: email, password: password, phone: phone, address: address, lat: obLat, lng: obLng, telegram_chat_id: telegram || null, brand_color: brandColor, logo_url: logoUrl }),
+      body: JSON.stringify({ name: name, slug: slug, phone: phone, address: address, lat: obLat, lng: obLng, telegram_chat_id: telegram || null, brand_color: brandColor, logo_url: logoUrl }),
     })
     .then(function(r) {
       if (!r.ok) {
         return r.json().then(function(e){ showToast(e.message || 'Onboarding failed', true); });
       }
-      // Step 2: Create Auth account via Edge Function (no session hijack)
-      return sb.auth.getSession().then(function(res) {
-        var token = res.data.session ? res.data.session.access_token : SUPABASE_KEY;
-        return fetch(SUPABASE_URL + '/functions/v1/create-auth-user', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'apikey': SUPABASE_KEY },
-          body: JSON.stringify({ email: email, password: password }),
-        })
-        .then(function(r) { return r.json(); })
-        .then(function(result) {
-          if (result.error) {
-            showToast(name + ' onboarded (Auth: ' + result.error + ')', true);
-          } else {
-            showToast(name + ' onboarded ✓');
-          }
-          ['ob-name','ob-slug','ob-email','ob-password','ob-phone','ob-house','ob-address','ob-telegram','ob-brand-color','ob-logo-url'].forEach(function(id){ document.getElementById(id).value = ''; });
-          obLat = null; obLng = null; obAddressConfirmed = false;
-          document.getElementById('ob-addr-status').textContent = '';
-          loadOverview();
-          setTimeout(function(){ showPage('vendors'); }, 1500);
-        });
-      });
+      showToast(name + ' onboarded ✓ — share their slug to complete registration');
+      ['ob-name','ob-slug','ob-phone','ob-house','ob-address','ob-telegram','ob-brand-color','ob-logo-url'].forEach(function(id){ document.getElementById(id).value = ''; });
+      obLat = null; obLng = null; obAddressConfirmed = false;
+      document.getElementById('ob-addr-status').textContent = '';
+      loadOverview();
+      setTimeout(function(){ showPage('vendors'); }, 1500);
     })
     .catch(function(){ showToast('Could not onboard vendor', true); })
     .finally(function(){ btn.disabled = false; btn.textContent = 'Onboard Laundromat'; });
@@ -1171,7 +1133,7 @@
   }
 
   function openAddRiderModal() {
-    ['rider-name','rider-email','rider-phone','rider-pin','rider-percentage','rider-telegram'].forEach(function(id){ document.getElementById(id).value = ''; });
+    ['rider-name','rider-phone','rider-percentage','rider-telegram'].forEach(function(id){ document.getElementById(id).value = ''; });
     document.getElementById('add-rider-modal').classList.add('open');
   }
 
@@ -1281,58 +1243,30 @@
 
   function addRider() {
     var name       = document.getElementById('rider-name').value.trim();
-    var email      = document.getElementById('rider-email').value.trim().toLowerCase();
     var phone      = document.getElementById('rider-phone').value.trim().replace(/\s+/g,'');
-    var pin        = document.getElementById('rider-pin').value.trim();
     var pct        = parseInt(document.getElementById('rider-percentage').value) || 60;
     var telegram   = document.getElementById('rider-telegram').value.trim() || null;
-    if (!name)         { showToast('Enter rider name', true); return; }
-    if (!email)        { showToast('Enter rider email', true); return; }
-    if (!phone)        { showToast('Enter phone number', true); return; }
-    if (!pin)          { showToast('Set a PIN', true); return; }
-    if (pin.length < 6){ showToast('PIN must be at least 6 characters', true); return; }
+    if (!name)  { showToast('Enter rider name', true); return; }
+    if (!phone) { showToast('Enter phone number', true); return; }
 
     var btn = document.getElementById('add-rider-btn');
     btn.disabled = true; btn.textContent = 'Adding...';
 
-    // Step 1: Insert driver record first (uses superadmin session — no session hijack)
     sbFetch('drivers', {
       method: 'POST',
-      body: JSON.stringify({ name: name, email: email, phone: phone, pin: pin, percentage: pct, telegram_chat_id: telegram, active: true }),
+      body: JSON.stringify({ name: name, phone: phone, percentage: pct, telegram_chat_id: telegram, active: true }),
     })
     .then(function(r) {
-      if (!r.ok) {
-        return r.json().then(function(e) {
-          showToast(e.message && e.message.indexOf('unique') > -1 ? 'Email or phone already registered' : 'Could not add rider', true);
-        });
+      if (r.ok) {
+        showToast(name + ' added ✓ — share register.html link with them');
+        closeAddRiderModal();
+        loadRiders();
+      } else {
+        return r.json().then(function(e){ showToast(e.message && e.message.indexOf('unique')>-1 ? 'Phone already registered' : 'Could not add rider', true); });
       }
-      // Step 2: Create Auth account via Edge Function (service role — no session hijack)
-      return sb.auth.getSession().then(function(res) {
-        var token = res.data.session ? res.data.session.access_token : SUPABASE_KEY;
-        return fetch(SUPABASE_URL + '/functions/v1/create-auth-user', {
-          method: 'POST',
-          headers: {
-            'Content-Type':  'application/json',
-            'Authorization': 'Bearer ' + token,
-            'apikey':        SUPABASE_KEY,
-          },
-          body: JSON.stringify({ email: email, password: pin }),
-        })
-        .then(function(r) { return r.json(); })
-        .then(function(result) {
-          if (result.error) {
-            // Driver row saved but Auth account failed — show warning but don't block
-            showToast(name + ' added (Auth account: ' + result.error + ')', true);
-          } else {
-            showToast(name + ' added ✓');
-          }
-          closeAddRiderModal();
-          loadRiders();
-        });
-      });
     })
-    .catch(function() { showToast('Could not add rider', true); })
-    .finally(function() { btn.disabled = false; btn.textContent = 'Add Rider'; });
+    .catch(function(){ showToast('Could not add rider', true); })
+    .finally(function(){ btn.disabled = false; btn.textContent = 'Add Rider'; });
   }
 
   function toggleRider(id, active) {
