@@ -585,8 +585,11 @@
       sb.auth.signInWithPassword({ email: email, password: pass })
         .then(function(result) {
           if (result.error) { err.style.display = 'block'; return; }
-          // Fetch vendor record by email
-          return sbFetch('vendors?email=eq.' + encodeURIComponent(email) + '&active=eq.true&limit=1&select=*')
+          var token = result.data.session.access_token;
+          // Fetch vendor record using the fresh session token directly
+          return fetch(SUPABASE_URL + '/rest/v1/vendors?email=eq.' + encodeURIComponent(email) + '&active=eq.true&limit=1&select=*', {
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
+          })
             .then(function(r) { return r.json(); })
             .then(function(data) {
               if (!Array.isArray(data) || !data.length) { err.style.display = 'block'; sb.auth.signOut(); return; }
@@ -604,14 +607,18 @@
       sb.auth.signInWithPassword({ email: email, password: pin })
         .then(function(result) {
           if (result.error) { err.style.display = 'block'; return; }
-          // Fetch staff record by email
-          return sbFetch('vendor_staff?email=eq.' + encodeURIComponent(email) + '&active=eq.true&limit=1&select=*')
+          var token = result.data.session.access_token;
+          // Fetch staff record using fresh session token
+          return fetch(SUPABASE_URL + '/rest/v1/vendor_staff?email=eq.' + encodeURIComponent(email) + '&active=eq.true&limit=1&select=*', {
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
+          })
             .then(function(r) { return r.json(); })
             .then(function(sdata) {
               if (!Array.isArray(sdata) || !sdata.length) { err.style.display = 'block'; sb.auth.signOut(); return; }
               currentStaff = sdata[0];
-              // Fetch their vendor
-              return sbFetch('vendors?id=eq.' + sdata[0].vendor_id + '&limit=1&select=*')
+              return fetch(SUPABASE_URL + '/rest/v1/vendors?id=eq.' + sdata[0].vendor_id + '&limit=1&select=*', {
+                headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
+              })
                 .then(function(r) { return r.json(); })
                 .then(function(vdata) {
                   if (!Array.isArray(vdata) || !vdata.length) { err.style.display = 'block'; sb.auth.signOut(); return; }
