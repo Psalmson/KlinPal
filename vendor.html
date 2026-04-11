@@ -523,7 +523,10 @@
   /* ── CONFIG ── */
   var SUPABASE_URL = 'https://mlgdqxqzpzfzndjhywqf.supabase.co';
   var SUPABASE_KEY = 'sb_publishable_TS5uGf7KzLKxeQw8bxDKYw_HwBNNBeA';
-  var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false }
+  });
+  var _sessionToken = null; // set on login, used by sbFetch
 
   var currentVendor    = null;
   var allOrders        = [];
@@ -538,22 +541,17 @@
     { id: 'dry',     name: 'Dry-clean',    price: 300, active: true },
   ];
 
-  /* ── SUPABASE FETCH (attaches Auth session token) ── */
+  /* ── SUPABASE FETCH ── */
   function sbFetch(path, options) {
-    return sb.auth.getSession().then(function(res) {
-      var token = (res.data && res.data.session) ? res.data.session.access_token : SUPABASE_KEY;
-      var defaults = {
-        headers: {
-          'apikey':        SUPABASE_KEY,
-          'Authorization': 'Bearer ' + token,
-          'Content-Type':  'application/json',
-          'Prefer':        'return=representation',
-        },
-      };
-      var opts = Object.assign({}, defaults, options || {});
-      if (options && options.headers) opts.headers = Object.assign({}, defaults.headers, options.headers);
-      return fetch(SUPABASE_URL + '/rest/v1/' + path, opts);
-    });
+    var token = _sessionToken || SUPABASE_KEY;
+    var headers = Object.assign({
+      'apikey':        SUPABASE_KEY,
+      'Authorization': 'Bearer ' + token,
+      'Content-Type':  'application/json',
+      'Prefer':        'return=representation',
+    }, (options && options.headers) || {});
+    var opts = Object.assign({}, options || {}, { headers: headers });
+    return fetch(SUPABASE_URL + '/rest/v1/' + path, opts);
   }
 
   function togglePwd(id, btn) {
@@ -586,6 +584,7 @@
         .then(function(result) {
           if (result.error) { err.style.display = 'block'; return; }
           var token = result.data.session.access_token;
+          _sessionToken = token;
           // Fetch vendor record using the fresh session token directly
           return fetch(SUPABASE_URL + '/rest/v1/vendors?email=eq.' + encodeURIComponent(email) + '&active=eq.true&limit=1&select=*', {
             headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
@@ -608,6 +607,7 @@
         .then(function(result) {
           if (result.error) { err.style.display = 'block'; return; }
           var token = result.data.session.access_token;
+          _sessionToken = token;
           // Fetch staff record using fresh session token
           return fetch(SUPABASE_URL + '/rest/v1/vendor_staff?email=eq.' + encodeURIComponent(email) + '&active=eq.true&limit=1&select=*', {
             headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' }
@@ -711,13 +711,16 @@
   document.getElementById('login-pass').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
   document.getElementById('login-pin').addEventListener('keydown',  function(e) { if (e.key === 'Enter') doLogin(); });
 
-  // Restore session on page reload
+  // Restore session on page reload and keep token fresh
   sb.auth.onAuthStateChange(function(event, session) {
     if (event === 'PASSWORD_RECOVERY') showPage('profile');
+    if (session) _sessionToken = session.access_token;
+    if (event === 'SIGNED_OUT') _sessionToken = null;
   });
 
   function doLogout() {
     stopRealtime();
+    _sessionToken = null;
     sb.auth.signOut();
     document.documentElement.style.removeProperty('--teal');
     document.documentElement.style.removeProperty('--teal2');
