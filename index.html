@@ -103,6 +103,40 @@
   </div>
 </section>
 
+<!-- S4b: CONFIRM ADDRESS (returning customers) -->
+<section class="screen" id="s-confirm">
+  <div class="topbar">
+    <div class="logo"><img src="" alt="Klinpal" class="logo-img"></div>
+  </div>
+  <div class="screen-body">
+    <div class="screen-head">
+      <h2 class="screen-title" id="confirm-greeting">Welcome back!</h2>
+      <p class="screen-sub">Please confirm your pickup &amp; delivery location.</p>
+    </div>
+
+    <div class="confirm-address-card" id="confirm-address-card">
+      <div class="confirm-address-icon">📍</div>
+      <div class="confirm-address-text" id="confirm-address-text"></div>
+      <p class="confirm-address-sub">We will pick up and deliver to this location.</p>
+    </div>
+
+    <button class="btn-primary" onclick="confirmAddress()">Yes, this is correct →</button>
+
+    <button class="btn-ghost" onclick="showAddressChange()">Change address</button>
+
+    <div id="address-change-panel" style="display:none">
+      <div class="field-group" style="position:relative;margin-top:16px">
+        <label class="field-label">New Street / Area</label>
+        <input class="field-input" id="confirm-new-addr" type="text" placeholder="Start typing your street…" autocomplete="off">
+        <div id="confirm-addr-dropdown" class="addr-dropdown"></div>
+        <p class="addr-status" id="confirm-addr-status"></p>
+        <p class="field-error" id="confirm-addr-error" style="display:none">Please select an address from the suggestions.</p>
+      </div>
+      <button class="btn-primary" onclick="submitAddressChange()">Use this address →</button>
+    </div>
+  </div>
+</section>
+
 <!-- S5: ORDER -->
 <section class="screen" id="s-order">
   <div class="topbar">
