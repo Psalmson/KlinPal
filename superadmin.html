@@ -4,22 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Klinpal — Superadmin</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Inria+Sans:wght@300;400;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --navy:  #0d1b2a;
-    --navy2: #162032;
-    --navy3: #1e2e42;
-    --teal:  #00c9a7;
-    --teal2: #00a88a;
-    --white: #f4f8ff;
-    --gray:  #8a9ab5;
-    --gray2: #4a5a72;
+    --navy:  #F0F8F4;
+    --navy2: #173753;
+    --navy3: #1a4060;
+    --teal:  #B5DFCA;
+    --teal2: #2C5530;
+    --white: #173753;
+    --light: #e8f4f0;
+    --gray:  #4a6580;
+    --gray2: #8ab0c8;
     --red:   #ff5757;
     --amber: #ffb347;
     --green: #3dd68c;
-    --font-head: 'Syne', sans-serif;
-    --font-body: 'DM Sans', sans-serif;
+    --font-head: 'Instrument Sans', sans-serif;
+    --font-body: 'Inria Sans', sans-serif;
     --font-mono: 'DM Mono', monospace;
     --radius: 10px;
     --sidebar: 240px;
@@ -30,27 +31,29 @@
 
   /* LOGIN */
   #login-screen { position: fixed; inset: 0; background: var(--navy); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-  .login-card   { background: var(--navy2); border: 1px solid var(--navy3); border-radius: 16px; padding: 48px 40px; width: 100%; max-width: 400px; box-shadow: 0 32px 80px rgba(0,0,0,0.4); }
+  .login-card   { background: var(--navy2); border: 1px solid var(--navy3); border-radius: 16px; padding: 48px 40px; width: 100%; max-width: 400px; box-shadow: 0 32px 80px rgba(0,0,0,0.4); color: var(--light); }
   .login-logo   { font-family: var(--font-head); font-size: 28px; font-weight: 800; color: var(--teal); margin-bottom: 4px; }
-  .login-badge  { display: inline-block; background: rgba(0,201,167,0.15); color: var(--teal); font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; margin-bottom: 28px; }
+  .login-badge  { display: inline-block; background: rgba(181,223,202,0.15); color: var(--teal); font-size: 10px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; margin-bottom: 28px; }
   .login-label  { font-size: 11px; font-weight: 500; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; display: block; }
-  .login-input  { width: 100%; background: var(--navy3); border: 1px solid var(--gray2); border-radius: var(--radius); padding: 12px 16px; color: var(--white); font-family: var(--font-body); font-size: 15px; margin-bottom: 20px; outline: none; transition: border-color 0.2s; }
+  .login-input  { width: 100%; background: var(--navy3); border: 1px solid var(--gray2); border-radius: var(--radius); padding: 12px 16px; color: #e8f4f0; font-family: var(--font-body); font-size: 15px; margin-bottom: 20px; outline: none; transition: border-color 0.2s; }
   .login-input:focus { border-color: var(--teal); }
-  .login-btn    { width: 100%; background: var(--teal); color: var(--navy); border: none; border-radius: var(--radius); padding: 14px; font-family: var(--font-head); font-size: 15px; font-weight: 700; cursor: pointer; }
+  .login-input::placeholder { color: #7aA8C0; }
+  .field-input::placeholder  { color: #7aA8C0; }
+  .login-btn    { width: 100%; background: var(--teal); color: #173753; border: none; border-radius: var(--radius); padding: 14px; font-family: var(--font-head); font-size: 15px; font-weight: 700; cursor: pointer; }
   .login-btn:hover { background: var(--teal2); }
   .login-error  { color: var(--red); font-size: 13px; margin-top: 12px; display: none; text-align: center; }
 
   /* LAYOUT */
   #app { display: none; }
-  .sidebar { width: var(--sidebar); min-height: 100vh; background: var(--navy2); border-right: 1px solid var(--navy3); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
+  .sidebar { width: var(--sidebar); min-height: 100vh; background: var(--navy2); border-right: 1px solid var(--navy3); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; color: var(--light); }
   .sidebar-logo { padding: 28px 24px 8px; font-family: var(--font-head); font-size: 22px; font-weight: 800; color: var(--teal); }
   .sidebar-tag  { margin: 0 24px 16px; padding-bottom: 16px; border-bottom: 1px solid var(--navy3); }
-  .sidebar-tag span { background: rgba(0,201,167,0.15); color: var(--teal); font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; }
+  .sidebar-tag span { background: rgba(181,223,202,0.15); color: var(--teal); font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; }
   .sidebar-nav  { flex: 1; padding: 12px; display: flex; flex-direction: column; gap: 4px; }
   .sidebar-foot { padding: 12px; border-top: 1px solid var(--navy3); }
   .nav-item     { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; cursor: pointer; color: var(--gray); font-size: 14px; font-weight: 500; border: none; background: none; width: 100%; text-align: left; font-family: var(--font-body); transition: all 0.15s; }
   .nav-item:hover  { background: var(--navy3); color: var(--white); }
-  .nav-item.active { background: rgba(0,201,167,0.12); color: var(--teal); }
+  .nav-item.active { background: rgba(181,223,202,0.12); color: var(--teal); }
   .nav-item .icon  { font-size: 16px; width: 20px; text-align: center; }
   .main  { margin-left: var(--sidebar); padding: 32px; min-height: 100vh; }
   .page        { display: none; }
@@ -109,7 +112,7 @@
   .loading-state { text-align: center; padding: 60px 20px; color: var(--gray); font-size: 14px; }
 
   /* TOAST */
-  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--teal); color: var(--navy); padding: 12px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; z-index: 9999; transform: translateY(80px); opacity: 0; transition: all 0.3s; pointer-events: none; }
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--teal); color: #173753; padding: 12px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; z-index: 9999; transform: translateY(80px); opacity: 0; transition: all 0.3s; pointer-events: none; }
   .toast.show  { transform: translateY(0); opacity: 1; }
   .toast.error { background: var(--red); color: white; }
   .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 500; display: none; align-items: center; justify-content: center; }
@@ -265,7 +268,7 @@
               <input class="field-input" id="ob-phone" placeholder="e.g. 08012345678">
             </div>
             <div style="display:flex;align-items:center">
-              <div style="background:rgba(0,201,167,0.08);border:1px solid rgba(0,201,167,0.2);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--gray);line-height:1.5">
+              <div style="background:rgba(181,223,202,0.08);border:1px solid rgba(181,223,202,0.2);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--gray);line-height:1.5">
                 🔑 Vendor sets their own email &amp; password at <strong style="color:var(--teal)">klin-pal.vercel.app/register.html</strong> using their slug.
               </div>
             </div>
@@ -280,7 +283,7 @@
             <div style="position:relative">
               <label class="field-label">Street / Area</label>
               <input class="field-input" id="ob-address" placeholder="Start typing street..." autocomplete="off" oninput="onAddressInput()">
-              <div id="ob-addr-dropdown" style="display:none;position:fixed;background:#162032;border:1px solid #1e2e42;border-radius:8px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.5);overflow-y:auto;max-height:240px;"></div>
+              <div id="ob-addr-dropdown" style="display:none;position:fixed;background:#173753;border:1px solid #1a4060;border-radius:8px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.5);overflow-y:auto;max-height:240px;"></div>
               <div id="ob-addr-status" style="font-size:11px;margin-top:5px;color:var(--gray)"></div>
               <div class="field-note">Select from suggestions — coordinates captured automatically.</div>
             </div>
@@ -514,7 +517,7 @@
         <div style="font-size:11px;color:var(--gray);margin-top:4px">Personal Telegram ID for assignment alerts.</div>
       </div>
     </div>
-    <div style="background:rgba(0,201,167,0.08);border:1px solid rgba(0,201,167,0.2);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--gray);margin-bottom:20px;line-height:1.5">
+    <div style="background:rgba(181,223,202,0.08);border:1px solid rgba(181,223,202,0.2);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--gray);margin-bottom:20px;line-height:1.5">
       🔑 Rider sets their own email &amp; PIN at <strong style="color:var(--teal)">klin-pal.vercel.app/register.html</strong> using their phone number.
     </div>
     <div style="display:flex;gap:10px">
@@ -588,8 +591,8 @@
       <div class="modal-field-label">Brand Colour</div>
       <div style="display:flex;align-items:center;gap:12px;margin-top:6px">
         <input type="color" id="bm-color-picker" style="width:44px;height:44px;border:none;border-radius:8px;cursor:pointer;padding:0;background:none" oninput="document.getElementById('bm-color-hex').value=this.value;document.getElementById('bm-color-preview').style.background=this.value">
-        <input class="field-input" id="bm-color-hex" placeholder="#00c9a7" style="width:140px;margin-bottom:0;font-family:var(--font-mono)" oninput="if(/^#[0-9a-fA-F]{6}$/.test(this.value)){document.getElementById('bm-color-picker').value=this.value;document.getElementById('bm-color-preview').style.background=this.value}">
-        <div id="bm-color-preview" style="width:80px;height:44px;border-radius:8px;background:#00c9a7"></div>
+        <input class="field-input" id="bm-color-hex" placeholder="#B5DFCA" style="width:140px;margin-bottom:0;font-family:var(--font-mono)" oninput="if(/^#[0-9a-fA-F]{6}$/.test(this.value)){document.getElementById('bm-color-picker').value=this.value;document.getElementById('bm-color-preview').style.background=this.value}">
+        <div id="bm-color-preview" style="width:80px;height:44px;border-radius:8px;background:#B5DFCA"></div>
       </div>
       <div style="font-size:11px;color:var(--gray);margin-top:6px">Leave blank to use the default teal</div>
     </div>
@@ -1035,8 +1038,8 @@
         dd.style.width = rect.width + 'px';
         dd.innerHTML = data.map(function(r, i){
           var parts = (r.display_name || '').split(',');
-          return '<div style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #1e2e42;font-size:13px"'
-            + ' onmouseover="this.style.background=\'#1e2e42\'" onmouseout="this.style.background=\'\'"'
+          return '<div style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #1a4060;font-size:13px"'
+            + ' onmouseover="this.style.background=\'#1a4060\'" onmouseout="this.style.background=\'\'"'
             + ' onclick="selectObAddress(' + i + ')">'
             + '<div style="color:#f4f8ff;font-weight:500">' + parts[0].trim() + '</div>'
             + '<div style="color:#8a9ab5;font-size:11px">' + parts.slice(1).join(',').trim() + '</div>'
@@ -1427,8 +1430,8 @@
     var logo  = vendor.logo_url    || '';
     document.getElementById('branding-modal-vendor-name').textContent = vendor.name;
     document.getElementById('bm-color-hex').value    = color;
-    document.getElementById('bm-color-picker').value = color || '#00c9a7';
-    document.getElementById('bm-color-preview').style.background = color || '#00c9a7';
+    document.getElementById('bm-color-picker').value = color || '#B5DFCA';
+    document.getElementById('bm-color-preview').style.background = color || '#B5DFCA';
     document.getElementById('bm-logo-url').value     = logo;
     document.getElementById('branding-modal').classList.add('open');
   }
