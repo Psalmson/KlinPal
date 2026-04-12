@@ -4,23 +4,24 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Klinpal — Laundromat Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Inria+Sans:wght@300;400;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --navy:  #0d1b2a;
-    --navy2: #162032;
-    --navy3: #1e2e42;
-    --teal:  #00c9a7;
-    --teal2: #00a88a;
+    --navy:  #F0F8F4;
+    --navy2: #173753;
+    --navy3: #1a4060;
+    --teal:  #B5DFCA;
+    --teal2: #2C5530;
     --sky:   #5bc4f5;
-    --white: #f4f8ff;
-    --gray:  #8a9ab5;
-    --gray2: #4a5a72;
+    --white: #173753;
+    --light: #e8f4f0;
+    --gray:  #4a6580;
+    --gray2: #8ab0c8;
     --red:   #ff5757;
     --amber: #ffb347;
     --green: #3dd68c;
-    --font-head: 'Syne', sans-serif;
-    --font-body: 'DM Sans', sans-serif;
+    --font-head: 'Instrument Sans', sans-serif;
+    --font-body: 'Inria Sans', sans-serif;
     --font-mono: 'DM Mono', monospace;
     --radius: 10px;
     --sidebar: 240px;
@@ -31,19 +32,21 @@
 
   /* LOGIN */
   #login-screen { position: fixed; inset: 0; background: var(--navy); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-  .login-card   { background: var(--navy2); border: 1px solid var(--navy3); border-radius: 16px; padding: 48px 40px; width: 100%; max-width: 400px; box-shadow: 0 32px 80px rgba(0,0,0,0.4); }
+  .login-card   { background: var(--navy2); border: 1px solid var(--navy3); border-radius: 16px; padding: 48px 40px; width: 100%; max-width: 400px; box-shadow: 0 32px 80px rgba(0,0,0,0.4); color: var(--light); }
   .login-logo   { font-family: var(--font-head); font-size: 28px; font-weight: 800; color: var(--teal); margin-bottom: 6px; }
   .login-sub    { color: var(--gray); font-size: 13px; margin-bottom: 36px; }
   .login-label  { font-size: 11px; font-weight: 500; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; display: block; }
-  .login-input  { width: 100%; background: var(--navy3); border: 1px solid var(--gray2); border-radius: var(--radius); padding: 12px 16px; color: var(--white); font-family: var(--font-body); font-size: 15px; margin-bottom: 20px; outline: none; transition: border-color 0.2s; }
+  .login-input  { width: 100%; background: var(--navy3); border: 1px solid var(--gray2); border-radius: var(--radius); padding: 12px 16px; color: #e8f4f0; font-family: var(--font-body); font-size: 15px; margin-bottom: 20px; outline: none; transition: border-color 0.2s; }
   .login-input:focus { border-color: var(--teal); }
-  .login-btn    { width: 100%; background: var(--teal); color: var(--navy); border: none; border-radius: var(--radius); padding: 14px; font-family: var(--font-head); font-size: 15px; font-weight: 700; cursor: pointer; }
+  .login-input::placeholder { color: #7aA8C0; }
+  .field-input::placeholder  { color: #7aA8C0; }
+  .login-btn    { width: 100%; background: var(--teal); color: #173753; border: none; border-radius: var(--radius); padding: 14px; font-family: var(--font-head); font-size: 15px; font-weight: 700; cursor: pointer; }
   .login-btn:hover { background: var(--teal2); }
   .login-error  { color: var(--red); font-size: 13px; margin-top: 12px; display: none; text-align: center; }
 
   /* LAYOUT */
   #app { display: none; }
-  .sidebar { width: var(--sidebar); min-height: 100vh; background: var(--navy2); border-right: 1px solid var(--navy3); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
+  .sidebar { width: var(--sidebar); min-height: 100vh; background: var(--navy2); border-right: 1px solid var(--navy3); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; color: var(--light); }
   .sidebar-logo { padding: 28px 24px 16px; font-family: var(--font-head); font-size: 22px; font-weight: 800; color: var(--teal); border-bottom: 1px solid var(--navy3); }
   .sidebar-vendor { padding: 14px 24px; border-bottom: 1px solid var(--navy3); }
   .sidebar-name { font-size: 13px; font-weight: 600; color: var(--white); }
@@ -52,7 +55,7 @@
   .sidebar-foot { padding: 12px; border-top: 1px solid var(--navy3); }
   .nav-item     { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; cursor: pointer; color: var(--gray); font-size: 14px; font-weight: 500; border: none; background: none; width: 100%; text-align: left; font-family: var(--font-body); transition: all 0.15s; }
   .nav-item:hover  { background: var(--navy3); color: var(--white); }
-  .nav-item.active { background: rgba(0,201,167,0.12); color: var(--teal); }
+  .nav-item.active { background: rgba(181,223,202,0.12); color: var(--teal); }
   .nav-item .icon  { font-size: 16px; width: 20px; text-align: center; }
   .main { margin-left: var(--sidebar); padding: 32px; min-height: 100vh; }
 
@@ -82,15 +85,15 @@
   .btn        { border: none; border-radius: 8px; padding: 9px 18px; font-family: var(--font-head); font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s; }
   .btn-ghost  { background: var(--navy3); color: var(--gray); }
   .btn-ghost:hover { color: var(--white); }
-  .save-btn   { background: var(--teal); color: var(--navy); border: none; border-radius: var(--radius); padding: 12px 28px; font-family: var(--font-head); font-size: 14px; font-weight: 700; cursor: pointer; transition: background 0.2s; margin-right: 10px; }
+  .save-btn   { background: var(--teal); color: #173753; border: none; border-radius: var(--radius); padding: 12px 28px; font-family: var(--font-head); font-size: 14px; font-weight: 700; cursor: pointer; transition: background 0.2s; margin-right: 10px; }
   .save-btn:hover { background: var(--teal2); }
   .delete-btn { background: rgba(255,87,87,0.1); color: var(--red); border: 1px solid rgba(255,87,87,0.2); border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; font-family: var(--font-body); transition: all 0.15s; }
   .delete-btn:hover { background: rgba(255,87,87,0.2); }
-  .copy-btn   { background: var(--teal); color: var(--navy); border: none; border-radius: 8px; padding: 9px 18px; font-family: var(--font-head); font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+  .copy-btn   { background: var(--teal); color: #173753; border: none; border-radius: 8px; padding: 9px 18px; font-family: var(--font-head); font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
   .copy-btn:hover { background: var(--teal2); }
 
   /* CUSTOMER LINK */
-  .link-card  { background: linear-gradient(135deg,rgba(0,201,167,0.12),rgba(0,201,167,0.04)); border: 1px solid rgba(0,201,167,0.25); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .link-card  { background: linear-gradient(135deg,rgba(181,223,202,0.12),rgba(181,223,202,0.04)); border: 1px solid rgba(181,223,202,0.25); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
   .link-label { font-size: 11px; color: var(--teal); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 4px; }
   .link-url   { font-family: var(--font-mono); font-size: 13px; color: var(--white); word-break: break-all; }
 
@@ -109,7 +112,7 @@
   .revenue-row:last-child { border-bottom: none; }
   .revenue-label { color: var(--gray); }
   .revenue-value { font-family: var(--font-mono); font-weight: 500; }
-  .highlight-card  { background: linear-gradient(135deg,rgba(0,201,167,0.15),rgba(0,201,167,0.05)); border: 1px solid rgba(0,201,167,0.3); border-radius: var(--radius); padding: 24px; margin-bottom: 24px; }
+  .highlight-card  { background: linear-gradient(135deg,rgba(181,223,202,0.15),rgba(181,223,202,0.05)); border: 1px solid rgba(181,223,202,0.3); border-radius: var(--radius); padding: 24px; margin-bottom: 24px; }
   .highlight-label { font-size: 11px; color: var(--teal); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 6px; }
   .highlight-value { font-family: var(--font-head); font-size: 36px; font-weight: 800; color: var(--green); letter-spacing: -1px; }
   .highlight-sub   { font-size: 12px; color: var(--gray); margin-top: 4px; }
@@ -126,7 +129,7 @@
   .toggle-switch input:checked + .toggle-slider { background: var(--teal); }
   .toggle-switch input:checked + .toggle-slider:before { transform: translateX(18px); }
   .field-label { font-size: 11px; color: var(--gray); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; display: block; }
-  .field-input { width: 100%; background: var(--navy3); border: 1px solid var(--gray2); border-radius: 8px; padding: 10px 14px; color: var(--white); font-family: var(--font-body); font-size: 14px; outline: none; transition: border-color 0.2s; margin-bottom: 12px; }
+  .field-input { width: 100%; background: var(--navy3); border: 1px solid var(--gray2); border-radius: 8px; padding: 10px 14px; color: #e8f4f0; font-family: var(--font-body); font-size: 14px; outline: none; transition: border-color 0.2s; margin-bottom: 12px; }
   .field-input:focus { border-color: var(--teal); }
   .add-service-card { background: var(--navy2); border: 1px dashed var(--gray2); border-radius: var(--radius); padding: 24px; margin-bottom: 24px; }
   .add-service-title { font-family: var(--font-head); font-size: 15px; font-weight: 700; margin-bottom: 16px; color: var(--teal); }
@@ -147,7 +150,7 @@
   .loading-state { text-align: center; padding: 60px 20px; color: var(--gray); font-size: 14px; }
 
   /* TOAST */
-  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--teal); color: var(--navy); padding: 12px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; z-index: 9999; transform: translateY(80px); opacity: 0; transition: all 0.3s; pointer-events: none; }
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--teal); color: #173753; padding: 12px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; z-index: 9999; transform: translateY(80px); opacity: 0; transition: all 0.3s; pointer-events: none; }
   .toast.show  { transform: translateY(0); opacity: 1; }
   .toast.error { background: var(--red); color: white; }
 
@@ -284,7 +287,7 @@
         <div class="highlight-label">Vendor Earnings</div>
         <div class="highlight-value" id="rev-total">—</div>
         <div class="highlight-sub" id="rev-platform-fee-note">Subtotal minus platform fee</div>
-        <div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(0,201,167,0.2);display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(181,223,202,0.2);display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
           <div>
             <div style="font-size:11px;color:var(--green);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;margin-bottom:4px">Paid</div>
             <div style="font-family:var(--font-head);font-size:20px;font-weight:700;color:var(--green)" id="rev-paid">—</div>
@@ -389,7 +392,7 @@
             <input class="field-input" id="staff-phone" type="tel" placeholder="e.g. 08012345678">
           </div>
         </div>
-        <div style="background:rgba(0,201,167,0.08);border:1px solid rgba(0,201,167,0.2);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--gray);margin-bottom:16px;line-height:1.5">
+        <div style="background:rgba(181,223,202,0.08);border:1px solid rgba(181,223,202,0.2);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--gray);margin-bottom:16px;line-height:1.5">
           🔑 Staff sets their own email &amp; PIN at <strong style="color:var(--teal)">klin-pal.vercel.app/register.html</strong> using their phone number.
         </div>
         <button class="save-btn" onclick="addStaff()">Add Staff</button>
@@ -416,16 +419,16 @@
         <div class="card-body">
           <p style="font-size:13px;color:var(--gray);margin-bottom:20px;line-height:1.6">This colour replaces the default teal on your customer order page — buttons, accents, and highlights.</p>
           <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
-            <input type="color" id="brand-color-picker" value="#00c9a7"
+            <input type="color" id="brand-color-picker" value="#B5DFCA"
               style="width:48px;height:48px;border:none;border-radius:8px;cursor:pointer;background:none;padding:0"
               oninput="syncColorInput(this.value)">
             <div>
               <label class="field-label">Hex code</label>
-              <input class="field-input" id="brand-color-hex" value="#00c9a7" placeholder="#000000"
+              <input class="field-input" id="brand-color-hex" value="#B5DFCA" placeholder="#000000"
                 style="width:140px;margin-bottom:0;font-family:var(--font-mono)"
                 oninput="syncColorPicker(this.value)">
             </div>
-            <div id="brand-color-preview" style="width:120px;height:48px;border-radius:8px;background:#00c9a7;display:flex;align-items:center;justify-content:center;font-size:12px;color:#0d1b2a;font-weight:600">Preview</div>
+            <div id="brand-color-preview" style="width:120px;height:48px;border-radius:8px;background:#B5DFCA;display:flex;align-items:center;justify-content:center;font-size:12px;color:#F0F8F4;font-weight:600">Preview</div>
           </div>
           <button class="save-btn" onclick="saveBranding()">💾 Save Colour</button>
           <button onclick="resetBrandColor()" style="background:none;border:none;color:var(--gray);font-size:13px;cursor:pointer;margin-left:12px">Reset to default</button>
@@ -1147,7 +1150,7 @@
         return '<tr>'
           + '<td style="font-weight:600">' + s.name + '</td>'
           + '<td style="font-size:13px;color:var(--gray)">' + s.phone + '</td>'
-          + '<td><span style="font-size:11px;background:rgba(0,201,167,0.12);color:var(--teal);padding:3px 8px;border-radius:4px">Orders Only</span></td>'
+          + '<td><span style="font-size:11px;background:rgba(181,223,202,0.12);color:var(--teal);padding:3px 8px;border-radius:4px">Orders Only</span></td>'
           + '<td><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"' + (s.active ? ' checked' : '') + ' onchange="toggleStaff(\'' + s.id + '\',this.checked)" style="width:16px;height:16px;accent-color:var(--teal)"><span style="font-size:13px;color:' + (s.active ? 'var(--green)' : 'var(--gray)') + '">' + (s.active ? 'Active' : 'Inactive') + '</span></label></td>'
           + '<td><button class="delete-btn" onclick="removeStaff(\'' + s.id + '\',\'' + s.name + '\')">Remove</button></td>'
           + '</tr>';
@@ -1191,7 +1194,7 @@
   }
   /* ── BRANDING ── */
   function loadBranding() {
-    var color = currentVendor.brand_color || '#00c9a7';
+    var color = currentVendor.brand_color || '#B5DFCA';
     var logo  = currentVendor.logo_url    || '';
     document.getElementById('brand-color-picker').value = color;
     document.getElementById('brand-color-hex').value    = color;
@@ -1222,7 +1225,7 @@
   }
 
   function resetBrandColor() {
-    var def = '#00c9a7';
+    var def = '#B5DFCA';
     document.getElementById('brand-color-picker').value = def;
     document.getElementById('brand-color-hex').value    = def;
     document.getElementById('brand-color-preview').style.background = def;
