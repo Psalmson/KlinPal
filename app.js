@@ -226,11 +226,170 @@ function go(screenId) {
   window.scrollTo(0, 0);
   if (screenId === 's-order')   renderOrderScreen();
   if (screenId === 's-summary') renderSummary();
+  if (screenId === 's-confirm') renderConfirmScreen();
 }
 
 function goBackFromOrder() {
-  // New customers go back to personal details; returning customers go to phone entry
-  go(isNewCustomer ? 's-new' : 's-phone');
+  // New customers go back to personal details; returning customers go to confirm address
+  go(isNewCustomer ? 's-new' : 's-confirm');
+}
+
+/* ─── STEP 2b: CONFIRM ADDRESS (returning customers) ─── */
+var confirmDebounceTimer = null;
+var confirmAddressConfirmed = false;
+var confirmSelectedAddress  = '';
+var confirmSelectedCoords   = null;
+
+function renderConfirmScreen() {
+  confirmAddressConfirmed = false;
+  confirmSelectedAddress  = '';
+  confirmSelectedCoords   = null;
+  document.getElementById('address-change-panel').style.display = 'none';
+  document.getElementById('confirm-new-addr').value = '';
+  document.getElementById('confirm-addr-status').textContent = '';
+  document.getElementById('confirm-addr-error').style.display = 'none';
+
+  var fullName = [currentUser.firstName, currentUser.lastName].filter(Boolean).join(' ');
+  document.getElementById('confirm-greeting').textContent = 'Welcome back, ' + fullName + '! 👋';
+  document.getElementById('confirm-address-text').textContent = currentUser.address || 'No address saved';
+
+  // Pre-calculate delivery fee for saved address
+  if (currentUser.address && !addressConfirmed) {
+    geocodeAddress(currentUser.address, function(coords) {
+      if (coords) {
+        selectedAddress  = currentUser.address;
+        selectedCoords   = coords;
+        addressConfirmed = true;
+        calculateDeliveryFee(coords);
+      }
+    });
+  }
+
+  // Init autocomplete for change address panel
+  initConfirmAutocomplete();
+}
+
+function geocodeAddress(address, callback) {
+  var url = 'https://api.locationiq.com/v1/search'
+    + '?key=' + CONFIG.LOCATIONIQ_TOKEN
+    + '&q=' + encodeURIComponent(address)
+    + '&countrycodes=ng&limit=1&format=json';
+  fetch(url)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data && data.length) {
+        callback({ lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) });
+      } else { callback(null); }
+    })
+    .catch(function() { callback(null); });
+}
+
+function confirmAddress() {
+  // Use existing saved address — already geocoded in renderConfirmScreen
+  go('s-order');
+}
+
+function showAddressChange() {
+  document.getElementById('address-change-panel').style.display = 'block';
+}
+
+function initConfirmAutocomplete() {
+  var input    = document.getElementById('confirm-new-addr');
+  var dropdown = document.getElementById('confirm-addr-dropdown');
+  if (!input || !dropdown) return;
+
+  input.addEventListener('input', function() {
+    confirmAddressConfirmed = false;
+    confirmSelectedAddress  = '';
+    confirmSelectedCoords   = null;
+    document.getElementById('confirm-addr-status').textContent = '';
+    clearTimeout(confirmDebounceTimer);
+    var q = input.value.trim();
+    if (q.length < CONFIG.MIN_CHARS) { dropdown.style.display = 'none'; return; }
+    confirmDebounceTimer = setTimeout(function() { fetchConfirmSuggestions(q); }, CONFIG.DEBOUNCE_MS);
+  });
+
+  document.addEventListener('click', function(e) {
+    if (!input.contains(e.target) && !dropdown.contains(e.target)) dropdown.style.display = 'none';
+  });
+}
+
+function fetchConfirmSuggestions(query) {
+  var url = 'https://api.locationiq.com/v1/autocomplete'
+    + '?key=' + CONFIG.LOCATIONIQ_TOKEN
+    + '&q=' + encodeURIComponent(query)
+    + '&countrycodes=ng&limit=5&dedupe=1'
+    + '&proximity_lat=' + CONFIG.CAPPERBERRY_LAT
+    + '&proximity_lon=' + CONFIG.CAPPERBERRY_LNG;
+
+  fetch(url)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var results = Array.isArray(data) ? data : [];
+      renderConfirmDropdown(results);
+    })
+    .catch(function() { document.getElementById('confirm-addr-dropdown').style.display = 'none'; });
+}
+
+function renderConfirmDropdown(results) {
+  var dropdown = document.getElementById('confirm-addr-dropdown');
+  if (!results.length) { dropdown.style.display = 'none'; return; }
+  dropdown.innerHTML = results.map(function(r, i) {
+    var parts = (r.display_name || '').split(',');
+    var main  = parts[0].trim();
+    var sub   = parts.slice(1).join(',').trim();
+    return '<div class="addr-item" data-idx="' + i + '">'
+      + '<span class="addr-item-main">' + escHtml(main) + '</span>'
+      + (sub ? '<span class="addr-item-sub">' + escHtml(sub) + '</span>' : '')
+      + '</div>';
+  }).join('');
+  dropdown.querySelectorAll('.addr-item').forEach(function(el, i) {
+    el.addEventListener('click', function() { selectConfirmSuggestion(results[i]); });
+  });
+  dropdown.style.display = 'block';
+}
+
+function selectConfirmSuggestion(result) {
+  var full = result.display_name || '';
+  var lat  = parseFloat(result.lat);
+  var lon  = parseFloat(result.lon);
+  confirmSelectedAddress  = full;
+  confirmSelectedCoords   = { lng: lon, lat: lat };
+  confirmAddressConfirmed = true;
+  document.getElementById('confirm-new-addr').value = full;
+  document.getElementById('confirm-addr-dropdown').style.display = 'none';
+  document.getElementById('confirm-addr-status').textContent = 'Calculating distance...';
+  calculateDeliveryFee({ lng: lon, lat: lat });
+  document.getElementById('confirm-addr-status').textContent = '✓ Address selected';
+}
+
+function submitAddressChange() {
+  var errEl = document.getElementById('confirm-addr-error');
+  if (!confirmAddressConfirmed || !confirmSelectedAddress) {
+    errEl.style.display = 'block';
+    return;
+  }
+  errEl.style.display = 'none';
+
+  // Update selected address
+  selectedAddress  = confirmSelectedAddress;
+  selectedCoords   = confirmSelectedCoords;
+  addressConfirmed = true;
+
+  // Update display card
+  document.getElementById('confirm-address-text').textContent = confirmSelectedAddress;
+  document.getElementById('address-change-panel').style.display = 'none';
+
+  // Save new address to customer record
+  if (currentUser && currentUser.customerId) {
+    sbFetch('customers?id=eq.' + currentUser.customerId, {
+      method: 'PATCH',
+      body: JSON.stringify({ address: confirmSelectedAddress })
+    }).catch(function() {});
+  }
+
+  currentUser.address = confirmSelectedAddress;
+  go('s-order');
 }
 
 /* ─── STEP 1: CHECK PHONE ─── */
@@ -259,9 +418,9 @@ function checkPhone() {
     .then(function(data) {
       if (data && data.length) {
         var c = data[0];
-        currentUser   = { phone: c.phone, firstName: c.first_name, lastName: c.last_name, email: c.email, address: c.address };
+        currentUser   = { phone: c.phone, firstName: c.first_name, lastName: c.last_name, email: c.email, address: c.address, customerId: c.id };
         isNewCustomer = false;
-        go('s-order');
+        go('s-confirm');
       } else {
         currentUser      = { phone: phone, firstName: '', lastName: '', email: '', address: '' };
         isNewCustomer    = true;
@@ -577,17 +736,24 @@ function submitOrder() {
 
 /* ─── RESET ─── */
 function resetApp() {
-  currentUser      = null;
-  isNewCustomer    = false;
-  addressConfirmed = false;
-  selectedAddress  = '';
-  selectedCoords   = null;
-  deliveryFee      = CONFIG.BASE_DELIVERY_FEE;
-  serviceFee       = 0;
-  platformFee      = 0;
-  deliveryLabel    = 'Calculating...';
-  ['phone-input','new-name','new-email','new-house-no','new-addr','new-landmark']
+  currentUser             = null;
+  isNewCustomer           = false;
+  addressConfirmed        = false;
+  selectedAddress         = '';
+  selectedCoords          = null;
+  deliveryFee             = CONFIG.BASE_DELIVERY_FEE;
+  serviceFee              = 0;
+  platformFee             = 0;
+  deliveryLabel           = 'Calculating...';
+  confirmAddressConfirmed = false;
+  confirmSelectedAddress  = '';
+  confirmSelectedCoords   = null;
+  ['phone-input','new-name','new-email','new-house-no','new-addr','new-landmark','confirm-new-addr']
     .forEach(function(id) { var el = document.getElementById(id); if (el) el.value = ''; });
+  var panel = document.getElementById('address-change-panel');
+  if (panel) panel.style.display = 'none';
+  var confirmStatus = document.getElementById('confirm-addr-status');
+  if (confirmStatus) confirmStatus.textContent = '';
   setAddrStatus('', '');
   hideDropdown();
   SERVICES.forEach(function(s) { s.qty = 0; });
