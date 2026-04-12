@@ -7,16 +7,15 @@
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Inria+Sans:wght@300;400;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --navy:  #F0F8F4;
-    --navy2: #173753;
-    --navy3: #1a4060;
+    --navy:  #173753;
+    --navy2: #0F2235;
+    --navy3: #0a1628;
     --teal:  #B5DFCA;
-    --teal2: #2C5530;
+    --teal2: #8FCFB0;
     --sky:   #5bc4f5;
-    --white: #173753;
-    --light: #e8f4f0;
-    --gray:  #4a6580;
-    --gray2: #8ab0c8;
+    --white: #e8f4f0;
+        --gray:  #8a9ab5;
+    --gray2: #4a5a72;
     --red:   #ff5757;
     --amber: #ffb347;
     --green: #3dd68c;
@@ -32,11 +31,11 @@
 
   /* LOGIN */
   #login-screen { position: fixed; inset: 0; background: var(--navy); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-  .login-card   { background: var(--navy2); border: 1px solid var(--navy3); border-radius: 16px; padding: 48px 40px; width: 100%; max-width: 400px; box-shadow: 0 32px 80px rgba(0,0,0,0.4); color: var(--light); }
+  .login-card   { background: var(--navy2); border: 1px solid var(--navy3); border-radius: 16px; padding: 48px 40px; width: 100%; max-width: 400px; box-shadow: 0 8px 32px rgba(0,0,0,0.15); }
   .login-logo   { font-family: var(--font-head); font-size: 28px; font-weight: 800; color: var(--teal); margin-bottom: 6px; }
   .login-sub    { color: var(--gray); font-size: 13px; margin-bottom: 36px; }
   .login-label  { font-size: 11px; font-weight: 500; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; display: block; }
-  .login-input  { width: 100%; background: var(--navy3); border: 1px solid var(--gray2); border-radius: var(--radius); padding: 12px 16px; color: #e8f4f0; font-family: var(--font-body); font-size: 15px; margin-bottom: 20px; outline: none; transition: border-color 0.2s; }
+  .login-input  { width: 100%; background: var(--navy3); border: 1px solid var(--gray2); border-radius: var(--radius); padding: 12px 16px; color: var(--white); font-family: var(--font-body); font-size: 15px; margin-bottom: 20px; outline: none; transition: border-color 0.2s; }
   .login-input:focus { border-color: var(--teal); }
   .login-input::placeholder { color: #7aA8C0; }
   .field-input::placeholder  { color: #7aA8C0; }
@@ -46,7 +45,7 @@
 
   /* LAYOUT */
   #app { display: none; }
-  .sidebar { width: var(--sidebar); min-height: 100vh; background: var(--navy2); border-right: 1px solid var(--navy3); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; color: var(--light); }
+  .sidebar { width: var(--sidebar); min-height: 100vh; background: var(--navy2); border-right: 1px solid var(--navy3); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
   .sidebar-logo { padding: 28px 24px 16px; font-family: var(--font-head); font-size: 22px; font-weight: 800; color: var(--teal); border-bottom: 1px solid var(--navy3); }
   .sidebar-vendor { padding: 14px 24px; border-bottom: 1px solid var(--navy3); }
   .sidebar-name { font-size: 13px; font-weight: 600; color: var(--white); }
@@ -129,7 +128,7 @@
   .toggle-switch input:checked + .toggle-slider { background: var(--teal); }
   .toggle-switch input:checked + .toggle-slider:before { transform: translateX(18px); }
   .field-label { font-size: 11px; color: var(--gray); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; display: block; }
-  .field-input { width: 100%; background: var(--navy3); border: 1px solid var(--gray2); border-radius: 8px; padding: 10px 14px; color: #e8f4f0; font-family: var(--font-body); font-size: 14px; outline: none; transition: border-color 0.2s; margin-bottom: 12px; }
+  .field-input { width: 100%; background: var(--navy3); border: 1px solid var(--gray2); border-radius: 8px; padding: 10px 14px; color: var(--white); font-family: var(--font-body); font-size: 14px; outline: none; transition: border-color 0.2s; margin-bottom: 12px; }
   .field-input:focus { border-color: var(--teal); }
   .add-service-card { background: var(--navy2); border: 1px dashed var(--gray2); border-radius: var(--radius); padding: 24px; margin-bottom: 24px; }
   .add-service-title { font-family: var(--font-head); font-size: 15px; font-weight: 700; margin-bottom: 16px; color: var(--teal); }
@@ -428,7 +427,7 @@
                 style="width:140px;margin-bottom:0;font-family:var(--font-mono)"
                 oninput="syncColorPicker(this.value)">
             </div>
-            <div id="brand-color-preview" style="width:120px;height:48px;border-radius:8px;background:#B5DFCA;display:flex;align-items:center;justify-content:center;font-size:12px;color:#F0F8F4;font-weight:600">Preview</div>
+            <div id="brand-color-preview" style="width:120px;height:48px;border-radius:8px;background:#B5DFCA;display:flex;align-items:center;justify-content:center;font-size:12px;color:#173753;font-weight:600">Preview</div>
           </div>
           <button class="save-btn" onclick="saveBranding()">💾 Save Colour</button>
           <button onclick="resetBrandColor()" style="background:none;border:none;color:var(--gray);font-size:13px;cursor:pointer;margin-left:12px">Reset to default</button>
