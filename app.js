@@ -208,21 +208,20 @@ function calculateDeliveryFee(coords) {
 
   var origin      = VENDOR.lat + ',' + VENDOR.lng;
   var destination = coords.lat + ',' + coords.lng;
-  var url = 'https://maps.googleapis.com/maps/api/directions/json'
-    + '?origin='      + encodeURIComponent(origin)
-    + '&destination=' + encodeURIComponent(destination)
-    + '&mode=driving'
-    + '&key='         + CONFIG.GOOGLE_MAPS_KEY;
 
-  fetch(url)
-    .then(function(r) {
-      if (!r.ok) throw new Error('Network error');
-      return r.json();
-    })
+  fetch(CONFIG.SUPABASE_URL + '/functions/v1/google-directions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey':       CONFIG.SUPABASE_KEY,
+      'Authorization': 'Bearer ' + CONFIG.SUPABASE_KEY,
+    },
+    body: JSON.stringify({ origin: origin, destination: destination })
+  })
+    .then(function(r) { return r.json(); })
     .then(function(data) {
-      if (!data.routes || !data.routes.length) throw new Error('No route found');
-      var metres      = data.routes[0].legs[0].distance.value;
-      var km          = parseFloat((metres / 1000).toFixed(1));
+      if (data.error) throw new Error(data.error);
+      var km          = data.km;
       var roundTripKm = km * 2;
       deliveryFee     = Math.round(CONFIG.BASE_DELIVERY_FEE + CONFIG.RATE_PER_KM * roundTripKm);
       serviceFee      = Math.min(Math.round(deliveryFee * 0.2), 1000);
@@ -498,10 +497,8 @@ function checkPhone() {
 /* ─── STEP 2a: NEW CUSTOMER SUBMIT ─── */
 function submitNewCustomer() {
   var nameInput    = document.getElementById('new-name');
-  var houseInput   = document.getElementById('new-house-no');
   var addrInput    = document.getElementById('new-addr');
   var nameVal      = nameInput.value.trim();
-  var houseVal     = houseInput.value.trim();
   var valid        = true;
 
   if (!nameVal) {
@@ -511,15 +508,6 @@ function submitNewCustomer() {
   } else {
     nameInput.classList.remove('input-error');
     document.getElementById('new-name-error').style.display = 'none';
-  }
-
-  if (!houseVal) {
-    houseInput.classList.add('input-error');
-    document.getElementById('new-house-no-error').style.display = 'block';
-    valid = false;
-  } else {
-    houseInput.classList.remove('input-error');
-    document.getElementById('new-house-no-error').style.display = 'none';
   }
 
   if (!addressConfirmed || !selectedAddress) {
@@ -536,7 +524,7 @@ function submitNewCustomer() {
   if (!valid) return;
 
   var landmark    = document.getElementById('new-landmark').value.trim();
-  var fullAddress = houseVal + ', ' + selectedAddress + (landmark ? ' (' + landmark + ')' : '');
+  var fullAddress = selectedAddress + (landmark ? ' (' + landmark + ')' : '');
 
   var parts = nameVal.split(' ');
   currentUser.firstName = parts[0];
@@ -797,7 +785,7 @@ function resetApp() {
   confirmAddressConfirmed = false;
   confirmSelectedAddress  = '';
   confirmSelectedCoords   = null;
-  ['phone-input','new-name','new-email','new-house-no','new-addr','new-landmark','confirm-new-addr']
+  ['phone-input','new-name','new-email','new-addr','new-landmark','confirm-new-addr']
     .forEach(function(id) { var el = document.getElementById(id); if (el) el.value = ''; });
   var panel = document.getElementById('address-change-panel');
   if (panel) panel.style.display = 'none';
