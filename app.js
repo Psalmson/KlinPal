@@ -2,8 +2,8 @@
    CONFIGURATION
 ════════════════════════════════════════════════════════════════ */
 var CONFIG = {
-  // LocationIQ token — address autocomplete + distance calculation
-  LOCATIONIQ_TOKEN: 'pk.ec47de1300ad77f86deab165cce9bbe2',
+  // Google Maps API key — address autocomplete + distance calculation
+  GOOGLE_MAPS_KEY: 'AIzaSyA4mpTBCqmyZpCZFtP-_oVvjs_8AhNoSa0',
 
   // Supabase
   SUPABASE_URL:  'https://mlgdqxqzpzfzndjhywqf.supabase.co',
@@ -69,8 +69,8 @@ function genOrderId() {
 }
 
 /* ════════════════════════════════════════════════════════════════
-   LOCATIONIQ ADDRESS AUTOCOMPLETE
-   Uses LocationIQ Autocomplete API — Lagos-biased, Nigeria only.
+   GOOGLE MAPS ADDRESS AUTOCOMPLETE
+   Uses Google Places API (New) — Lagos-biased, Nigeria only.
    Debounces keystrokes and requires MIN_CHARS before fetching.
    Free tier: 5,000 requests/day — no credit card needed.
 ════════════════════════════════════════════════════════════════ */
@@ -104,22 +104,30 @@ function initMapboxAutocomplete() {
 }
 
 function fetchSuggestions(query) {
-  var url = 'https://api.locationiq.com/v1/autocomplete'
-    + '?key='             + CONFIG.LOCATIONIQ_TOKEN
-    + '&q='               + encodeURIComponent(query)
-    + '&countrycodes=ng'
-    + '&limit=5'
-    + '&dedupe=1'
-    + '&proximity_lat='   + VENDOR.lat
-    + '&proximity_lon='   + VENDOR.lng;
-
-  fetch(url)
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      var results = Array.isArray(data) ? data : [];
-      renderDropdown(results);
+  var url = 'https://places.googleapis.com/v1/places:autocomplete';
+  fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type':     'application/json',
+      'X-Goog-Api-Key':   CONFIG.GOOGLE_MAPS_KEY,
+    },
+    body: JSON.stringify({
+      input:               query,
+      includedRegionCodes: ['ng'],
+      locationBias: {
+        circle: {
+          center: { latitude: VENDOR.lat, longitude: VENDOR.lng },
+          radius: 50000
+        }
+      }
     })
-    .catch(function() { hideDropdown(); });
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var suggestions = (data.suggestions || []).filter(function(s) { return s.placePrediction; });
+    renderDropdown(suggestions);
+  })
+  .catch(function() { hideDropdown(); });
 }
 
 function renderDropdown(results) {
@@ -127,10 +135,12 @@ function renderDropdown(results) {
   if (!results.length) { hideDropdown(); return; }
 
   dropdown.innerHTML = results.map(function(r, i) {
-    var display = r.display_name || '';
-    var parts   = display.split(',');
-    var main    = parts[0].trim();
-    var secondary = parts.slice(1).join(',').trim();
+    var pred = r.placePrediction;
+    var main = pred.structuredFormat && pred.structuredFormat.mainText
+      ? pred.structuredFormat.mainText.text
+      : pred.text.text;
+    var secondary = pred.structuredFormat && pred.structuredFormat.secondaryText
+      ? pred.structuredFormat.secondaryText.text : '';
     return '<div class="addr-item" data-idx="' + i + '">'
       + '<span class="addr-item-main">' + escHtml(main) + '</span>'
       + (secondary ? '<span class="addr-item-sub">' + escHtml(secondary) + '</span>' : '')
@@ -147,18 +157,33 @@ function renderDropdown(results) {
 }
 
 function selectSuggestion(result) {
-  var full = result.display_name || '';
-  var lat  = parseFloat(result.lat);
-  var lon  = parseFloat(result.lon);
-
-  selectedAddress  = full;
-  selectedCoords   = { lng: lon, lat: lat };
-  addressConfirmed = true;
+  var pred    = result.placePrediction;
+  var placeId = pred.placeId;
+  var full    = pred.text.text;
 
   document.getElementById('new-addr').value = full;
   hideDropdown();
+  setAddrStatus('Calculating...', 'loading');
 
-  calculateDeliveryFee(selectedCoords);
+  // Geocode placeId to get lat/lng
+  fetch('https://places.googleapis.com/v1/places/' + placeId + '?fields=location', {
+    headers: {
+      'X-Goog-Api-Key':    CONFIG.GOOGLE_MAPS_KEY,
+      'X-Goog-FieldMask':  'location'
+    }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var lat = data.location.latitude;
+    var lng = data.location.longitude;
+    selectedAddress  = full;
+    selectedCoords   = { lat: lat, lng: lng };
+    addressConfirmed = true;
+    calculateDeliveryFee(selectedCoords);
+  })
+  .catch(function() {
+    setAddrStatus('Could not get location', 'err');
+  });
 }
 
 function hideDropdown() {
@@ -176,18 +201,18 @@ function escHtml(str) {
 
 /* ════════════════════════════════════════════════════════════════
    DELIVERY FEE CALCULATION
-   Uses LocationIQ Directions API directly from the frontend.
-   No backend worker needed — one token handles everything.
-   Road distance (driving) from Capperberry → customer address.
+   Uses Google Directions API — road distance from vendor → customer address.
 ════════════════════════════════════════════════════════════════ */
 function calculateDeliveryFee(coords) {
   setAddrStatus('Calculating...', 'loading');
 
-  var url = 'https://us1.locationiq.com/v1/directions/driving/'
-    + VENDOR.lng + ',' + VENDOR.lat + ';'
-    + coords.lng + ',' + coords.lat
-    + '?key=' + CONFIG.LOCATIONIQ_TOKEN
-    + '&overview=false';
+  var origin      = VENDOR.lat + ',' + VENDOR.lng;
+  var destination = coords.lat + ',' + coords.lng;
+  var url = 'https://maps.googleapis.com/maps/api/directions/json'
+    + '?origin='      + encodeURIComponent(origin)
+    + '&destination=' + encodeURIComponent(destination)
+    + '&mode=driving'
+    + '&key='         + CONFIG.GOOGLE_MAPS_KEY;
 
   fetch(url)
     .then(function(r) {
@@ -195,9 +220,8 @@ function calculateDeliveryFee(coords) {
       return r.json();
     })
     .then(function(data) {
-      var routes  = data.routes;
-      if (!routes || !routes.length) throw new Error('No route found');
-      var metres      = routes[0].distance;
+      if (!data.routes || !data.routes.length) throw new Error('No route found');
+      var metres      = data.routes[0].legs[0].distance.value;
       var km          = parseFloat((metres / 1000).toFixed(1));
       var roundTripKm = km * 2;
       deliveryFee     = Math.round(CONFIG.BASE_DELIVERY_FEE + CONFIG.RATE_PER_KM * roundTripKm);
@@ -270,15 +294,16 @@ function renderConfirmScreen() {
 }
 
 function geocodeAddress(address, callback) {
-  var url = 'https://api.locationiq.com/v1/search'
-    + '?key=' + CONFIG.LOCATIONIQ_TOKEN
-    + '&q=' + encodeURIComponent(address)
-    + '&countrycodes=ng&limit=1&format=json';
+  var url = 'https://maps.googleapis.com/maps/api/geocode/json'
+    + '?address=' + encodeURIComponent(address)
+    + '&region=ng'
+    + '&key=' + CONFIG.GOOGLE_MAPS_KEY;
   fetch(url)
     .then(function(r) { return r.json(); })
     .then(function(data) {
-      if (data && data.length) {
-        callback({ lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) });
+      if (data.results && data.results.length) {
+        var loc = data.results[0].geometry.location;
+        callback({ lat: loc.lat, lng: loc.lng });
       } else { callback(null); }
     })
     .catch(function() { callback(null); });
@@ -315,29 +340,40 @@ function initConfirmAutocomplete() {
 }
 
 function fetchConfirmSuggestions(query) {
-  var url = 'https://api.locationiq.com/v1/autocomplete'
-    + '?key=' + CONFIG.LOCATIONIQ_TOKEN
-    + '&q=' + encodeURIComponent(query)
-    + '&countrycodes=ng&limit=5&dedupe=1'
-    + '&proximity_lat=' + CONFIG.CAPPERBERRY_LAT
-    + '&proximity_lon=' + CONFIG.CAPPERBERRY_LNG;
-
-  fetch(url)
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      var results = Array.isArray(data) ? data : [];
-      renderConfirmDropdown(results);
+  fetch('https://places.googleapis.com/v1/places:autocomplete', {
+    method: 'POST',
+    headers: {
+      'Content-Type':   'application/json',
+      'X-Goog-Api-Key': CONFIG.GOOGLE_MAPS_KEY,
+    },
+    body: JSON.stringify({
+      input:               query,
+      includedRegionCodes: ['ng'],
+      locationBias: {
+        circle: {
+          center: { latitude: VENDOR.lat, longitude: VENDOR.lng },
+          radius: 50000
+        }
+      }
     })
-    .catch(function() { document.getElementById('confirm-addr-dropdown').style.display = 'none'; });
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var suggestions = (data.suggestions || []).filter(function(s) { return s.placePrediction; });
+    renderConfirmDropdown(suggestions);
+  })
+  .catch(function() { document.getElementById('confirm-addr-dropdown').style.display = 'none'; });
 }
 
 function renderConfirmDropdown(results) {
   var dropdown = document.getElementById('confirm-addr-dropdown');
   if (!results.length) { dropdown.style.display = 'none'; return; }
   dropdown.innerHTML = results.map(function(r, i) {
-    var parts = (r.display_name || '').split(',');
-    var main  = parts[0].trim();
-    var sub   = parts.slice(1).join(',').trim();
+    var pred = r.placePrediction;
+    var main = pred.structuredFormat && pred.structuredFormat.mainText
+      ? pred.structuredFormat.mainText.text : pred.text.text;
+    var sub = pred.structuredFormat && pred.structuredFormat.secondaryText
+      ? pred.structuredFormat.secondaryText.text : '';
     return '<div class="addr-item" data-idx="' + i + '">'
       + '<span class="addr-item-main">' + escHtml(main) + '</span>'
       + (sub ? '<span class="addr-item-sub">' + escHtml(sub) + '</span>' : '')
@@ -350,17 +386,32 @@ function renderConfirmDropdown(results) {
 }
 
 function selectConfirmSuggestion(result) {
-  var full = result.display_name || '';
-  var lat  = parseFloat(result.lat);
-  var lon  = parseFloat(result.lon);
-  confirmSelectedAddress  = full;
-  confirmSelectedCoords   = { lng: lon, lat: lat };
-  confirmAddressConfirmed = true;
+  var pred    = result.placePrediction;
+  var placeId = pred.placeId;
+  var full    = pred.text.text;
+
   document.getElementById('confirm-new-addr').value = full;
   document.getElementById('confirm-addr-dropdown').style.display = 'none';
   document.getElementById('confirm-addr-status').textContent = 'Calculating distance...';
-  calculateDeliveryFee({ lng: lon, lat: lat });
-  document.getElementById('confirm-addr-status').textContent = '✓ Address selected';
+
+  fetch('https://places.googleapis.com/v1/places/' + placeId + '?fields=location', {
+    headers: {
+      'X-Goog-Api-Key':   CONFIG.GOOGLE_MAPS_KEY,
+      'X-Goog-FieldMask': 'location'
+    }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var lat = data.location.latitude;
+    var lng = data.location.longitude;
+    confirmSelectedAddress  = full;
+    confirmSelectedCoords   = { lat: lat, lng: lng };
+    confirmAddressConfirmed = true;
+    calculateDeliveryFee({ lat: lat, lng: lng });
+  })
+  .catch(function() {
+    document.getElementById('confirm-addr-status').textContent = 'Could not get location';
+  });
 }
 
 function submitAddressChange() {
@@ -536,22 +587,20 @@ function renderOrderScreen() {
     deliveryLabel    = 'Calculating...';
 
     // Geocode the saved address to get coords for distance calculation
-    var geocodeUrl = 'https://api.locationiq.com/v1/autocomplete'
-      + '?key='           + CONFIG.LOCATIONIQ_TOKEN
-      + '&q='             + encodeURIComponent(currentUser.address)
-      + '&countrycodes=ng'
-      + '&limit=1'
-      + '&dedupe=1';
+    var geocodeUrl = 'https://maps.googleapis.com/maps/api/geocode/json'
+      + '?address=' + encodeURIComponent(currentUser.address)
+      + '&region=ng'
+      + '&key=' + CONFIG.GOOGLE_MAPS_KEY;
 
     fetch(geocodeUrl)
       .then(function(r) { return r.json(); })
       .then(function(data) {
-        if (Array.isArray(data) && data.length) {
-          var coords = { lng: parseFloat(data[0].lon), lat: parseFloat(data[0].lat) };
+        if (data.results && data.results.length) {
+          var loc    = data.results[0].geometry.location;
+          var coords = { lat: loc.lat, lng: loc.lng };
           selectedCoords = coords;
           calculateDeliveryFee(coords);
         } else {
-          // Fallback to base fee if geocoding fails
           deliveryFee   = CONFIG.BASE_DELIVERY_FEE;
           deliveryLabel = 'Flat rate';
         }
