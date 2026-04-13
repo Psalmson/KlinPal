@@ -492,12 +492,25 @@
         </div>
       </div>
 
-      <div class="card">
+      <div class="card" style="margin-bottom:20px">
         <div class="card-header"><div class="card-title">Update Phone Number</div></div>
         <div class="card-body">
           <label class="field-label">Phone Number</label>
           <input class="field-input" id="profile-phone" type="tel" placeholder="e.g. 08012345678" style="max-width:360px">
           <button class="save-btn" onclick="updatePhone()">Update Phone</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">Update Pickup Address</div></div>
+        <div class="card-body">
+          <label class="field-label">New Address</label>
+          <div style="position:relative;max-width:480px">
+            <input class="field-input" id="profile-address" type="text" placeholder="Start typing your new address..." autocomplete="off" oninput="onProfileAddressInput()">
+            <div id="profile-addr-dropdown" style="display:none;position:fixed;background:var(--navy2);border:1px solid var(--navy3);border-radius:8px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.5);overflow-y:auto;max-height:220px;"></div>
+          </div>
+          <div id="profile-addr-status" style="font-size:12px;margin-top:6px;color:var(--gray)"></div>
+          <button class="save-btn" onclick="updateAddress()" style="margin-top:12px">Update Address</button>
         </div>
       </div>
     </div>
@@ -1121,12 +1134,98 @@
     if (!phone) { showToast('Enter a phone number', true); return; }
     if (isStaffSession) {
       sbFetch('vendor_staff?id=eq.' + currentStaff.id, { method: 'PATCH', body: JSON.stringify({ phone: phone }) })
-        .then(function(r) { if (r.ok) { currentStaff.phone = phone; showToast('Phone updated ✓'); } else showToast('Update failed', true); });
+        .then(function(r) { if (r.ok) { currentStaff.phone = phone; showToast('Phone updated \u2713'); } else showToast('Update failed', true); });
     } else {
       sbFetch('vendors?id=eq.' + currentVendor.id, { method: 'PATCH', body: JSON.stringify({ phone: phone }) })
-        .then(function(r) { if (r.ok) { currentVendor.phone = phone; showToast('Phone updated ✓'); } else showToast('Update failed', true); });
+        .then(function(r) { if (r.ok) { currentVendor.phone = phone; showToast('Phone updated \u2713'); } else showToast('Update failed', true); });
     }
   }
+
+  /* ── PROFILE ADDRESS UPDATE ── */
+  var GOOGLE_MAPS_KEY = 'AIzaSyA4mpTBCqmyZpCZFtP-_oVvjs_8AhNoSa0';
+  var profileAddrConfirmed = false, profileAddrLat = null, profileAddrLng = null, profileAddrDebounce = null;
+
+  function onProfileAddressInput() {
+    profileAddrConfirmed = false; profileAddrLat = null; profileAddrLng = null;
+    document.getElementById('profile-addr-status').textContent = '';
+    clearTimeout(profileAddrDebounce);
+    var q = document.getElementById('profile-address').value.trim();
+    if (q.length < 3) { document.getElementById('profile-addr-dropdown').style.display = 'none'; return; }
+    profileAddrDebounce = setTimeout(function() { fetchProfileAddressSuggestions(q); }, 350);
+  }
+
+  function fetchProfileAddressSuggestions(q) {
+    fetch('https://places.googleapis.com/v1/places:autocomplete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': GOOGLE_MAPS_KEY },
+      body: JSON.stringify({
+        input: q, includedRegionCodes: ['ng'],
+        locationBias: { circle: { center: { latitude: currentVendor.lat || 6.5244, longitude: currentVendor.lng || 3.3792 }, radius: 50000 } }
+      })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      var dd = document.getElementById('profile-addr-dropdown');
+      var input = document.getElementById('profile-address');
+      var results = (data.suggestions || []).filter(function(s){ return s.placePrediction; });
+      if (!results.length) { dd.style.display = 'none'; return; }
+      var rect = input.getBoundingClientRect();
+      dd.style.top = (rect.bottom + 4) + 'px'; dd.style.left = rect.left + 'px'; dd.style.width = rect.width + 'px';
+      dd.innerHTML = results.map(function(r, i) {
+        var pred = r.placePrediction;
+        var main = pred.structuredFormat && pred.structuredFormat.mainText ? pred.structuredFormat.mainText.text : pred.text.text;
+        var sub  = pred.structuredFormat && pred.structuredFormat.secondaryText ? pred.structuredFormat.secondaryText.text : '';
+        return '<div style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--navy3);font-size:13px" onmouseover="this.style.background=\'var(--navy3)\'" onmouseout="this.style.background=\'\'" onclick="selectProfileAddress(' + i + ')">'
+          + '<div style="color:var(--white);font-weight:500">' + main + '</div>'
+          + '<div style="color:var(--gray);font-size:11px">' + sub + '</div></div>';
+      }).join('');
+      dd.__results = results; dd.style.display = 'block';
+    })
+    .catch(function() { document.getElementById('profile-addr-dropdown').style.display = 'none'; });
+  }
+
+  function selectProfileAddress(idx) {
+    var dd = document.getElementById('profile-addr-dropdown');
+    var pred = dd.__results[idx].placePrediction;
+    document.getElementById('profile-address').value = pred.text.text;
+    dd.style.display = 'none';
+    document.getElementById('profile-addr-status').textContent = 'Getting coordinates...';
+    fetch('https://places.googleapis.com/v1/places/' + pred.placeId + '?fields=location', {
+      headers: { 'X-Goog-Api-Key': GOOGLE_MAPS_KEY, 'X-Goog-FieldMask': 'location' }
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      profileAddrLat = data.location.latitude; profileAddrLng = data.location.longitude; profileAddrConfirmed = true;
+      document.getElementById('profile-addr-status').textContent = '\u2713 Address confirmed';
+      document.getElementById('profile-addr-status').style.color = 'var(--teal)';
+    })
+    .catch(function() { document.getElementById('profile-addr-status').textContent = 'Could not get coordinates'; });
+  }
+
+  function updateAddress() {
+    if (isStaffSession) { showToast('Staff cannot update the laundromat address', true); return; }
+    var newAddr = document.getElementById('profile-address').value.trim();
+    if (!newAddr) { showToast('Enter a new address', true); return; }
+    if (!profileAddrConfirmed) { showToast('Please select an address from the suggestions', true); return; }
+    var payload = { address: newAddr, lat: profileAddrLat, lng: profileAddrLng };
+    sbFetch('vendors?id=eq.' + currentVendor.id, { method: 'PATCH', body: JSON.stringify(payload) })
+    .then(function(r) {
+      if (r.ok) {
+        currentVendor.address = newAddr; currentVendor.lat = profileAddrLat; currentVendor.lng = profileAddrLng;
+        showToast('Address updated \u2713');
+        document.getElementById('profile-address').value = '';
+        document.getElementById('profile-addr-status').textContent = '';
+        profileAddrConfirmed = false; profileAddrLat = null; profileAddrLng = null;
+      } else { showToast('Update failed', true); }
+    })
+    .catch(function() { showToast('Could not update address', true); });
+  }
+
+  document.addEventListener('click', function(e) {
+    var dd = document.getElementById('profile-addr-dropdown');
+    var inp = document.getElementById('profile-address');
+    if (dd && inp && !dd.contains(e.target) && !inp.contains(e.target)) dd.style.display = 'none';
+  });
 
   /* ── STAFF MANAGEMENT ── */
   function loadStaff() {
