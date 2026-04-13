@@ -624,7 +624,7 @@
       if (key.startsWith('klinpal-')) localStorage.removeItem(key);
     });
   }
-  var LOCATIONIQ_TOKEN    = 'pk.ec47de1300ad77f86deab165cce9bbe2';
+  var GOOGLE_MAPS_KEY     = 'AIzaSyA4mpTBCqmyZpCZFtP-_oVvjs_8AhNoSa0';
 
   var allVendors          = [];
   var currentDrillVendor  = null;
@@ -1025,42 +1025,68 @@
   }
 
   function fetchAddressSuggestions(q) {
-    fetch('https://api.locationiq.com/v1/autocomplete?key=' + LOCATIONIQ_TOKEN + '&q=' + encodeURIComponent(q) + '&countrycodes=ng&limit=5&dedupe=1')
-      .then(function(r){ return r.json(); })
-      .then(function(data){
-        var dd    = document.getElementById('ob-addr-dropdown');
-        var input = document.getElementById('ob-address');
-        if (!Array.isArray(data) || !data.length) { dd.style.display = 'none'; return; }
-        var rect = input.getBoundingClientRect();
-        dd.style.top = (rect.bottom + 4) + 'px';
-        dd.style.left = rect.left + 'px';
-        dd.style.width = rect.width + 'px';
-        dd.innerHTML = data.map(function(r, i){
-          var parts = (r.display_name || '').split(',');
-          return '<div style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #1a4060;font-size:13px"'
-            + ' onmouseover="this.style.background=\'#1a4060\'" onmouseout="this.style.background=\'\'"'
-            + ' onclick="selectObAddress(' + i + ')">'
-            + '<div style="color:#f4f8ff;font-weight:500">' + parts[0].trim() + '</div>'
-            + '<div style="color:#8a9ab5;font-size:11px">' + parts.slice(1).join(',').trim() + '</div>'
-            + '</div>';
-        }).join('');
-        dd.__results = data;
-        dd.style.display = 'block';
+    fetch('https://places.googleapis.com/v1/places:autocomplete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': GOOGLE_MAPS_KEY },
+      body: JSON.stringify({
+        input: q,
+        includedRegionCodes: ['ng'],
+        locationBias: { circle: { center: { latitude: 6.5244, longitude: 3.3792 }, radius: 50000 } }
       })
-      .catch(function(){ document.getElementById('ob-addr-dropdown').style.display = 'none'; });
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      var dd       = document.getElementById('ob-addr-dropdown');
+      var input    = document.getElementById('ob-address');
+      var results  = (data.suggestions || []).filter(function(s){ return s.placePrediction; });
+      if (!results.length) { dd.style.display = 'none'; return; }
+      var rect = input.getBoundingClientRect();
+      dd.style.top = (rect.bottom + 4) + 'px';
+      dd.style.left = rect.left + 'px';
+      dd.style.width = rect.width + 'px';
+      dd.innerHTML = results.map(function(r, i){
+        var pred = r.placePrediction;
+        var main = pred.structuredFormat && pred.structuredFormat.mainText ? pred.structuredFormat.mainText.text : pred.text.text;
+        var sub  = pred.structuredFormat && pred.structuredFormat.secondaryText ? pred.structuredFormat.secondaryText.text : '';
+        return '<div style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #1a4060;font-size:13px"'
+          + ' onmouseover="this.style.background=\'#1a4060\'" onmouseout="this.style.background=\'\'"'
+          + ' onclick="selectObAddress(' + i + ')">'
+          + '<div style="color:#e8f4f0;font-weight:500">' + main + '</div>'
+          + '<div style="color:#8a9ab5;font-size:11px">' + sub + '</div>'
+          + '</div>';
+      }).join('');
+      dd.__results = results;
+      dd.style.display = 'block';
+    })
+    .catch(function(){ document.getElementById('ob-addr-dropdown').style.display = 'none'; });
   }
 
   function selectObAddress(idx) {
     var dd     = document.getElementById('ob-addr-dropdown');
     var result = dd.__results[idx];
-    document.getElementById('ob-address').value = result.display_name || '';
-    obLat = parseFloat(result.lat);
-    obLng = parseFloat(result.lon);
-    obAddressConfirmed = true;
+    var pred   = result.placePrediction;
+    var full   = pred.text.text;
+    document.getElementById('ob-address').value = full;
     dd.style.display = 'none';
     var status = document.getElementById('ob-addr-status');
-    status.textContent = '✓ ' + obLat.toFixed(4) + ', ' + obLng.toFixed(4);
+    status.textContent = 'Getting coordinates...';
     status.style.color = 'var(--teal)';
+
+    // Geocode placeId to get lat/lng
+    fetch('https://places.googleapis.com/v1/places/' + pred.placeId + '?fields=location', {
+      headers: { 'X-Goog-Api-Key': GOOGLE_MAPS_KEY, 'X-Goog-FieldMask': 'location' }
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      obLat = data.location.latitude;
+      obLng = data.location.longitude;
+      obAddressConfirmed = true;
+      status.textContent = '\u2713 ' + obLat.toFixed(4) + ', ' + obLng.toFixed(4);
+    })
+    .catch(function(){
+      status.textContent = 'Could not get coordinates';
+      status.style.color = 'var(--red)';
+    });
   }
 
   document.addEventListener('click', function(e){
