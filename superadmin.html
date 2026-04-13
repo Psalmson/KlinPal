@@ -13,7 +13,7 @@
     --teal:  #B5DFCA;
     --teal2: #8FCFB0;
     --white: #e8f4f0;
-        --gray:  #8a9ab5;
+    --gray:  #8a9ab5;
     --gray2: #4a5a72;
     --red:   #ff5757;
     --amber: #ffb347;
@@ -24,11 +24,8 @@
     --radius: 10px;
     --sidebar: 240px;
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: var(--font-body); background: var(--navy); color: var(--white); min-height: 100vh; }
-
-  /* LOGIN */
   #login-screen { position: fixed; inset: 0; background: var(--navy); display: flex; align-items: center; justify-content: center; z-index: 1000; }
   .login-card   { background: var(--navy2); border: 1px solid var(--navy3); border-radius: 16px; padding: 48px 40px; width: 100%; max-width: 400px; box-shadow: 0 8px 32px rgba(0,0,0,0.15); }
   .login-logo   { font-family: var(--font-head); font-size: 28px; font-weight: 800; color: var(--teal); margin-bottom: 4px; }
@@ -41,8 +38,6 @@
   .login-btn    { width: 100%; background: var(--teal); color: #173753; border: none; border-radius: var(--radius); padding: 14px; font-family: var(--font-head); font-size: 15px; font-weight: 700; cursor: pointer; }
   .login-btn:hover { background: var(--teal2); }
   .login-error  { color: var(--red); font-size: 13px; margin-top: 12px; display: none; text-align: center; }
-
-  /* LAYOUT */
   #app { display: none; }
   .sidebar { width: var(--sidebar); min-height: 100vh; background: var(--navy2); border-right: 1px solid var(--navy3); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
   .sidebar-logo { padding: 28px 24px 8px; font-family: var(--font-head); font-size: 22px; font-weight: 800; color: var(--teal); }
@@ -57,34 +52,27 @@
   .main  { margin-left: var(--sidebar); padding: 32px; min-height: 100vh; }
   .page        { display: none; }
   .page.active { display: block; }
-
-  /* PAGE */
   .page-header   { margin-bottom: 28px; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
   .page-title    { font-family: var(--font-head); font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
   .page-subtitle { color: var(--gray); font-size: 13px; margin-top: 4px; }
-
-  /* STATS */
   .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 28px; }
   .stat-card  { background: var(--navy2); border: 1px solid var(--navy3); border-radius: var(--radius); padding: 20px; }
   .stat-label { font-size: 11px; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; font-weight: 500; }
   .stat-value { font-family: var(--font-head); font-size: 28px; font-weight: 800; color: var(--white); margin: 6px 0 2px; letter-spacing: -1px; }
   .stat-value.teal { color: var(--teal); }
+  .stat-value.green { color: var(--green); }
   .stat-sub   { font-size: 12px; color: var(--gray); }
-
-  /* CARD */
   .card        { background: var(--navy2); border: 1px solid var(--navy3); border-radius: var(--radius); overflow: hidden; margin-bottom: 20px; }
   .card-header { padding: 18px 24px; border-bottom: 1px solid var(--navy3); display: flex; align-items: center; justify-content: space-between; }
   .card-title  { font-family: var(--font-head); font-size: 15px; font-weight: 700; }
-
-  /* BUTTONS */
   .btn       { border: none; border-radius: 8px; padding: 9px 18px; font-family: var(--font-head); font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s; }
-  .btn-teal  { background: var(--teal); color: var(--navy); }
+  .btn-teal  { background: var(--teal); color: #173753; }
   .btn-teal:hover { background: var(--teal2); }
   .btn-ghost { background: var(--navy3); color: var(--gray); }
   .btn-ghost:hover { color: var(--white); }
   .btn-sm    { padding: 6px 14px; font-size: 12px; border-radius: 6px; }
-
-  /* TABLE */
+  .save-btn  { background: var(--teal); color: #173753; border: none; border-radius: var(--radius); padding: 10px 24px; font-family: var(--font-head); font-size: 14px; font-weight: 700; cursor: pointer; }
+  .save-btn:hover { background: var(--teal2); }
   table { width: 100%; border-collapse: collapse; }
   th { padding: 12px 20px; text-align: left; font-size: 11px; color: var(--gray); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 500; border-bottom: 1px solid var(--navy3); background: rgba(0,0,0,0.1); }
   td { padding: 16px 20px; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: middle; }
@@ -93,30 +81,22 @@
   .mono        { font-family: var(--font-mono); font-size: 12px; color: var(--teal); }
   .vendor-name { font-weight: 600; }
   .vendor-slug { font-family: var(--font-mono); font-size: 11px; color: var(--gray); margin-top: 2px; }
-
-  /* FORM */
   .form-grid   { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
   .field-label { font-size: 11px; color: var(--gray); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; display: block; }
   .field-input { width: 100%; background: var(--navy3); border: 1px solid var(--gray2); border-radius: 8px; padding: 10px 14px; color: var(--white); font-family: var(--font-body); font-size: 14px; outline: none; transition: border-color 0.2s; }
   .field-input:focus { border-color: var(--teal); }
   .field-note  { font-size: 11px; color: var(--gray); margin-top: 5px; }
-
-  /* DRILL */
   .back-btn { display: flex; align-items: center; gap: 6px; background: none; border: none; color: var(--gray); font-size: 13px; cursor: pointer; font-family: var(--font-body); padding: 0; margin-bottom: 20px; transition: color 0.15s; }
   .back-btn:hover { color: var(--white); }
   .status-select { background: var(--navy3); border: 1px solid var(--gray2); border-radius: 6px; color: var(--white); font-size: 12px; padding: 6px 10px; cursor: pointer; font-family: var(--font-body); outline: none; }
-
-  /* STATES */
   .empty-state   { text-align: center; padding: 60px 20px; color: var(--gray); }
   .loading-state { text-align: center; padding: 60px 20px; color: var(--gray); font-size: 14px; }
-
-  /* TOAST */
   .toast { position: fixed; bottom: 24px; right: 24px; background: var(--teal); color: #173753; padding: 12px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; z-index: 9999; transform: translateY(80px); opacity: 0; transition: all 0.3s; pointer-events: none; }
   .toast.show  { transform: translateY(0); opacity: 1; }
   .toast.error { background: var(--red); color: white; }
   .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 500; display: none; align-items: center; justify-content: center; }
   .modal-overlay.open { display: flex; }
-  .modal { background: var(--navy2); border: 1px solid var(--navy3); border-radius: 16px; padding: 32px; width: 100%; max-width: 420px; }
+  .modal { background: var(--navy2); border: 1px solid var(--navy3); border-radius: 16px; padding: 32px; width: 100%; max-width: 420px; max-height: 90vh; overflow-y: auto; }
   .modal-title { font-family: var(--font-head); font-size: 18px; font-weight: 800; margin-bottom: 20px; }
   .modal-field { margin-bottom: 14px; }
   .modal-field-label { font-size: 11px; color: var(--gray); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px; }
@@ -125,7 +105,6 @@
 </head>
 <body>
 
-<!-- LOGIN -->
 <div id="login-screen">
   <div class="login-card">
     <div class="login-logo">klinpal</div>
@@ -142,21 +121,20 @@
   </div>
 </div>
 
-<!-- APP -->
 <div id="app">
   <aside class="sidebar">
     <div class="sidebar-logo">klinpal</div>
     <div class="sidebar-tag"><span>Superadmin</span></div>
     <nav class="sidebar-nav">
-      <button class="nav-item active" onclick="showPage('overview')" id="nav-overview"><span class="icon">🏠</span> Overview</button>
-      <button class="nav-item" onclick="showPage('vendors')" id="nav-vendors"><span class="icon">🏪</span> Laundromats</button>
-      <button class="nav-item" onclick="showPage('onboard')" id="nav-onboard"><span class="icon">➕</span> Onboard New</button>
-      <button class="nav-item" onclick="showPage('riders')" id="nav-riders"><span class="icon">🛵</span> Riders</button>
-      <button class="nav-item" onclick="showPage('settings')" id="nav-settings"><span class="icon">⚙️</span> Settings</button>
+      <button class="nav-item active" onclick="showPage('overview')" id="nav-overview"><span class="icon">&#x1F3E0;</span> Overview</button>
+      <button class="nav-item" onclick="showPage('vendors')" id="nav-vendors"><span class="icon">&#x1F3EA;</span> Laundromats</button>
+      <button class="nav-item" onclick="showPage('onboard')" id="nav-onboard"><span class="icon">&#x2795;</span> Onboard New</button>
+      <button class="nav-item" onclick="showPage('riders')" id="nav-riders"><span class="icon">&#x1F6F5;</span> Riders</button>
+      <button class="nav-item" onclick="showPage('settings')" id="nav-settings"><span class="icon">&#x2699;&#xFE0F;</span> Settings</button>
     </nav>
     <div class="sidebar-foot">
-      <button class="nav-item" onclick="openChangePasswordModal()"><span class="icon">🔑</span> Change Password</button>
-      <button class="nav-item" onclick="doLogout()"><span class="icon">🚪</span> Sign Out</button>
+      <button class="nav-item" onclick="openChangePasswordModal()"><span class="icon">&#x1F511;</span> Change Password</button>
+      <button class="nav-item" onclick="doLogout()"><span class="icon">&#x1F6AA;</span> Sign Out</button>
     </div>
   </aside>
 
@@ -165,48 +143,33 @@
     <!-- OVERVIEW -->
     <div class="page active" id="page-overview">
       <div class="page-header">
-        <div>
-          <div class="page-title">Platform Overview</div>
-          <div class="page-subtitle">All laundromats on Klinpal</div>
-        </div>
-        <button class="btn btn-ghost" onclick="loadOverview()">↻ Refresh</button>
+        <div><div class="page-title">Platform Overview</div><div class="page-subtitle">All laundromats on Klinpal</div></div>
+        <button class="btn btn-ghost" onclick="loadOverview()">&#x21BB; Refresh</button>
       </div>
-      <!-- Hero row: Klinpal Revenue + Laundromat Revenue -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
-
         <div style="background:var(--navy2);border:1px solid var(--navy3);border-radius:var(--radius);padding:20px 24px;display:flex;align-items:center">
           <div style="flex:1">
             <div style="font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;font-weight:500">Total Klinpal Revenue</div>
-            <div style="font-family:var(--font-head);font-size:32px;font-weight:800;color:var(--teal);letter-spacing:-1px;margin:6px 0 4px" id="stat-klinpal-total">—</div>
+            <div style="font-family:var(--font-head);font-size:32px;font-weight:800;color:var(--teal);letter-spacing:-1px;margin:6px 0 4px" id="stat-klinpal-total">&mdash;</div>
             <div style="font-size:11px;color:var(--gray)">Service fee + platform fee</div>
           </div>
           <div style="width:1px;background:var(--navy3);align-self:stretch;margin:0 20px"></div>
           <div style="display:flex;flex-direction:column;gap:12px;min-width:120px">
-            <div>
-              <div style="font-size:11px;color:var(--gray);margin-bottom:2px">Service fee</div>
-              <div style="font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--white)" id="stat-service-fee">—</div>
-            </div>
-            <div>
-              <div style="font-size:11px;color:var(--gray);margin-bottom:2px">Platform fee</div>
-              <div style="font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--red)" id="stat-platform-fee">—</div>
-            </div>
+            <div><div style="font-size:11px;color:var(--gray);margin-bottom:2px">Service fee</div><div style="font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--white)" id="stat-service-fee">&mdash;</div></div>
+            <div><div style="font-size:11px;color:var(--gray);margin-bottom:2px">Platform fee</div><div style="font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--red)" id="stat-platform-fee">&mdash;</div></div>
           </div>
         </div>
-
         <div style="background:var(--navy2);border:1px solid var(--navy3);border-radius:var(--radius);padding:20px 24px">
           <div style="font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;font-weight:500">Laundromat Revenue</div>
-          <div style="font-family:var(--font-head);font-size:32px;font-weight:800;color:var(--white);letter-spacing:-1px;margin:6px 0 4px" id="stat-revenue">—</div>
+          <div style="font-family:var(--font-head);font-size:32px;font-weight:800;color:var(--white);letter-spacing:-1px;margin:6px 0 4px" id="stat-revenue">&mdash;</div>
           <div style="font-size:11px;color:var(--gray)">Vendor earnings</div>
         </div>
-
       </div>
-
-      <!-- Small cards row -->
       <div class="stats-grid" style="margin-bottom:28px">
-        <div class="stat-card"><div class="stat-label">Laundromats</div><div class="stat-value teal" id="stat-vendors">—</div><div class="stat-sub">Onboarded</div></div>
-        <div class="stat-card"><div class="stat-label">Total Orders</div><div class="stat-value" id="stat-orders">—</div><div class="stat-sub">All time</div></div>
-        <div class="stat-card"><div class="stat-label">Delivery Revenue</div><div class="stat-value" id="stat-delivery">—</div><div class="stat-sub">Net from delivery</div></div>
-        <div class="stat-card"><div class="stat-label">Pending Orders</div><div class="stat-value" id="stat-pending">—</div><div class="stat-sub">Awaiting pickup</div></div>
+        <div class="stat-card"><div class="stat-label">Laundromats</div><div class="stat-value teal" id="stat-vendors">&mdash;</div><div class="stat-sub">Onboarded</div></div>
+        <div class="stat-card"><div class="stat-label">Total Orders</div><div class="stat-value" id="stat-orders">&mdash;</div><div class="stat-sub">All time</div></div>
+        <div class="stat-card"><div class="stat-label">Delivery Revenue</div><div class="stat-value" id="stat-delivery">&mdash;</div><div class="stat-sub">Net from delivery</div></div>
+        <div class="stat-card"><div class="stat-label">Pending Orders</div><div class="stat-value" id="stat-pending">&mdash;</div><div class="stat-sub">Awaiting pickup</div></div>
       </div>
       <div class="card">
         <div class="card-header"><div class="card-title">Laundromat Performance</div></div>
@@ -217,14 +180,10 @@
     <!-- LAUNDROMATS -->
     <div class="page" id="page-vendors">
       <div class="page-header">
-        <div>
-          <div class="page-title">Laundromats</div>
-          <div class="page-subtitle">All onboarded vendors</div>
-        </div>
+        <div><div class="page-title">Laundromats</div><div class="page-subtitle">All onboarded vendors</div></div>
         <div style="display:flex;gap:10px;align-items:center">
           <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--gray);cursor:pointer">
-            <input type="checkbox" id="show-inactive" onchange="renderVendorsTable()" style="width:16px;height:16px;accent-color:var(--teal)">
-            Show inactive
+            <input type="checkbox" id="show-inactive" onchange="renderVendorsTable()" style="width:16px;height:16px;accent-color:var(--teal)"> Show inactive
           </label>
           <button class="btn btn-teal" onclick="showPage('onboard')">+ Onboard New</button>
         </div>
@@ -238,78 +197,45 @@
     <!-- ONBOARD -->
     <div class="page" id="page-onboard">
       <div class="page-header">
-        <div>
-          <div class="page-title">Onboard Laundromat</div>
-          <div class="page-subtitle">Add a new laundromat to the Klinpal platform</div>
-        </div>
+        <div><div class="page-title">Onboard Laundromat</div><div class="page-subtitle">Add a new laundromat to the Klinpal platform</div></div>
       </div>
       <div class="card">
         <div class="card-header"><div class="card-title">New Laundromat Details</div></div>
         <div style="padding:28px;max-width:860px">
-
           <div style="margin-bottom:6px;font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;font-weight:600">Basic Info</div>
           <div class="form-grid" style="margin-bottom:20px">
-            <div>
-              <label class="field-label">Laundromat Name</label>
-              <input class="field-input" id="ob-name" placeholder="e.g. Fresh Press Laundry">
-            </div>
-            <div>
-              <label class="field-label">Slug (URL identifier)</label>
-              <input class="field-input" id="ob-slug" placeholder="e.g. freshpress" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9]/g,'')">
-              <div class="field-note">Lowercase letters and numbers only. Used in the customer link.</div>
-            </div>
+            <div><label class="field-label">Laundromat Name</label><input class="field-input" id="ob-name" placeholder="e.g. Fresh Press Laundry"></div>
+            <div><label class="field-label">Slug (URL identifier)</label><input class="field-input" id="ob-slug" placeholder="e.g. freshpress" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9]/g,'')"><div class="field-note">Lowercase letters and numbers only.</div></div>
           </div>
-
           <div style="margin-bottom:6px;font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;font-weight:600">Owner &amp; Login</div>
           <div class="form-grid" style="margin-bottom:20px">
-            <div>
-              <label class="field-label">Owner Phone</label>
-              <input class="field-input" id="ob-phone" placeholder="e.g. 08012345678">
-            </div>
+            <div><label class="field-label">Owner Phone</label><input class="field-input" id="ob-phone" placeholder="e.g. 08012345678"></div>
             <div style="display:flex;align-items:center">
               <div style="background:rgba(181,223,202,0.08);border:1px solid rgba(181,223,202,0.2);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--gray);line-height:1.5">
-                🔑 Vendor sets their own email &amp; password at <strong style="color:var(--teal)">klin-pal.vercel.app/register.html</strong> using their slug.
+                &#x1F511; Vendor sets their own email &amp; password at <strong style="color:var(--teal)">klin-pal.vercel.app/register.html</strong> using their slug.
               </div>
             </div>
           </div>
-
           <div style="margin-bottom:6px;font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;font-weight:600">Address</div>
           <div class="form-grid" style="margin-bottom:20px">
-            <div>
-              <label class="field-label">House / Unit No.</label>
-              <input class="field-input" id="ob-house" placeholder="e.g. 12B">
-            </div>
+            <div><label class="field-label">House / Unit No.</label><input class="field-input" id="ob-house" placeholder="e.g. 12B"></div>
             <div style="position:relative">
               <label class="field-label">Street / Area</label>
               <input class="field-input" id="ob-address" placeholder="Start typing street..." autocomplete="off" oninput="onAddressInput()">
-              <div id="ob-addr-dropdown" style="display:none;position:fixed;background:#173753;border:1px solid #1a4060;border-radius:8px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.5);overflow-y:auto;max-height:240px;"></div>
+              <div id="ob-addr-dropdown" style="display:none;position:fixed;background:#0F2235;border:1px solid #0a1628;border-radius:8px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.5);overflow-y:auto;max-height:240px;"></div>
               <div id="ob-addr-status" style="font-size:11px;margin-top:5px;color:var(--gray)"></div>
-              <div class="field-note">Select from suggestions — coordinates captured automatically.</div>
+              <div class="field-note">Select from suggestions &mdash; coordinates captured automatically.</div>
             </div>
           </div>
-
           <div style="margin-bottom:6px;font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;font-weight:600">Notifications &amp; Branding</div>
           <div class="form-grid" style="margin-bottom:8px">
-            <div>
-              <label class="field-label">Telegram Group Chat ID</label>
-              <input class="field-input" id="ob-telegram" placeholder="e.g. -1234567890">
-              <div class="field-note">Add the bot to a group and get the Chat ID from getUpdates.</div>
-            </div>
-            <div>
-              <label class="field-label">Brand Colour (hex)</label>
-              <input class="field-input" id="ob-brand-color" placeholder="e.g. #7c3aed" style="font-family:var(--font-mono)">
-              <div class="field-note">Leave blank to use the Klinpal default teal.</div>
-            </div>
+            <div><label class="field-label">Telegram Group Chat ID</label><input class="field-input" id="ob-telegram" placeholder="e.g. -1234567890"></div>
+            <div><label class="field-label">Brand Colour (hex)</label><input class="field-input" id="ob-brand-color" placeholder="e.g. #7c3aed" style="font-family:var(--font-mono)"></div>
           </div>
           <div class="form-grid" style="margin-bottom:28px">
-            <div>
-              <label class="field-label">Logo URL</label>
-              <input class="field-input" id="ob-logo-url" placeholder="https://i.ibb.co/...">
-              <div class="field-note">Recommended: <strong style="color:var(--white)">imgbb.com</strong> — free upload, instant direct link. Google Drive links will not work.</div>
-            </div>
+            <div><label class="field-label">Logo URL</label><input class="field-input" id="ob-logo-url" placeholder="https://i.ibb.co/..."><div class="field-note">Recommended: <strong style="color:var(--white)">imgbb.com</strong></div></div>
             <div></div>
           </div>
-
           <button class="btn btn-teal" onclick="onboardVendor()" id="ob-btn" style="padding:14px 32px;font-size:15px">Onboard Laundromat</button>
         </div>
       </div>
@@ -317,50 +243,35 @@
 
     <!-- VENDOR ORDERS DRILL-IN -->
     <div class="page" id="page-vendor-orders">
-      <button class="back-btn" onclick="showPage('vendors')">← Back to Laundromats</button>
+      <button class="back-btn" onclick="showPage('vendors')">&#x2190; Back to Laundromats</button>
       <div class="page-header">
-        <div>
-          <div class="page-title" id="drill-title">Orders</div>
-          <div class="page-subtitle" id="drill-subtitle"></div>
-        </div>
-        <button class="btn btn-ghost" onclick="loadVendorOrders(currentDrillVendor)">↻ Refresh</button>
+        <div><div class="page-title" id="drill-title">Orders</div><div class="page-subtitle" id="drill-subtitle"></div></div>
+        <button class="btn btn-ghost" onclick="loadVendorOrders(currentDrillVendor)">&#x21BB; Refresh</button>
       </div>
-      <!-- Hero row -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
-
         <div style="background:var(--navy2);border:1px solid var(--navy3);border-radius:var(--radius);padding:20px 24px;display:flex;align-items:center">
           <div style="flex:1">
             <div style="font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;font-weight:500">Total Klinpal Revenue</div>
-            <div style="font-family:var(--font-head);font-size:32px;font-weight:800;color:var(--teal);letter-spacing:-1px;margin:6px 0 4px" id="drill-klinpal-total">—</div>
+            <div style="font-family:var(--font-head);font-size:32px;font-weight:800;color:var(--teal);letter-spacing:-1px;margin:6px 0 4px" id="drill-klinpal-total">&mdash;</div>
             <div style="font-size:11px;color:var(--gray)">Service fee + platform fee</div>
           </div>
           <div style="width:1px;background:var(--navy3);align-self:stretch;margin:0 20px"></div>
           <div style="display:flex;flex-direction:column;gap:12px;min-width:120px">
-            <div>
-              <div style="font-size:11px;color:var(--gray);margin-bottom:2px">Service fee</div>
-              <div style="font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--white)" id="drill-service-fee">—</div>
-            </div>
-            <div>
-              <div style="font-size:11px;color:var(--gray);margin-bottom:2px">Platform fee</div>
-              <div style="font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--red)" id="drill-service-fee-platform">—</div>
-            </div>
+            <div><div style="font-size:11px;color:var(--gray);margin-bottom:2px">Service fee</div><div style="font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--white)" id="drill-service-fee">&mdash;</div></div>
+            <div><div style="font-size:11px;color:var(--gray);margin-bottom:2px">Platform fee</div><div style="font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--red)" id="drill-service-fee-platform">&mdash;</div></div>
           </div>
         </div>
-
         <div style="background:var(--navy2);border:1px solid var(--navy3);border-radius:var(--radius);padding:20px 24px">
           <div style="font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;font-weight:500">Laundromat Revenue</div>
-          <div style="font-family:var(--font-head);font-size:32px;font-weight:800;color:var(--white);letter-spacing:-1px;margin:6px 0 4px" id="drill-revenue">—</div>
+          <div style="font-family:var(--font-head);font-size:32px;font-weight:800;color:var(--white);letter-spacing:-1px;margin:6px 0 4px" id="drill-revenue">&mdash;</div>
           <div style="font-size:11px;color:var(--gray)">Vendor earnings</div>
         </div>
-
       </div>
-
-      <!-- Small cards row -->
       <div class="stats-grid" style="margin-bottom:28px">
-        <div class="stat-card"><div class="stat-label">Total Orders</div><div class="stat-value teal" id="drill-total">—</div></div>
-        <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value" id="drill-pending">—</div></div>
-        <div class="stat-card"><div class="stat-label">Delivery Revenue</div><div class="stat-value" id="drill-delivery">—</div><div class="stat-sub">Net from delivery</div></div>
-        <div class="stat-card"><div class="stat-label">Delivered</div><div class="stat-value green" id="drill-delivered">—</div></div>
+        <div class="stat-card"><div class="stat-label">Total Orders</div><div class="stat-value teal" id="drill-total">&mdash;</div></div>
+        <div class="stat-card"><div class="stat-label">Pending</div><div class="stat-value" id="drill-pending">&mdash;</div></div>
+        <div class="stat-card"><div class="stat-label">Delivery Revenue</div><div class="stat-value" id="drill-delivery">&mdash;</div><div class="stat-sub">Net from delivery</div></div>
+        <div class="stat-card"><div class="stat-label">Delivered</div><div class="stat-value green" id="drill-delivered">&mdash;</div></div>
       </div>
       <div class="card">
         <div class="card-header" style="flex-wrap:wrap;gap:10px">
@@ -368,19 +279,10 @@
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <input id="drill-search" type="text" placeholder="Search Order ID..." oninput="applyDrillFilters()" style="background:var(--navy3);border:1px solid var(--gray2);border-radius:6px;padding:7px 12px;color:var(--white);font-size:13px;outline:none;width:150px">
             <select id="drill-filter-payment" onchange="applyDrillFilters()" style="background:var(--navy3);border:1px solid var(--gray2);border-radius:6px;padding:7px 10px;color:var(--white);font-size:13px;outline:none;cursor:pointer">
-              <option value="">All Payments</option>
-              <option value="Paid">Paid</option>
-              <option value="Pending">Pending</option>
-              <option value="Not Paid">Not Paid</option>
+              <option value="">All Payments</option><option value="Paid">Paid</option><option value="Pending">Pending</option><option value="Not Paid">Not Paid</option>
             </select>
             <select id="drill-filter-status" onchange="applyDrillFilters()" style="background:var(--navy3);border:1px solid var(--gray2);border-radius:6px;padding:7px 10px;color:var(--white);font-size:13px;outline:none;cursor:pointer">
-              <option value="">All Order Statuses</option>
-              <option value="Pending">Pending</option>
-              <option value="Picked Up">Picked Up</option>
-              <option value="Washing">Washing</option>
-              <option value="Ready">Ready</option>
-              <option value="Delivered">Delivered</option>
-              <option value="Cancelled">Cancelled</option>
+              <option value="">All Statuses</option><option value="Pending">Pending</option><option value="Picked Up">Picked Up</option><option value="Washing">Washing</option><option value="Ready">Ready</option><option value="Delivered">Delivered</option><option value="Cancelled">Cancelled</option>
             </select>
           </div>
         </div>
@@ -390,42 +292,26 @@
 
     <!-- RIDERS -->
     <div class="page" id="page-riders">
-      <div class="page-header">
-        <div>
-          <div class="page-title">Riders</div>
-          <div class="page-subtitle">Manage drivers and their earnings</div>
-        </div>
-      </div>
-
-      <!-- Overview stats -->
+      <div class="page-header"><div><div class="page-title">Riders</div><div class="page-subtitle">Manage drivers and their earnings</div></div></div>
       <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:24px">
-        <div class="stat-card"><div class="stat-label">Total Riders</div><div class="stat-value teal" id="rider-stat-count">—</div><div class="stat-sub">Registered</div></div>
-        <div class="stat-card"><div class="stat-label">Total Rider Payout</div><div class="stat-value" id="rider-stat-payout">—</div><div class="stat-sub">Across all orders</div></div>
-        <div class="stat-card"><div class="stat-label">Klinpal Delivery Revenue</div><div class="stat-value green" id="rider-stat-klinpal">—</div><div class="stat-sub">Delivery − rider cut</div></div>
+        <div class="stat-card"><div class="stat-label">Total Riders</div><div class="stat-value teal" id="rider-stat-count">&mdash;</div><div class="stat-sub">Registered</div></div>
+        <div class="stat-card"><div class="stat-label">Total Rider Payout</div><div class="stat-value" id="rider-stat-payout">&mdash;</div><div class="stat-sub">Across all orders</div></div>
+        <div class="stat-card"><div class="stat-label">Klinpal Delivery Revenue</div><div class="stat-value green" id="rider-stat-klinpal">&mdash;</div><div class="stat-sub">Delivery &minus; rider cut</div></div>
       </div>
-
-      <!-- Riders list -->
       <div class="card">
-        <div class="card-header">
-          <div class="card-title">All Riders</div>
-          <button class="btn btn-teal btn-sm" onclick="openAddRiderModal()">+ Add New Rider</button>
-        </div>
+        <div class="card-header"><div class="card-title">All Riders</div><button class="btn btn-teal btn-sm" onclick="openAddRiderModal()">+ Add New Rider</button></div>
         <div id="riders-list"><div class="loading-state">Loading...</div></div>
       </div>
-
-      <!-- Rider drill-in -->
       <div id="rider-drill" style="display:none;margin-top:24px">
-        <button onclick="closeRiderDrill()" style="background:none;border:none;color:var(--gray);cursor:pointer;font-size:13px;margin-bottom:16px;font-family:var(--font-body)">← Back to all riders</button>
-        <div class="page-title" id="rider-drill-name" style="margin-bottom:4px">—</div>
-        <div style="font-size:13px;color:var(--gray);margin-bottom:20px" id="rider-drill-sub">—</div>
-
+        <button onclick="closeRiderDrill()" style="background:none;border:none;color:var(--gray);cursor:pointer;font-size:13px;margin-bottom:16px;font-family:var(--font-body)">&#x2190; Back to all riders</button>
+        <div class="page-title" id="rider-drill-name" style="margin-bottom:4px">&mdash;</div>
+        <div style="font-size:13px;color:var(--gray);margin-bottom:20px" id="rider-drill-sub">&mdash;</div>
         <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px">
-          <div class="stat-card"><div class="stat-label">Assigned Orders</div><div class="stat-value teal" id="rd-orders">—</div></div>
-          <div class="stat-card"><div class="stat-label">Fulfilled</div><div class="stat-value green" id="rd-fulfilled">—</div><div class="stat-sub">Delivered</div></div>
-          <div class="stat-card"><div class="stat-label">Total Earned</div><div class="stat-value" id="rd-earned">—</div><div class="stat-sub">Rider's cut</div></div>
-          <div class="stat-card"><div class="stat-label">Earnings %</div><div class="stat-value teal" id="rd-pct">—</div><div class="stat-sub">Of delivery fee</div></div>
+          <div class="stat-card"><div class="stat-label">Assigned Orders</div><div class="stat-value teal" id="rd-orders">&mdash;</div></div>
+          <div class="stat-card"><div class="stat-label">Fulfilled</div><div class="stat-value green" id="rd-fulfilled">&mdash;</div><div class="stat-sub">Delivered</div></div>
+          <div class="stat-card"><div class="stat-label">Total Earned</div><div class="stat-value" id="rd-earned">&mdash;</div><div class="stat-sub">Rider's cut</div></div>
+          <div class="stat-card"><div class="stat-label">Earnings %</div><div class="stat-value teal" id="rd-pct">&mdash;</div><div class="stat-sub">Of delivery fee</div></div>
         </div>
-
         <div class="card">
           <div class="card-header"><div class="card-title">Order History</div></div>
           <div id="rider-drill-table"><div class="loading-state">Loading...</div></div>
@@ -435,30 +321,18 @@
 
     <!-- SETTINGS -->
     <div class="page" id="page-settings">
-      <div class="page-header">
-        <div>
-          <div class="page-title">Settings</div>
-          <div class="page-subtitle">Platform-wide configuration</div>
-        </div>
-      </div>
-
+      <div class="page-header"><div><div class="page-title">Settings</div><div class="page-subtitle">Platform-wide configuration</div></div></div>
       <div class="card" style="max-width:540px">
         <div class="card-header"><div class="card-title">Platform Fee</div></div>
-        <div class="card-body">
-          <p style="font-size:13px;color:var(--gray);margin-bottom:20px;line-height:1.6">
-            This is the global platform fee percentage charged on every order's laundry subtotal. Individual vendors can have a custom rate set in their Edit modal — if set, the vendor's rate overrides this global rate.
-          </p>
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
-            <div style="flex:1">
-              <label class="field-label">Global Platform Fee (%)</label>
-              <div style="display:flex;align-items:center;gap:10px;margin-top:6px">
-                <input class="field-input" id="settings-platform-fee" type="number" min="0" max="100" step="0.5" placeholder="e.g. 10" style="max-width:160px;margin-bottom:0">
-                <span style="font-size:20px;color:var(--teal);font-family:var(--font-head);font-weight:700" id="settings-fee-preview">—%</span>
-              </div>
-            </div>
+        <div style="padding:24px">
+          <p style="font-size:13px;color:var(--gray);margin-bottom:20px;line-height:1.6">Global platform fee % charged on every order's subtotal. Individual vendors can override this in their Edit modal.</p>
+          <label class="field-label">Global Platform Fee (%)</label>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:6px;margin-bottom:8px">
+            <input class="field-input" id="settings-platform-fee" type="number" min="0" max="100" step="0.5" placeholder="e.g. 10" style="max-width:160px" oninput="document.getElementById('settings-fee-preview').textContent=this.value+'%'">
+            <span style="font-size:20px;color:var(--teal);font-family:var(--font-head);font-weight:700" id="settings-fee-preview">&mdash;%</span>
           </div>
-          <div style="font-size:11px;color:var(--gray);margin-bottom:20px">Applies to all new orders where no vendor-specific rate is set. Existing orders are not affected.</div>
-          <button class="save-btn" onclick="saveGlobalPlatformFee()">💾 Save</button>
+          <div style="font-size:11px;color:var(--gray);margin-bottom:20px">Applies to all new orders where no vendor-specific rate is set.</div>
+          <button class="save-btn" onclick="saveGlobalPlatformFee()">&#x1F4BE; Save</button>
         </div>
       </div>
     </div>
@@ -470,19 +344,13 @@
 <div class="modal-overlay" id="change-password-modal">
   <div class="modal" style="max-width:400px">
     <div class="modal-title">Change Password</div>
-    <div class="modal-field">
-      <div class="modal-field-label">New Password</div>
-      <div style="position:relative;margin-top:6px">
-        <input class="field-input" id="new-password" type="password" placeholder="Enter new password" style="padding-right:48px">
-        <button onclick="togglePwd('new-password',this)" type="button" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--gray);cursor:pointer;font-size:13px;padding:0">Show</button>
-      </div>
+    <div class="modal-field"><div class="modal-field-label">New Password</div>
+      <div style="position:relative;margin-top:6px"><input class="field-input" id="new-password" type="password" placeholder="Enter new password" style="padding-right:48px">
+      <button onclick="togglePwd('new-password',this)" type="button" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--gray);cursor:pointer;font-size:13px;padding:0">Show</button></div>
     </div>
-    <div class="modal-field" style="margin-top:14px">
-      <div class="modal-field-label">Confirm New Password</div>
-      <div style="position:relative;margin-top:6px">
-        <input class="field-input" id="new-password-confirm" type="password" placeholder="Confirm new password" style="padding-right:48px">
-        <button onclick="togglePwd('new-password-confirm',this)" type="button" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--gray);cursor:pointer;font-size:13px;padding:0">Show</button>
-      </div>
+    <div class="modal-field" style="margin-top:14px"><div class="modal-field-label">Confirm New Password</div>
+      <div style="position:relative;margin-top:6px"><input class="field-input" id="new-password-confirm" type="password" placeholder="Confirm new password" style="padding-right:48px">
+      <button onclick="togglePwd('new-password-confirm',this)" type="button" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--gray);cursor:pointer;font-size:13px;padding:0">Show</button></div>
     </div>
     <div style="display:flex;gap:10px;margin-top:24px">
       <button class="save-btn" onclick="changePassword()">Update Password</button>
@@ -496,28 +364,15 @@
   <div class="modal" style="max-width:520px">
     <div class="modal-title">Add New Rider</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
-      <div>
-        <div class="modal-field-label">Full Name</div>
-        <input class="field-input" id="rider-name" placeholder="e.g. Emeka Eze" style="margin-top:6px">
-      </div>
-      <div>
-        <div class="modal-field-label">Phone Number</div>
-        <input class="field-input" id="rider-phone" type="tel" placeholder="e.g. 08012345678" style="margin-top:6px">
-      </div>
+      <div><div class="modal-field-label">Full Name</div><input class="field-input" id="rider-name" placeholder="e.g. Emeka Eze" style="margin-top:6px"></div>
+      <div><div class="modal-field-label">Phone Number</div><input class="field-input" id="rider-phone" type="tel" placeholder="e.g. 08012345678" style="margin-top:6px"></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
-      <div>
-        <div class="modal-field-label">Earnings % (of delivery fee)</div>
-        <input class="field-input" id="rider-percentage" type="number" min="1" max="100" placeholder="e.g. 60" style="margin-top:6px">
-      </div>
-      <div>
-        <div class="modal-field-label">Telegram Chat ID</div>
-        <input class="field-input" id="rider-telegram" placeholder="e.g. 1234567890" style="margin-top:6px">
-        <div style="font-size:11px;color:var(--gray);margin-top:4px">Personal Telegram ID for assignment alerts.</div>
-      </div>
+      <div><div class="modal-field-label">Earnings % (of delivery fee)</div><input class="field-input" id="rider-percentage" type="number" min="1" max="100" placeholder="e.g. 60" style="margin-top:6px"></div>
+      <div><div class="modal-field-label">Telegram Chat ID</div><input class="field-input" id="rider-telegram" placeholder="e.g. 1234567890" style="margin-top:6px"><div style="font-size:11px;color:var(--gray);margin-top:4px">Personal Telegram ID for alerts.</div></div>
     </div>
     <div style="background:rgba(181,223,202,0.08);border:1px solid rgba(181,223,202,0.2);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--gray);margin-bottom:20px;line-height:1.5">
-      🔑 Rider sets their own email &amp; PIN at <strong style="color:var(--teal)">klin-pal.vercel.app/register.html</strong> using their phone number.
+      &#x1F511; Rider sets their own email &amp; PIN at <strong style="color:var(--teal)">klin-pal.vercel.app/register.html</strong> using their phone number.
     </div>
     <div style="display:flex;gap:10px">
       <button class="save-btn" onclick="addRider()" id="add-rider-btn">Add Rider</button>
@@ -528,52 +383,37 @@
 
 <!-- EDIT VENDOR MODAL -->
 <div class="modal-overlay" id="edit-vendor-modal">
-  <div class="modal" style="max-width:520px">
+  <div class="modal" style="max-width:540px">
     <div class="modal-title">Edit Vendor</div>
     <div id="edit-vendor-name-display" style="font-size:13px;color:var(--gray);margin-bottom:20px"></div>
-
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
-      <div>
-        <div class="modal-field-label">Name</div>
-        <input class="field-input" id="ev-name" placeholder="Laundromat name" style="margin-top:6px">
-      </div>
-      <div>
-        <div class="modal-field-label">Slug</div>
-        <input class="field-input" id="ev-slug" placeholder="e.g. freshpress" style="margin-top:6px" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9]/g,'')">
-      </div>
+      <div><div class="modal-field-label">Name</div><input class="field-input" id="ev-name" placeholder="Laundromat name" style="margin-top:6px"></div>
+      <div><div class="modal-field-label">Slug</div><input class="field-input" id="ev-slug" placeholder="e.g. freshpress" style="margin-top:6px" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9]/g,'')"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+      <div><div class="modal-field-label">Email</div><input class="field-input" id="ev-email" type="email" placeholder="owner@email.com" style="margin-top:6px"><div style="font-size:11px;color:var(--gray);margin-top:4px">Updates vendor table only.</div></div>
+      <div><div class="modal-field-label">Phone</div><input class="field-input" id="ev-phone" type="tel" placeholder="e.g. 08012345678" style="margin-top:6px"></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
       <div>
-        <div class="modal-field-label">Email</div>
-        <input class="field-input" id="ev-email" type="email" placeholder="owner@email.com" style="margin-top:6px">
-        <div style="font-size:11px;color:var(--gray);margin-top:4px">Updates vendor table only. Vendor updates Auth email via their Profile.</div>
+        <div class="modal-field-label">New Password (leave blank to keep)</div>
+        <div style="position:relative;margin-top:6px"><input class="field-input" id="ev-password" type="password" placeholder="Set new password" style="padding-right:48px">
+        <button onclick="togglePwd('ev-password',this)" type="button" style="position:absolute;right:14px;top:38%;transform:translateY(-50%);background:none;border:none;color:var(--gray);cursor:pointer;font-size:13px;padding:0">Show</button></div>
       </div>
-      <div>
-        <div class="modal-field-label">Phone</div>
-        <input class="field-input" id="ev-phone" type="tel" placeholder="e.g. 08012345678" style="margin-top:6px">
-      </div>
+      <div><div class="modal-field-label">Telegram Group Chat ID</div><input class="field-input" id="ev-telegram" placeholder="e.g. -1234567890" style="margin-top:6px"></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
-      <div>
-        <div class="modal-field-label">New Password (leave blank to keep current)</div>
-        <div style="position:relative;margin-top:6px">
-          <input class="field-input" id="ev-password" type="password" placeholder="Set new password" style="padding-right:48px">
-          <button onclick="togglePwd('ev-password',this)" type="button" style="position:absolute;right:14px;top:38%;transform:translateY(-50%);background:none;border:none;color:var(--gray);cursor:pointer;font-size:13px;padding:0">Show</button>
-        </div>
-      </div>
-      <div>
-        <div class="modal-field-label">Telegram Group Chat ID</div>
-        <input class="field-input" id="ev-telegram" placeholder="e.g. -1234567890" style="margin-top:6px">
-      </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px">
-      <div>
-        <div class="modal-field-label">Custom Platform Fee % <span style="color:var(--gray);font-weight:400">(leave blank to use global rate)</span></div>
-        <input class="field-input" id="ev-platform-fee-pct" type="number" min="0" max="100" step="0.5" placeholder="e.g. 8" style="margin-top:6px">
-      </div>
+      <div><div class="modal-field-label">Custom Platform Fee % <span style="color:var(--gray);font-weight:400">(blank = global)</span></div><input class="field-input" id="ev-platform-fee-pct" type="number" min="0" max="100" step="0.5" placeholder="e.g. 8" style="margin-top:6px"></div>
       <div></div>
     </div>
-
+    <div style="margin-bottom:14px">
+      <div class="modal-field-label">Update Address</div>
+      <div style="position:relative;margin-top:6px">
+        <input class="field-input" id="ev-address" placeholder="Start typing to change address..." autocomplete="off" oninput="onEvAddressInput()">
+        <div id="ev-addr-dropdown" style="display:none;position:fixed;background:#0F2235;border:1px solid #0a1628;border-radius:8px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.5);overflow-y:auto;max-height:200px;"></div>
+      </div>
+      <div id="ev-addr-status" style="font-size:11px;margin-top:4px;color:var(--gray)">Leave blank or keep current to not change address.</div>
+    </div>
     <div style="display:flex;gap:10px;margin-top:24px">
       <button class="save-btn" onclick="saveEditVendor()">Save Changes</button>
       <button class="modal-close" onclick="closeEditVendorModal()">Cancel</button>
@@ -586,19 +426,16 @@
   <div class="modal" style="max-width:480px">
     <div class="modal-title">Edit Branding</div>
     <div id="branding-modal-vendor-name" style="font-size:13px;color:var(--gray);margin-bottom:20px"></div>
-    <div class="modal-field">
-      <div class="modal-field-label">Brand Colour</div>
+    <div class="modal-field"><div class="modal-field-label">Brand Colour</div>
       <div style="display:flex;align-items:center;gap:12px;margin-top:6px">
         <input type="color" id="bm-color-picker" style="width:44px;height:44px;border:none;border-radius:8px;cursor:pointer;padding:0;background:none" oninput="document.getElementById('bm-color-hex').value=this.value;document.getElementById('bm-color-preview').style.background=this.value">
-        <input class="field-input" id="bm-color-hex" placeholder="#B5DFCA" style="width:140px;margin-bottom:0;font-family:var(--font-mono)" oninput="if(/^#[0-9a-fA-F]{6}$/.test(this.value)){document.getElementById('bm-color-picker').value=this.value;document.getElementById('bm-color-preview').style.background=this.value}">
+        <input class="field-input" id="bm-color-hex" placeholder="#B5DFCA" style="width:140px;font-family:var(--font-mono)" oninput="if(/^#[0-9a-fA-F]{6}$/.test(this.value)){document.getElementById('bm-color-picker').value=this.value;document.getElementById('bm-color-preview').style.background=this.value}">
         <div id="bm-color-preview" style="width:80px;height:44px;border-radius:8px;background:#B5DFCA"></div>
       </div>
-      <div style="font-size:11px;color:var(--gray);margin-top:6px">Leave blank to use the default teal</div>
     </div>
-    <div class="modal-field" style="margin-top:16px">
-      <div class="modal-field-label">Logo URL</div>
-      <input class="field-input" id="bm-logo-url" placeholder="https://i.ibb.co/...  or  https://raw.githubusercontent.com/..." style="margin-top:6px">
-      <div style="font-size:11px;color:var(--gray);margin-top:4px">Use a direct image URL — <strong style="color:var(--white)">imgbb.com</strong> (free) or GitHub raw. PNG/SVG with transparent background recommended. Google Drive links will not work.</div>
+    <div class="modal-field" style="margin-top:16px"><div class="modal-field-label">Logo URL</div>
+      <input class="field-input" id="bm-logo-url" placeholder="https://i.ibb.co/..." style="margin-top:6px">
+      <div style="font-size:11px;color:var(--gray);margin-top:4px">Use <strong style="color:var(--white)">imgbb.com</strong> for free direct image links.</div>
     </div>
     <div style="display:flex;gap:10px;margin-top:24px">
       <button class="save-btn" onclick="saveBrandingModal()">Save Changes</button>
@@ -611,39 +448,27 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-  /* ── CONFIG ── */
-  var SUPABASE_URL        = 'https://mlgdqxqzpzfzndjhywqf.supabase.co';
-  var SUPABASE_KEY        = 'sb_publishable_TS5uGf7KzLKxeQw8bxDKYw_HwBNNBeA';
-  var sb                  = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  var SUPABASE_URL = 'https://mlgdqxqzpzfzndjhywqf.supabase.co';
+  var SUPABASE_KEY = 'sb_publishable_TS5uGf7KzLKxeQw8bxDKYw_HwBNNBeA';
+  var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, storageKey: 'klinpal-superadmin-auth' }
   });
-  var _sessionToken       = null;
+  var _sessionToken = null;
+  var GOOGLE_MAPS_KEY = 'AIzaSyA4mpTBCqmyZpCZFtP-_oVvjs_8AhNoSa0';
 
   function clearAuthStorage() {
-    Object.keys(localStorage).forEach(function(key) {
-      if (key.startsWith('klinpal-')) localStorage.removeItem(key);
-    });
+    Object.keys(localStorage).forEach(function(k){ if(k.startsWith('klinpal-')) localStorage.removeItem(k); });
   }
-  var GOOGLE_MAPS_KEY     = 'AIzaSyA4mpTBCqmyZpCZFtP-_oVvjs_8AhNoSa0';
 
-  var allVendors          = [];
-  var currentDrillVendor  = null;
-  var obAddressConfirmed  = false;
-  var obLat = null, obLng = null, obDebounce = null;
-  var realtimeChannel     = null;
-  var drillRealtimeChannel = null;
+  var allVendors = [], currentDrillVendor = null;
+  var obAddressConfirmed = false, obLat = null, obLng = null, obDebounce = null;
+  var evAddressConfirmed = false, evLat = null, evLng = null, evDebounce = null;
+  var realtimeChannel = null, drillRealtimeChannel = null;
 
-  /* ── SUPABASE FETCH ── */
   function sbFetch(path, options) {
     var token = _sessionToken || SUPABASE_KEY;
-    var headers = Object.assign({
-      'apikey':        SUPABASE_KEY,
-      'Authorization': 'Bearer ' + token,
-      'Content-Type':  'application/json',
-      'Prefer':        'return=representation',
-    }, (options && options.headers) || {});
-    var opts = Object.assign({}, options || {}, { headers: headers });
-    return fetch(SUPABASE_URL + '/rest/v1/' + path, opts);
+    var headers = Object.assign({ 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', 'Prefer': 'return=representation' }, (options && options.headers) || {});
+    return fetch(SUPABASE_URL + '/rest/v1/' + path, Object.assign({}, options || {}, { headers: headers }));
   }
 
   function togglePwd(id, btn) {
@@ -652,850 +477,591 @@
     else { input.type = 'password'; btn.textContent = 'Show'; }
   }
 
-  /* ── LOGIN ── */
   function doLogin() {
     var email = document.getElementById('login-email').value.trim().toLowerCase();
     var pass  = document.getElementById('login-pass').value.trim();
     var err   = document.getElementById('login-error');
     if (!email || !pass) { err.style.display = 'block'; return; }
-
     clearAuthStorage();
-
-    sb.auth.signInWithPassword({ email: email, password: pass })
-      .then(function(result) {
-        if (result.error) { err.style.display = 'block'; return; }
-        _sessionToken = result.data.session.access_token;
-        err.style.display = 'none';
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('app').style.display = 'block';
-        loadOverview();
-        startOverviewRealtime();
-      })
-      .catch(function() { err.style.display = 'block'; });
+    sb.auth.signInWithPassword({ email: email, password: pass }).then(function(result) {
+      if (result.error) { err.style.display = 'block'; return; }
+      _sessionToken = result.data.session.access_token;
+      err.style.display = 'none';
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      loadOverview(); startOverviewRealtime();
+    }).catch(function() { err.style.display = 'block'; });
   }
 
-  document.getElementById('login-email').addEventListener('keydown', function(e) { if (e.key === 'Enter') document.getElementById('login-pass').focus(); });
-  document.getElementById('login-pass').addEventListener('keydown',  function(e) { if (e.key === 'Enter') doLogin(); });
+  document.getElementById('login-email').addEventListener('keydown', function(e){ if(e.key==='Enter') document.getElementById('login-pass').focus(); });
+  document.getElementById('login-pass').addEventListener('keydown',  function(e){ if(e.key==='Enter') doLogin(); });
 
   function doLogout() {
-    _sessionToken = null;
-    sb.auth.signOut();
-    stopOverviewRealtime();
-    stopDrillRealtime();
+    _sessionToken = null; sb.auth.signOut(); stopOverviewRealtime(); stopDrillRealtime();
     allVendors = []; currentDrillVendor = null;
     document.getElementById('app').style.display = 'none';
     document.getElementById('login-screen').style.display = 'flex';
-    document.getElementById('login-email').value = '';
-    document.getElementById('login-pass').value  = '';
+    document.getElementById('login-email').value = ''; document.getElementById('login-pass').value = '';
   }
 
-  /* ── CHANGE PASSWORD ── */
-  function openChangePasswordModal() {
-    document.getElementById('new-password').value         = '';
-    document.getElementById('new-password-confirm').value = '';
-    document.getElementById('change-password-modal').classList.add('open');
-  }
-
-  function closeChangePasswordModal() {
-    document.getElementById('change-password-modal').classList.remove('open');
-  }
+  function openChangePasswordModal() { document.getElementById('new-password').value=''; document.getElementById('new-password-confirm').value=''; document.getElementById('change-password-modal').classList.add('open'); }
+  function closeChangePasswordModal() { document.getElementById('change-password-modal').classList.remove('open'); }
 
   function changePassword() {
-    var pass    = document.getElementById('new-password').value.trim();
-    var confirm = document.getElementById('new-password-confirm').value.trim();
-    if (!pass)            { showToast('Enter a new password', true); return; }
-    if (pass !== confirm) { showToast('Passwords do not match', true); return; }
+    var pass = document.getElementById('new-password').value.trim();
+    var conf = document.getElementById('new-password-confirm').value.trim();
+    if (!pass) { showToast('Enter a new password', true); return; }
+    if (pass !== conf) { showToast('Passwords do not match', true); return; }
     if (pass.length < 6) { showToast('Password must be at least 6 characters', true); return; }
-    sb.auth.updateUser({ password: pass })
-      .then(function(r) {
-        if (r.error) { showToast('Could not update: ' + r.error.message, true); return; }
-        closeChangePasswordModal();
-        showToast('Password updated ✓');
-      });
+    sb.auth.updateUser({ password: pass }).then(function(r) {
+      if (r.error) { showToast('Could not update: ' + r.error.message, true); return; }
+      closeChangePasswordModal(); showToast('Password updated \u2713');
+    });
   }
 
-  /* ── REALTIME ── */
   function startOverviewRealtime() {
     if (realtimeChannel) stopOverviewRealtime();
-    realtimeChannel = sb.channel('superadmin-orders-overview')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, function() {
-        loadOverview();
-      })
-      .subscribe();
+    realtimeChannel = sb.channel('superadmin-orders-overview').on('postgres_changes', { event:'*', schema:'public', table:'orders' }, function(){ loadOverview(); }).subscribe();
   }
-
-  function stopOverviewRealtime() {
-    if (realtimeChannel) { realtimeChannel.unsubscribe(); realtimeChannel = null; }
-  }
+  function stopOverviewRealtime() { if (realtimeChannel) { realtimeChannel.unsubscribe(); realtimeChannel = null; } }
 
   function startDrillRealtime(vendorId) {
     if (drillRealtimeChannel) stopDrillRealtime();
-    drillRealtimeChannel = sb.channel('superadmin-drill-' + vendorId)
-      .on('postgres_changes', {
-        event: '*', schema: 'public', table: 'orders',
-        filter: 'vendor_id=eq.' + vendorId,
-      }, function(payload) {
+    drillRealtimeChannel = sb.channel('superadmin-drill-'+vendorId)
+      .on('postgres_changes', { event:'*', schema:'public', table:'orders', filter:'vendor_id=eq.'+vendorId }, function(payload) {
         if (payload.eventType === 'UPDATE') {
-          var idx = drillOrders.findIndex(function(o) { return o.id === payload.new.id; });
-          if (idx > -1) drillOrders[idx] = payload.new;
-          else drillOrders.unshift(payload.new);
+          var idx = drillOrders.findIndex(function(o){ return o.id === payload.new.id; });
+          if (idx > -1) drillOrders[idx] = payload.new; else drillOrders.unshift(payload.new);
           applyDrillFilters();
-        } else {
-          loadVendorOrders(currentDrillVendor);
-        }
-      })
-      .subscribe();
+        } else { loadVendorOrders(currentDrillVendor); }
+      }).subscribe();
   }
+  function stopDrillRealtime() { if (drillRealtimeChannel) { drillRealtimeChannel.unsubscribe(); drillRealtimeChannel = null; } }
 
-  function stopDrillRealtime() {
-    if (drillRealtimeChannel) { drillRealtimeChannel.unsubscribe(); drillRealtimeChannel = null; }
-  }
-
-  /* ── KEEP TOKEN FRESH ── */
   sb.auth.onAuthStateChange(function(event, session) {
     if (session) _sessionToken = session.access_token;
     if (event === 'SIGNED_OUT') _sessionToken = null;
   });
 
-  /* ── NAVIGATION ── */
   function showPage(name) {
     if (name === 'settings') loadSettings();
     if (name === 'riders')   loadRiders();
     if (name !== 'vendor-orders') stopDrillRealtime();
     if (name !== 'riders') closeRiderDrill();
-    document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
-    document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
-    document.getElementById('page-' + name).classList.add('active');
-    var nav = document.getElementById('nav-' + name);
+    document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+    document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
+    document.getElementById('page-'+name).classList.add('active');
+    var nav = document.getElementById('nav-'+name);
     if (nav) nav.classList.add('active');
-    window.scrollTo(0, 0);
+    window.scrollTo(0,0);
     if (name === 'vendors') renderVendorsTable();
   }
 
-  /* ── OVERVIEW ── */
   function loadOverview() {
-    ['stat-vendors','stat-orders','stat-revenue','stat-delivery','stat-service-fee','stat-platform-fee','stat-klinpal-total','stat-pending'].forEach(function(id) {
-      document.getElementById(id).textContent = '…';
-    });
+    ['stat-vendors','stat-orders','stat-revenue','stat-delivery','stat-service-fee','stat-platform-fee','stat-klinpal-total','stat-pending'].forEach(function(id){ document.getElementById(id).textContent = '...'; });
     document.getElementById('overview-table').innerHTML = '<div class="loading-state">Loading...</div>';
-
-    sbFetch('vendors?select=*&order=created_at.desc')
-      .then(function(r) { return r.json(); })
-      .then(function(vendors) {
-        allVendors = Array.isArray(vendors) ? vendors : [];
-        document.getElementById('stat-vendors').textContent = allVendors.length;
-        return sbFetch('orders?select=vendor_id,subtotal,delivery_fee,service_fee,platform_fee,status');
-      })
-      .then(function(r) { return r.json(); })
-      .then(function(orders) {
-        orders = Array.isArray(orders) ? orders : [];
-
-        var totSvc      = orders.reduce(function(a,o){ return a + (Number(o.subtotal)      || 0); }, 0);
-        var totDel      = orders.reduce(function(a,o){ return a + (Number(o.delivery_fee)  || 0); }, 0);
-        var totFee      = orders.reduce(function(a,o){ return a + (Number(o.service_fee)   || 0); }, 0);
-        var totPlatform = orders.reduce(function(a,o){ return a + (Number(o.platform_fee)  || 0); }, 0);
-        var totPending  = orders.filter(function(o){ return o.status === 'Pending'; }).length;
-
-        document.getElementById('stat-orders').textContent        = orders.length;
-        document.getElementById('stat-revenue').textContent       = '₦' + totSvc.toLocaleString();
-        document.getElementById('stat-delivery').textContent      = '₦' + totDel.toLocaleString();
-        document.getElementById('stat-service-fee').textContent   = '₦' + totFee.toLocaleString();
-        document.getElementById('stat-platform-fee').textContent  = '₦' + totPlatform.toLocaleString();
-        document.getElementById('stat-klinpal-total').textContent = '₦' + (totFee + totPlatform).toLocaleString();
-        document.getElementById('stat-pending').textContent       = totPending;
-
-        if (!allVendors.length) {
-          document.getElementById('overview-table').innerHTML = '<div class="empty-state"><div style="font-size:14px">No laundromats yet</div></div>';
-          return;
-        }
-
-        var rows = allVendors.map(function(v) {
-          var vo  = orders.filter(function(o){ return o.vendor_id === v.id; });
-          var svc = vo.reduce(function(a,o){ return a + (Number(o.subtotal)      || 0); }, 0);
-          var del = vo.reduce(function(a,o){ return a + (Number(o.delivery_fee)  || 0); }, 0);
-          var plt = vo.reduce(function(a,o){ return a + (Number(o.platform_fee)  || 0); }, 0);
-          var pen = vo.filter(function(o){ return o.status === 'Pending'; }).length;
-          return '<tr>'
-            + '<td><div class="vendor-name">' + v.name + '</div><div class="vendor-slug">/' + v.slug + '</div></td>'
-            + '<td>' + vo.length + '</td>'
-            + '<td><span class="mono">₦' + svc.toLocaleString() + '</span></td>'
-            + '<td><span class="mono">₦' + del.toLocaleString() + '</span></td>'
-            + '<td><span class="mono" style="color:var(--red)">₦' + plt.toLocaleString() + '</span></td>'
-            + '<td>' + pen + '</td>'
-            + '<td><button class="btn btn-ghost btn-sm" onclick="openVendorOrders(\'' + v.slug + '\')">View Orders</button></td>'
-            + '</tr>';
-        }).join('');
-
-        document.getElementById('overview-table').innerHTML =
-          '<table><thead><tr><th>Laundromat</th><th>Orders</th><th>Laundromat Revenue</th><th>Delivery Revenue</th><th>Platform Fee</th><th>Pending</th><th></th></tr></thead>'
-          + '<tbody>' + rows + '</tbody></table>';
-      })
-      .catch(function(e) { console.error(e); showToast('Could not load overview', true); });
+    sbFetch('vendors?select=*&order=created_at.desc').then(function(r){ return r.json(); })
+    .then(function(vendors) {
+      allVendors = Array.isArray(vendors) ? vendors : [];
+      document.getElementById('stat-vendors').textContent = allVendors.length;
+      return sbFetch('orders?select=vendor_id,subtotal,delivery_fee,service_fee,platform_fee,status');
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(orders) {
+      orders = Array.isArray(orders) ? orders : [];
+      var totSvc = orders.reduce(function(a,o){ return a+(Number(o.subtotal)||0); },0);
+      var totDel = orders.reduce(function(a,o){ return a+(Number(o.delivery_fee)||0); },0);
+      var totFee = orders.reduce(function(a,o){ return a+(Number(o.service_fee)||0); },0);
+      var totPlt = orders.reduce(function(a,o){ return a+(Number(o.platform_fee)||0); },0);
+      var totPen = orders.filter(function(o){ return o.status==='Pending'; }).length;
+      document.getElementById('stat-orders').textContent        = orders.length;
+      document.getElementById('stat-revenue').textContent       = '\u20A6'+totSvc.toLocaleString();
+      document.getElementById('stat-delivery').textContent      = '\u20A6'+totDel.toLocaleString();
+      document.getElementById('stat-service-fee').textContent   = '\u20A6'+totFee.toLocaleString();
+      document.getElementById('stat-platform-fee').textContent  = '\u20A6'+totPlt.toLocaleString();
+      document.getElementById('stat-klinpal-total').textContent = '\u20A6'+(totFee+totPlt).toLocaleString();
+      document.getElementById('stat-pending').textContent       = totPen;
+      if (!allVendors.length) { document.getElementById('overview-table').innerHTML='<div class="empty-state"><div style="font-size:14px">No laundromats yet</div></div>'; return; }
+      var rows = allVendors.map(function(v) {
+        var vo  = orders.filter(function(o){ return o.vendor_id===v.id; });
+        var svc = vo.reduce(function(a,o){ return a+(Number(o.subtotal)||0); },0);
+        var del = vo.reduce(function(a,o){ return a+(Number(o.delivery_fee)||0); },0);
+        var plt = vo.reduce(function(a,o){ return a+(Number(o.platform_fee)||0); },0);
+        var pen = vo.filter(function(o){ return o.status==='Pending'; }).length;
+        return '<tr><td><div class="vendor-name">'+v.name+'</div><div class="vendor-slug">/'+v.slug+'</div></td><td>'+vo.length+'</td><td><span class="mono">\u20A6'+svc.toLocaleString()+'</span></td><td><span class="mono">\u20A6'+del.toLocaleString()+'</span></td><td><span class="mono" style="color:var(--red)">\u20A6'+plt.toLocaleString()+'</span></td><td>'+pen+'</td><td><button class="btn btn-ghost btn-sm" onclick="openVendorOrders(\''+v.slug+'\')">View Orders</button></td></tr>';
+      }).join('');
+      document.getElementById('overview-table').innerHTML='<table><thead><tr><th>Laundromat</th><th>Orders</th><th>Revenue</th><th>Delivery</th><th>Platform Fee</th><th>Pending</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>';
+    })
+    .catch(function(e){ console.error(e); showToast('Could not load overview', true); });
   }
 
-  /* ── VENDORS TABLE ── */
+  /* ── VENDORS TABLE — CARD LAYOUT ── */
   function renderVendorsTable() {
     var wrap = document.getElementById('vendors-table');
     var showInactive = document.getElementById('show-inactive') && document.getElementById('show-inactive').checked;
-    var list = allVendors.filter(function(v) {
-      return showInactive ? true : (v.active !== false);
-    });
-
-    if (!list.length) {
-      wrap.innerHTML = '<div class="empty-state"><div style="font-size:40px;margin-bottom:12px">🏪</div><div style="font-size:14px">' + (showInactive ? 'No laundromats found' : 'No active laundromats') + '</div></div>';
-      return;
-    }
-    var rows = list.map(function(v) {
-      var date     = v.created_at ? new Date(v.created_at).toLocaleDateString('en-GB') : '—';
+    var list = allVendors.filter(function(v){ return showInactive ? true : (v.active !== false); });
+    if (!list.length) { wrap.innerHTML='<div class="empty-state"><div style="font-size:14px">'+(showInactive?'No laundromats found':'No active laundromats')+'</div></div>'; return; }
+    var cards = list.map(function(v) {
+      var date     = v.created_at ? new Date(v.created_at).toLocaleDateString('en-GB') : '&mdash;';
       var inactive = v.active === false;
       var swatch   = v.brand_color
-        ? '<span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:' + v.brand_color + ';vertical-align:middle;margin-right:6px;border:1px solid rgba(255,255,255,0.1)"></span>' + v.brand_color
-        : '<span style="color:var(--gray);font-size:11px">default</span>';
-      return '<tr style="opacity:' + (inactive ? '0.5' : '1') + '">'
-        + '<td><div class="vendor-name">' + v.name + '</div>'
-        + (inactive ? '<div style="font-size:11px;color:var(--red);margin-top:2px">Inactive</div>' : '') + '</td>'
-        + '<td><span class="mono">' + v.slug + '</span></td>'
-        + '<td style="color:var(--gray)">' + (v.phone || '—') + '</td>'
-        + '<td style="color:var(--gray);font-size:12px;max-width:160px">' + (v.address || '—') + '</td>'
-        + '<td style="font-size:12px;font-family:var(--font-mono)">' + swatch + '</td>'
-        + '<td style="color:var(--gray);font-size:12px">' + date + '</td>'
-        + '<td style="display:flex;gap:6px;flex-wrap:wrap">'
-        + (inactive
-          ? '<button class="btn btn-ghost btn-sm" style="color:var(--green)" onclick="reactivateVendor(\'' + v.id + '\',\'' + v.name + '\')">Reactivate</button>'
-          : '<button class="btn btn-ghost btn-sm" onclick="openVendorOrders(\'' + v.slug + '\')">View Orders</button>'
-          + '<button class="btn btn-ghost btn-sm" onclick="openBrandingModal(\'' + v.id + '\')">Edit Branding</button>'
-          + '<button class="btn btn-ghost btn-sm" onclick="openEditVendorModal(\'' + v.id + '\')">Edit</button>'
-          + '<button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="deleteVendor(\'' + v.id + '\',\'' + v.name + '\')">Deactivate</button>')
-        + '</td>'
-        + '</tr>';
+        ? '<span style="display:inline-block;width:12px;height:12px;border-radius:3px;background:'+v.brand_color+';vertical-align:middle;margin-right:5px;border:1px solid rgba(255,255,255,0.15)"></span><span style="font-size:11px;color:var(--gray)">'+v.brand_color+'</span>'
+        : '<span style="font-size:11px;color:var(--gray)">Default theme</span>';
+      var shortAddr = (v.address||'').split(',').slice(0,2).join(',').trim() || '&mdash;';
+      var fullAddr  = (v.address||'').replace(/"/g,'&quot;');
+      return '<div style="border:1px solid var(--navy3);border-radius:10px;padding:18px 20px;margin-bottom:12px;opacity:'+(inactive?'0.6':'1')+'">'
+        +'<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px">'
+        +'<div><div style="font-weight:700;font-size:15px;color:var(--white)">'+v.name+'</div>'
+        +'<div style="font-size:11px;color:var(--teal);font-family:var(--font-mono);margin-top:2px">/'+v.slug+'</div></div>'
+        +'<div style="display:flex;align-items:center;gap:8px">'+swatch
+        +(inactive?'<span style="font-size:11px;color:var(--red);background:rgba(255,87,87,0.1);padding:2px 8px;border-radius:20px">Inactive</span>':'')
+        +'</div></div>'
+        +'<div style="display:flex;gap:24px;margin-bottom:14px;flex-wrap:wrap">'
+        +'<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);margin-bottom:3px">Phone</div><div style="font-size:13px;color:var(--white)">'+(v.phone||'&mdash;')+'</div></div>'
+        +'<div style="flex:1;min-width:160px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);margin-bottom:3px">Address</div>'
+        +'<div style="font-size:13px;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:340px;cursor:default" title="'+fullAddr+'">'+shortAddr+'</div></div>'
+        +'<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);margin-bottom:3px">Onboarded</div><div style="font-size:13px;color:var(--white)">'+date+'</div></div>'
+        +'</div>'
+        +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">'
+        +(inactive
+          ?'<button class="btn btn-ghost btn-sm" style="color:var(--green)" onclick="reactivateVendor(\''+v.id+'\',\''+v.name+'\')">Reactivate</button>'
+          :'<button class="btn btn-ghost btn-sm" onclick="openVendorOrders(\''+v.slug+'\')">Orders</button>'
+          +'<button class="btn btn-ghost btn-sm" onclick="openEditVendorModal(\''+v.id+'\')">Edit</button>'
+          +'<button class="btn btn-ghost btn-sm" onclick="openBrandingModal(\''+v.id+'\')">Branding</button>'
+          +'<button class="btn btn-ghost btn-sm" style="color:var(--red);margin-left:auto" onclick="deleteVendor(\''+v.id+'\',\''+v.name+'\')">Deactivate</button>')
+        +'</div></div>';
     }).join('');
-    wrap.innerHTML = '<table><thead><tr><th>Laundromat</th><th>Slug</th><th>Phone</th><th>Address</th><th>Brand</th><th>Onboarded</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>';
+    wrap.innerHTML = '<div style="padding:16px">'+cards+'</div>';
   }
 
-  /* ── VENDOR ORDERS ── */
   function openVendorOrders(slug) {
-    var vendor = allVendors.find(function(v){ return v.slug === slug; });
-    if (vendor) {
-      showVendorOrders(vendor);
-    } else {
-      sbFetch('vendors?slug=eq.' + encodeURIComponent(slug) + '&limit=1&select=*')
-        .then(function(r){ return r.json(); })
-        .then(function(d){ if (Array.isArray(d) && d.length) showVendorOrders(d[0]); else showToast('Vendor not found', true); })
-        .catch(function(){ showToast('Could not load vendor', true); });
-    }
+    var vendor = allVendors.find(function(v){ return v.slug===slug; });
+    if (vendor) { showVendorOrders(vendor); }
+    else { sbFetch('vendors?slug=eq.'+encodeURIComponent(slug)+'&limit=1&select=*').then(function(r){ return r.json(); }).then(function(d){ if(Array.isArray(d)&&d.length) showVendorOrders(d[0]); else showToast('Vendor not found',true); }).catch(function(){ showToast('Could not load vendor',true); }); }
   }
 
   function showVendorOrders(vendor) {
     currentDrillVendor = vendor;
-    document.getElementById('drill-title').textContent    = vendor.name + ' — Orders';
-    document.getElementById('drill-subtitle').textContent = '/' + vendor.slug;
-    document.getElementById('drill-total').textContent                = '—';
-    document.getElementById('drill-pending').textContent              = '—';
-    document.getElementById('drill-delivered').textContent            = '—';
-    document.getElementById('drill-revenue').textContent              = '—';
-    document.getElementById('drill-delivery').textContent             = '—';
-    document.getElementById('drill-service-fee').textContent          = '—';
-    document.getElementById('drill-service-fee-platform').textContent = '—';
-    document.getElementById('drill-klinpal-total').textContent        = '—';
-    document.getElementById('drill-table').innerHTML                  = '<div class="loading-state">Loading orders...</div>';
-    var searchEl = document.getElementById('drill-search');
-    var payEl    = document.getElementById('drill-filter-payment');
-    var statEl   = document.getElementById('drill-filter-status');
-    if (searchEl) searchEl.value = '';
-    if (payEl)    payEl.value    = '';
-    if (statEl)   statEl.value   = '';
+    document.getElementById('drill-title').textContent = vendor.name+' \u2014 Orders';
+    document.getElementById('drill-subtitle').textContent = '/'+vendor.slug;
+    ['drill-total','drill-pending','drill-delivered','drill-revenue','drill-delivery','drill-service-fee','drill-service-fee-platform','drill-klinpal-total'].forEach(function(id){ document.getElementById(id).textContent='\u2014'; });
+    document.getElementById('drill-table').innerHTML='<div class="loading-state">Loading orders...</div>';
+    var s=document.getElementById('drill-search'); if(s) s.value='';
+    var p=document.getElementById('drill-filter-payment'); if(p) p.value='';
+    var st=document.getElementById('drill-filter-status'); if(st) st.value='';
     showPage('vendor-orders');
-    // Ensure drivers are loaded for the assignment dropdown
-    if (!allDrivers.length) {
-      sbFetch('drivers?active=eq.true&order=name.asc&select=*')
-        .then(function(r){ return r.json(); })
-        .then(function(data){ allDrivers = Array.isArray(data) ? data : []; })
-        .catch(function(){});
-    }
+    if (!allDrivers.length) { sbFetch('drivers?active=eq.true&order=name.asc&select=*').then(function(r){ return r.json(); }).then(function(d){ allDrivers=Array.isArray(d)?d:[]; }).catch(function(){}); }
     loadVendorOrders(vendor);
     startDrillRealtime(vendor.id);
   }
 
   function loadVendorOrders(vendor) {
-    if (!vendor || !vendor.id) { showToast('No vendor selected', true); return; }
-    document.getElementById('drill-table').innerHTML = '<div class="loading-state">Loading orders...</div>';
-
-    sbFetch('orders?vendor_id=eq.' + vendor.id + '&order=created_at.desc&select=*')
-      .then(function(r){ return r.json(); })
-      .then(function(orders){
-        orders = Array.isArray(orders) ? orders : [];
-        drillOrders = orders; // store for search
-
-        var pending   = orders.filter(function(o){ return o.status === 'Pending'; }).length;
-        var delivered = orders.filter(function(o){ return o.status === 'Delivered'; }).length;
-        var svcRev    = orders.reduce(function(a,o){ return a + (Number(o.subtotal)     || 0); }, 0);
-        var delRev    = orders.reduce(function(a,o){ return a + (Number(o.delivery_fee) || 0); }, 0);
-        var feeRev    = orders.reduce(function(a,o){ return a + (Number(o.service_fee)  || 0); }, 0);
-        var platRev   = orders.reduce(function(a,o){ return a + (Number(o.platform_fee) || 0); }, 0);
-
-        document.getElementById('drill-total').textContent                = orders.length;
-        document.getElementById('drill-pending').textContent              = pending;
-        document.getElementById('drill-delivered').textContent            = delivered;
-        document.getElementById('drill-revenue').textContent              = '₦' + svcRev.toLocaleString();
-        document.getElementById('drill-delivery').textContent             = '₦' + delRev.toLocaleString();
-        document.getElementById('drill-service-fee').textContent          = '₦' + feeRev.toLocaleString();
-        document.getElementById('drill-service-fee-platform').textContent = '₦' + platRev.toLocaleString();
-        document.getElementById('drill-klinpal-total').textContent        = '₦' + (feeRev + platRev).toLocaleString();
-
-        if (!orders.length) {
-          document.getElementById('drill-table').innerHTML = '<div class="empty-state"><div style="font-size:14px;color:var(--gray)">No orders yet</div></div>';
-          return;
-        }
-
-        renderDrillTable(orders);
-      })
-      .catch(function(e){ console.error(e); document.getElementById('drill-table').innerHTML = '<div class="empty-state"><div style="font-size:14px;color:var(--gray)">Could not load orders</div></div>'; });
+    if (!vendor||!vendor.id) { showToast('No vendor selected',true); return; }
+    document.getElementById('drill-table').innerHTML='<div class="loading-state">Loading orders...</div>';
+    sbFetch('orders?vendor_id=eq.'+vendor.id+'&order=created_at.desc&select=*').then(function(r){ return r.json(); })
+    .then(function(orders) {
+      orders = Array.isArray(orders) ? orders : [];
+      drillOrders = orders;
+      var pen = orders.filter(function(o){ return o.status==='Pending'; }).length;
+      var del = orders.filter(function(o){ return o.status==='Delivered'; }).length;
+      var svc = orders.reduce(function(a,o){ return a+(Number(o.subtotal)||0); },0);
+      var dlv = orders.reduce(function(a,o){ return a+(Number(o.delivery_fee)||0); },0);
+      var fee = orders.reduce(function(a,o){ return a+(Number(o.service_fee)||0); },0);
+      var plt = orders.reduce(function(a,o){ return a+(Number(o.platform_fee)||0); },0);
+      document.getElementById('drill-total').textContent=orders.length;
+      document.getElementById('drill-pending').textContent=pen;
+      document.getElementById('drill-delivered').textContent=del;
+      document.getElementById('drill-revenue').textContent='\u20A6'+svc.toLocaleString();
+      document.getElementById('drill-delivery').textContent='\u20A6'+dlv.toLocaleString();
+      document.getElementById('drill-service-fee').textContent='\u20A6'+fee.toLocaleString();
+      document.getElementById('drill-service-fee-platform').textContent='\u20A6'+plt.toLocaleString();
+      document.getElementById('drill-klinpal-total').textContent='\u20A6'+(fee+plt).toLocaleString();
+      if (!orders.length) { document.getElementById('drill-table').innerHTML='<div class="empty-state"><div style="font-size:14px;color:var(--gray)">No orders yet</div></div>'; return; }
+      renderDrillTable(orders);
+    })
+    .catch(function(e){ console.error(e); document.getElementById('drill-table').innerHTML='<div class="empty-state"><div style="font-size:14px;color:var(--gray)">Could not load orders</div></div>'; });
   }
 
   var drillOrders = [];
 
   function applyDrillFilters() {
-    var q       = (document.getElementById('drill-search').value || '').trim().toLowerCase();
-    var payment = (document.getElementById('drill-filter-payment').value || '');
-    var status  = (document.getElementById('drill-filter-status').value || '');
-    var filtered = drillOrders.filter(function(o) {
-      var matchQ = !q || (o.order_id || '').toLowerCase().indexOf(q) > -1;
-      var matchP = !payment || (o.payment_status || 'Pending') === payment;
-      var matchS = !status  || o.status === status;
-      return matchQ && matchP && matchS;
-    });
-    renderDrillTable(filtered);
+    var q       = (document.getElementById('drill-search').value||'').trim().toLowerCase();
+    var payment = (document.getElementById('drill-filter-payment').value||'');
+    var status  = (document.getElementById('drill-filter-status').value||'');
+    renderDrillTable(drillOrders.filter(function(o) {
+      return (!q||(o.order_id||'').toLowerCase().indexOf(q)>-1) && (!payment||(o.payment_status||'Pending')===payment) && (!status||o.status===status);
+    }));
   }
 
   var allDrivers = [];
 
   function renderDrillTable(orders) {
-    var paymentStatuses = ['Pending','Paid','Not Paid'];
-    var statuses = ['Pending','Picked Up','On the Way','Washing','Ready','Delivered','Cancelled'];
+    var payStatuses = ['Pending','Paid','Not Paid'];
+    var statuses    = ['Pending','Picked Up','On the Way','Washing','Ready','Delivered','Cancelled'];
     var rows = orders.map(function(o) {
       var date = o.created_at ? new Date(o.created_at).toLocaleDateString('en-GB') : '';
-      var driverOpts = '<option value="">Unassigned</option>'
-        + allDrivers.filter(function(d){ return d.active; }).map(function(d){
-            return '<option value="' + d.id + '"' + (o.driver_id===d.id?' selected':'') + '>' + d.name + ' (' + d.percentage + '%)</option>';
-          }).join('');
+      var driverOpts = '<option value="">Unassigned</option>' + allDrivers.filter(function(d){ return d.active; }).map(function(d){ return '<option value="'+d.id+'"'+(o.driver_id===d.id?' selected':'')+'>'+d.name+' ('+d.percentage+'%)</option>'; }).join('');
       return '<tr>'
-        + '<td><div class="mono">' + (o.order_id || '—') + '</div><div style="font-size:11px;color:var(--gray);margin-top:3px">' + date + '</div></td>'
-        + '<td><div style="font-weight:600">' + (o.customer_name || '—') + '</div>'
-        +     '<div style="font-size:12px;color:var(--gray)">' + (o.phone || '') + '</div>'
-        +     '<div style="font-size:11px;color:var(--gray);max-width:180px;margin-top:2px">' + (o.address || '') + '</div></td>'
-        + '<td style="font-size:12px;color:var(--gray);max-width:160px">' + (o.items || '—') + '</td>'
-        + '<td><span class="mono">₦' + (Number(o.subtotal) || 0).toLocaleString() + '</span>'
-        +     '<div style="font-size:11px;color:var(--gray);margin-top:3px">+₦' + (Number(o.delivery_fee) || 0).toLocaleString() + ' pickup & delivery</div>'
-        +     '<div style="font-size:11px;color:var(--amber);margin-top:2px">+₦' + (Number(o.service_fee) || 0).toLocaleString() + ' service fee</div>'
-        +     '<div style="font-size:11px;color:var(--red);margin-top:2px">-₦' + (Number(o.platform_fee) || 0).toLocaleString() + ' platform fee</div></td>'
-        + '<td><select class="status-select" onchange="assignDriver(this,\'' + o.order_id + '\',' + (Number(o.delivery_fee)||0) + ',' + JSON.stringify(o.driver_id||null) + ')">' + driverOpts + '</select></td>'
-        + '<td><select class="status-select" onchange="updatePaymentStatus(this,\'' + o.order_id + '\')">'
-        +   paymentStatuses.map(function(s){ return '<option value="' + s + '"' + ((o.payment_status||'Pending')===s?' selected':'') + '>' + s + '</option>'; }).join('')
-        + '</select></td>'
-        + '<td><select class="status-select" onchange="updateStatus(this,\'' + o.order_id + '\')">'
-        +   statuses.map(function(s){ return '<option value="' + s + '"' + (o.status===s?' selected':'') + '>' + s + '</option>'; }).join('')
-        + '</select></td>'
-        + '</tr>';
+        +'<td><div class="mono">'+(o.order_id||'\u2014')+'</div><div style="font-size:11px;color:var(--gray);margin-top:3px">'+date+'</div></td>'
+        +'<td><div style="font-weight:600">'+(o.customer_name||'\u2014')+'</div><div style="font-size:12px;color:var(--gray)">'+(o.phone||'')+'</div><div style="font-size:11px;color:var(--gray);max-width:180px;margin-top:2px">'+(o.address||'')+'</div></td>'
+        +'<td style="font-size:12px;color:var(--gray);max-width:160px">'+(o.items||'\u2014')+'</td>'
+        +'<td><span class="mono">\u20A6'+(Number(o.subtotal)||0).toLocaleString()+'</span><div style="font-size:11px;color:var(--gray);margin-top:3px">+\u20A6'+(Number(o.delivery_fee)||0).toLocaleString()+' delivery</div><div style="font-size:11px;color:var(--amber);margin-top:2px">+\u20A6'+(Number(o.service_fee)||0).toLocaleString()+' svc fee</div><div style="font-size:11px;color:var(--red);margin-top:2px">-\u20A6'+(Number(o.platform_fee)||0).toLocaleString()+' platform</div></td>'
+        +'<td><select class="status-select" onchange="assignDriver(this,\''+o.order_id+'\','+(Number(o.delivery_fee)||0)+','+JSON.stringify(o.driver_id||null)+')">'+driverOpts+'</select></td>'
+        +'<td><select class="status-select" onchange="updatePaymentStatus(this,\''+o.order_id+'\')">'
+        +payStatuses.map(function(s){ return '<option value="'+s+'"'+((o.payment_status||'Pending')===s?' selected':'')+'>'+s+'</option>'; }).join('')
+        +'</select></td>'
+        +'<td><select class="status-select" onchange="updateStatus(this,\''+o.order_id+'\')">'
+        +statuses.map(function(s){ return '<option value="'+s+'"'+(o.status===s?' selected':'')+'>'+s+'</option>'; }).join('')
+        +'</select></td></tr>';
     }).join('');
-
-    document.getElementById('drill-table').innerHTML =
-      '<table><thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Amount</th><th>Rider</th><th>Payment</th><th>Order Status</th></tr></thead><tbody>' + rows + '</tbody></table>';
+    document.getElementById('drill-table').innerHTML='<table><thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Amount</th><th>Rider</th><th>Payment</th><th>Status</th></tr></thead><tbody>'+rows+'</tbody></table>';
   }
 
   function updatePaymentStatus(select, orderId) {
-    sbFetch('orders?order_id=eq.' + orderId, { method: 'PATCH', body: JSON.stringify({ payment_status: select.value }) })
-      .then(function(r){ showToast(r.ok ? 'Payment status updated ✓' : 'Update failed', !r.ok); })
-      .catch(function(){ showToast('Could not update payment status', true); });
+    sbFetch('orders?order_id=eq.'+orderId, { method:'PATCH', body:JSON.stringify({ payment_status: select.value }) }).then(function(r){ showToast(r.ok?'Payment updated \u2713':'Update failed',!r.ok); }).catch(function(){ showToast('Could not update',true); });
   }
 
   function updateStatus(select, orderId) {
-    sbFetch('orders?order_id=eq.' + orderId, { method: 'PATCH', body: JSON.stringify({ status: select.value }) })
-      .then(function(r){ showToast(r.ok ? 'Status updated ✓' : 'Update failed', !r.ok); })
-      .catch(function(){ showToast('Could not update status', true); });
+    sbFetch('orders?order_id=eq.'+orderId, { method:'PATCH', body:JSON.stringify({ status: select.value }) }).then(function(r){ showToast(r.ok?'Status updated \u2713':'Update failed',!r.ok); }).catch(function(){ showToast('Could not update',true); });
   }
 
-  /* ── ADDRESS AUTOCOMPLETE ── */
+  /* ── SHARED ADDRESS AUTOCOMPLETE ── */
   function onAddressInput() {
-    obAddressConfirmed = false; obLat = null; obLng = null;
-    document.getElementById('ob-addr-status').textContent = '';
+    obAddressConfirmed=false; obLat=null; obLng=null;
+    document.getElementById('ob-addr-status').textContent='';
     clearTimeout(obDebounce);
-    var q = document.getElementById('ob-address').value.trim();
-    if (q.length < 3) { document.getElementById('ob-addr-dropdown').style.display = 'none'; return; }
-    obDebounce = setTimeout(function(){ fetchAddressSuggestions(q); }, 350);
+    var q=document.getElementById('ob-address').value.trim();
+    if (q.length<3) { document.getElementById('ob-addr-dropdown').style.display='none'; return; }
+    obDebounce = setTimeout(function(){ fetchPlacesSuggestions(q,'ob'); }, 350);
   }
 
-  function fetchAddressSuggestions(q) {
+  function onEvAddressInput() {
+    evAddressConfirmed=false; evLat=null; evLng=null;
+    var statusEl=document.getElementById('ev-addr-status');
+    if (statusEl) statusEl.textContent='';
+    clearTimeout(evDebounce);
+    var q=document.getElementById('ev-address').value.trim();
+    if (q.length<3) { document.getElementById('ev-addr-dropdown').style.display='none'; return; }
+    evDebounce = setTimeout(function(){ fetchPlacesSuggestions(q,'ev'); }, 350);
+  }
+
+  function fetchPlacesSuggestions(q, prefix) {
     fetch('https://places.googleapis.com/v1/places:autocomplete', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': GOOGLE_MAPS_KEY },
-      body: JSON.stringify({
-        input: q,
-        includedRegionCodes: ['ng'],
-        locationBias: { circle: { center: { latitude: 6.5244, longitude: 3.3792 }, radius: 50000 } }
-      })
+      method:'POST', headers:{'Content-Type':'application/json','X-Goog-Api-Key':GOOGLE_MAPS_KEY},
+      body:JSON.stringify({ input:q, includedRegionCodes:['ng'], locationBias:{ circle:{ center:{ latitude:6.5244, longitude:3.3792 }, radius:50000 } } })
     })
     .then(function(r){ return r.json(); })
-    .then(function(data){
-      var dd       = document.getElementById('ob-addr-dropdown');
-      var input    = document.getElementById('ob-address');
-      var results  = (data.suggestions || []).filter(function(s){ return s.placePrediction; });
-      if (!results.length) { dd.style.display = 'none'; return; }
-      var rect = input.getBoundingClientRect();
-      dd.style.top = (rect.bottom + 4) + 'px';
-      dd.style.left = rect.left + 'px';
-      dd.style.width = rect.width + 'px';
-      dd.innerHTML = results.map(function(r, i){
-        var pred = r.placePrediction;
-        var main = pred.structuredFormat && pred.structuredFormat.mainText ? pred.structuredFormat.mainText.text : pred.text.text;
-        var sub  = pred.structuredFormat && pred.structuredFormat.secondaryText ? pred.structuredFormat.secondaryText.text : '';
-        return '<div style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #1a4060;font-size:13px"'
-          + ' onmouseover="this.style.background=\'#1a4060\'" onmouseout="this.style.background=\'\'"'
-          + ' onclick="selectObAddress(' + i + ')">'
-          + '<div style="color:#e8f4f0;font-weight:500">' + main + '</div>'
-          + '<div style="color:#8a9ab5;font-size:11px">' + sub + '</div>'
-          + '</div>';
+    .then(function(data) {
+      var dd      = document.getElementById(prefix+'-addr-dropdown');
+      var input   = document.getElementById(prefix+'-address');
+      var results = (data.suggestions||[]).filter(function(s){ return s.placePrediction; });
+      if (!results.length) { dd.style.display='none'; return; }
+      var rect=input.getBoundingClientRect();
+      dd.style.top=(rect.bottom+4)+'px'; dd.style.left=rect.left+'px'; dd.style.width=rect.width+'px';
+      dd.innerHTML=results.map(function(r,i){
+        var pred=r.placePrediction;
+        var main=pred.structuredFormat&&pred.structuredFormat.mainText?pred.structuredFormat.mainText.text:pred.text.text;
+        var sub=pred.structuredFormat&&pred.structuredFormat.secondaryText?pred.structuredFormat.secondaryText.text:'';
+        return '<div style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--navy3);font-size:13px" onmouseover="this.style.background=\'var(--navy3)\'" onmouseout="this.style.background=\'\'" onclick="selectPlaceAddress('+i+',\''+prefix+'\')">'
+          +'<div style="color:var(--white);font-weight:500">'+main+'</div>'
+          +'<div style="color:var(--gray);font-size:11px">'+sub+'</div></div>';
       }).join('');
-      dd.__results = results;
-      dd.style.display = 'block';
+      dd.__results=results; dd.style.display='block';
     })
-    .catch(function(){ document.getElementById('ob-addr-dropdown').style.display = 'none'; });
+    .catch(function(){ document.getElementById(prefix+'-addr-dropdown').style.display='none'; });
   }
 
-  function selectObAddress(idx) {
-    var dd     = document.getElementById('ob-addr-dropdown');
-    var result = dd.__results[idx];
-    var pred   = result.placePrediction;
-    var full   = pred.text.text;
-    document.getElementById('ob-address').value = full;
-    dd.style.display = 'none';
-    var status = document.getElementById('ob-addr-status');
-    status.textContent = 'Getting coordinates...';
-    status.style.color = 'var(--teal)';
-
-    // Geocode placeId to get lat/lng
-    fetch('https://places.googleapis.com/v1/places/' + pred.placeId + '?fields=location', {
-      headers: { 'X-Goog-Api-Key': GOOGLE_MAPS_KEY, 'X-Goog-FieldMask': 'location' }
+  function selectPlaceAddress(idx, prefix) {
+    var dd=document.getElementById(prefix+'-addr-dropdown');
+    var pred=dd.__results[idx].placePrediction;
+    document.getElementById(prefix+'-address').value=pred.text.text;
+    dd.style.display='none';
+    var status=document.getElementById(prefix+'-addr-status');
+    if (status) { status.textContent='Getting coordinates...'; status.style.color='var(--teal)'; }
+    fetch('https://places.googleapis.com/v1/places/'+pred.placeId+'?fields=location', {
+      headers:{'X-Goog-Api-Key':GOOGLE_MAPS_KEY,'X-Goog-FieldMask':'location'}
     })
     .then(function(r){ return r.json(); })
-    .then(function(data){
-      obLat = data.location.latitude;
-      obLng = data.location.longitude;
-      obAddressConfirmed = true;
-      status.textContent = '\u2713 ' + obLat.toFixed(4) + ', ' + obLng.toFixed(4);
+    .then(function(data) {
+      var lat=data.location.latitude, lng=data.location.longitude;
+      if (prefix==='ob') { obLat=lat; obLng=lng; obAddressConfirmed=true; }
+      else if (prefix==='ev') { evLat=lat; evLng=lng; evAddressConfirmed=true; }
+      if (status) { status.textContent='\u2713 Coordinates captured'; status.style.color='var(--teal)'; }
     })
-    .catch(function(){
-      status.textContent = 'Could not get coordinates';
-      status.style.color = 'var(--red)';
-    });
+    .catch(function(){ if(status){ status.textContent='Could not get coordinates'; status.style.color='var(--red)'; } });
   }
 
-  document.addEventListener('click', function(e){
-    var dd    = document.getElementById('ob-addr-dropdown');
-    var input = document.getElementById('ob-address');
-    if (dd && input && !input.contains(e.target) && !dd.contains(e.target)) dd.style.display = 'none';
+  document.addEventListener('click', function(e) {
+    ['ob-addr-dropdown','ev-addr-dropdown'].forEach(function(id) {
+      var dd=document.getElementById(id);
+      var inp=document.getElementById(id.replace('-dropdown','').replace('addr','address'));
+      if (dd && inp && !dd.contains(e.target) && !inp.contains(e.target)) dd.style.display='none';
+    });
   });
 
   /* ── ONBOARD ── */
   function onboardVendor() {
-    var name       = document.getElementById('ob-name').value.trim();
-    var slug       = document.getElementById('ob-slug').value.trim();
-    var phone      = document.getElementById('ob-phone').value.trim();
-    var house      = document.getElementById('ob-house').value.trim();
-    var street     = document.getElementById('ob-address').value.trim();
-    var telegram   = document.getElementById('ob-telegram').value.trim();
-    var brandColor = document.getElementById('ob-brand-color').value.trim() || null;
-    var logoUrl    = document.getElementById('ob-logo-url').value.trim()    || null;
-
-    if (!name || !slug) { showToast('Name and slug are required', true); return; }
-    if (!obAddressConfirmed || !obLat || !obLng) { showToast('Please select a street from the suggestions', true); return; }
-    if (brandColor && !/^#[0-9a-fA-F]{6}$/.test(brandColor)) { showToast('Brand colour must be a valid hex e.g. #7c3aed', true); return; }
-
-    var address = house ? house + ', ' + street : street;
-    var btn = document.getElementById('ob-btn');
-    btn.disabled = true; btn.textContent = 'Onboarding...';
-
-    sbFetch('vendors', {
-      method: 'POST',
-      body: JSON.stringify({ name: name, slug: slug, phone: phone, address: address, lat: obLat, lng: obLng, telegram_chat_id: telegram || null, brand_color: brandColor, logo_url: logoUrl }),
-    })
+    var name=document.getElementById('ob-name').value.trim(), slug=document.getElementById('ob-slug').value.trim();
+    var phone=document.getElementById('ob-phone').value.trim(), house=document.getElementById('ob-house').value.trim();
+    var street=document.getElementById('ob-address').value.trim(), telegram=document.getElementById('ob-telegram').value.trim();
+    var brandColor=document.getElementById('ob-brand-color').value.trim()||null, logoUrl=document.getElementById('ob-logo-url').value.trim()||null;
+    if (!name||!slug) { showToast('Name and slug are required',true); return; }
+    if (!obAddressConfirmed||!obLat||!obLng) { showToast('Please select a street from the suggestions',true); return; }
+    if (brandColor&&!/^#[0-9a-fA-F]{6}$/.test(brandColor)) { showToast('Brand colour must be a valid hex',true); return; }
+    var address=house?house+', '+street:street;
+    var btn=document.getElementById('ob-btn'); btn.disabled=true; btn.textContent='Onboarding...';
+    sbFetch('vendors', { method:'POST', body:JSON.stringify({ name:name, slug:slug, phone:phone, address:address, lat:obLat, lng:obLng, telegram_chat_id:telegram||null, brand_color:brandColor, logo_url:logoUrl }) })
     .then(function(r) {
-      if (!r.ok) {
-        return r.json().then(function(e){ showToast(e.message || 'Onboarding failed', true); });
-      }
-      showToast(name + ' onboarded ✓ — share their slug to complete registration');
-      ['ob-name','ob-slug','ob-phone','ob-house','ob-address','ob-telegram','ob-brand-color','ob-logo-url'].forEach(function(id){ document.getElementById(id).value = ''; });
-      obLat = null; obLng = null; obAddressConfirmed = false;
-      document.getElementById('ob-addr-status').textContent = '';
-      loadOverview();
-      setTimeout(function(){ showPage('vendors'); }, 1500);
+      if (!r.ok) { return r.json().then(function(e){ showToast(e.message||'Onboarding failed',true); }); }
+      showToast(name+' onboarded \u2713');
+      ['ob-name','ob-slug','ob-phone','ob-house','ob-address','ob-telegram','ob-brand-color','ob-logo-url'].forEach(function(id){ document.getElementById(id).value=''; });
+      obLat=null; obLng=null; obAddressConfirmed=false;
+      document.getElementById('ob-addr-status').textContent='';
+      loadOverview(); setTimeout(function(){ showPage('vendors'); }, 1500);
     })
-    .catch(function(){ showToast('Could not onboard vendor', true); })
-    .finally(function(){ btn.disabled = false; btn.textContent = 'Onboard Laundromat'; });
+    .catch(function(){ showToast('Could not onboard vendor',true); })
+    .finally(function(){ btn.disabled=false; btn.textContent='Onboard Laundromat'; });
   }
 
   /* ── ASSIGN DRIVER ── */
   function assignDriver(select, orderId, deliveryFee, prevDriverId) {
-    var driverId = select.value || null;
-    var driver   = driverId ? allDrivers.find(function(d){ return d.id === driverId; }) : null;
-    var riderFee = driver ? Math.round(deliveryFee * (driver.percentage / 100)) : 0;
-    var klinpalDel = deliveryFee - riderFee;
-
-    sbFetch('orders?order_id=eq.' + orderId, {
-      method: 'PATCH',
-      body: JSON.stringify({ driver_id: driverId, rider_fee: riderFee, klinpal_delivery_revenue: klinpalDel }),
-    })
+    var driverId=select.value||null, driver=driverId?allDrivers.find(function(d){ return d.id===driverId; }):null;
+    var riderFee=driver?Math.round(deliveryFee*(driver.percentage/100)):0, klinpalDel=deliveryFee-riderFee;
+    sbFetch('orders?order_id=eq.'+orderId, { method:'PATCH', body:JSON.stringify({ driver_id:driverId, rider_fee:riderFee, klinpal_delivery_revenue:klinpalDel }) })
     .then(function(r) {
-      if (!r.ok) { showToast('Assignment failed', true); return; }
-      showToast(driver ? driver.name + ' assigned ✓' : 'Driver removed ✓');
-      // Update local drillOrders
-      var o = drillOrders.find(function(x){ return x.order_id === orderId; });
-      if (o) { o.driver_id = driverId; o.rider_fee = riderFee; o.klinpal_delivery_revenue = klinpalDel; }
-      // Send Telegram notification to driver
-      if (driver && driver.telegram_chat_id) {
-        var orderObj = drillOrders.find(function(x){ return x.order_id === orderId; }) || {};
-        var msg = '🛵 New Order Assigned!\n\n'
-          + 'Order ID: ' + orderId + '\n'
-          + 'Customer: ' + (orderObj.customer_name || '—') + '\n'
-          + 'Phone: ' + (orderObj.phone || '—') + '\n'
-          + 'Address: ' + (orderObj.address || '—') + '\n'
-          + 'Items: ' + (orderObj.items || '—') + '\n'
-          + 'Your cut: ₦' + riderFee.toLocaleString();
-        sendTelegram(driver.telegram_chat_id, msg);
+      if (!r.ok) { showToast('Assignment failed',true); return; }
+      showToast(driver?driver.name+' assigned \u2713':'Driver removed \u2713');
+      var o=drillOrders.find(function(x){ return x.order_id===orderId; });
+      if (o) { o.driver_id=driverId; o.rider_fee=riderFee; o.klinpal_delivery_revenue=klinpalDel; }
+      if (driver&&driver.telegram_chat_id) {
+        var orderObj=drillOrders.find(function(x){ return x.order_id===orderId; })||{};
+        sendTelegram(driver.telegram_chat_id,'\uD83D\uDEF5 New Order Assigned!\n\nOrder ID: '+orderId+'\nCustomer: '+(orderObj.customer_name||'\u2014')+'\nPhone: '+(orderObj.phone||'\u2014')+'\nAddress: '+(orderObj.address||'\u2014')+'\nItems: '+(orderObj.items||'\u2014')+'\nYour cut: \u20A6'+riderFee.toLocaleString());
       }
     })
-    .catch(function(){ showToast('Could not assign driver', true); });
+    .catch(function(){ showToast('Could not assign driver',true); });
   }
 
   function sendTelegram(chatId, text) {
-    fetch('https://api.telegram.org/bot8021952716:AAFg_CsHXdp3SGl6guMiPTqHKs9cPvpv_7o/sendMessage', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: chatId, text: text }),
-    }).catch(function(e){ console.error('Telegram error:', e); });
+    fetch('https://api.telegram.org/bot8021952716:AAFg_CsHXdp3SGl6guMiPTqHKs9cPvpv_7o/sendMessage', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ chat_id:chatId, text:text }) }).catch(function(){});
   }
 
-  function openAddRiderModal() {
-    ['rider-name','rider-phone','rider-percentage','rider-telegram'].forEach(function(id){ document.getElementById(id).value = ''; });
-    document.getElementById('add-rider-modal').classList.add('open');
-  }
-
-  function closeAddRiderModal() {
-    document.getElementById('add-rider-modal').classList.remove('open');
-  }
+  function openAddRiderModal() { ['rider-name','rider-phone','rider-percentage','rider-telegram'].forEach(function(id){ document.getElementById(id).value=''; }); document.getElementById('add-rider-modal').classList.add('open'); }
+  function closeAddRiderModal() { document.getElementById('add-rider-modal').classList.remove('open'); }
 
   /* ── RIDERS ── */
   function loadRiders() {
-    document.getElementById('riders-list').innerHTML = '<div class="loading-state">Loading...</div>';
-    // Fetch riders and all orders with rider_fee in parallel
+    document.getElementById('riders-list').innerHTML='<div class="loading-state">Loading...</div>';
     Promise.all([
       sbFetch('drivers?order=created_at.desc&select=*').then(function(r){ return r.json(); }),
       sbFetch('orders?driver_id=not.is.null&select=driver_id,rider_fee,klinpal_delivery_revenue,status').then(function(r){ return r.json(); })
     ])
     .then(function(results) {
-      allDrivers = Array.isArray(results[0]) ? results[0] : [];
-      var allRiderOrders = Array.isArray(results[1]) ? results[1] : [];
-
-      // Overview stats
-      var totalPayout  = allRiderOrders.reduce(function(a,o){ return a + (Number(o.rider_fee)||0); }, 0);
-      var totalKlinpal = allRiderOrders.reduce(function(a,o){ return a + (Number(o.klinpal_delivery_revenue)||0); }, 0);
-      document.getElementById('rider-stat-count').textContent   = allDrivers.length;
-      document.getElementById('rider-stat-payout').textContent  = '₦' + totalPayout.toLocaleString();
-      document.getElementById('rider-stat-klinpal').textContent = '₦' + totalKlinpal.toLocaleString();
-
-      renderRidersList(allRiderOrders);
+      allDrivers=Array.isArray(results[0])?results[0]:[];
+      var rOrders=Array.isArray(results[1])?results[1]:[];
+      document.getElementById('rider-stat-count').textContent=allDrivers.length;
+      document.getElementById('rider-stat-payout').textContent='\u20A6'+rOrders.reduce(function(a,o){ return a+(Number(o.rider_fee)||0); },0).toLocaleString();
+      document.getElementById('rider-stat-klinpal').textContent='\u20A6'+rOrders.reduce(function(a,o){ return a+(Number(o.klinpal_delivery_revenue)||0); },0).toLocaleString();
+      renderRidersList(rOrders);
     })
-    .catch(function(){ document.getElementById('riders-list').innerHTML = '<div class="empty-state"><div style="font-size:13px">Could not load riders</div></div>'; });
+    .catch(function(){ document.getElementById('riders-list').innerHTML='<div class="empty-state"><div style="font-size:13px">Could not load riders</div></div>'; });
   }
 
   function renderRidersList(allRiderOrders) {
-    var wrap = document.getElementById('riders-list');
-    if (!allDrivers.length) {
-      wrap.innerHTML = '<div class="empty-state"><div style="font-size:40px;margin-bottom:12px">🛵</div><div style="font-size:14px">No riders added yet</div></div>';
-      return;
-    }
-    var rows = allDrivers.map(function(d) {
-      var dOrders    = allRiderOrders.filter(function(o){ return o.driver_id === d.id; });
-      var earned     = dOrders.reduce(function(a,o){ return a + (Number(o.rider_fee)||0); }, 0);
-      var fulfilled  = dOrders.filter(function(o){ return o.status === 'Delivered'; }).length;
-      return '<tr>'
-        + '<td style="font-weight:600">' + d.name + '</td>'
-        + '<td style="color:var(--gray)">' + d.phone + '</td>'
-        + '<td><span style="font-family:var(--font-mono);color:var(--teal)">' + d.percentage + '%</span><span style="font-size:11px;color:var(--gray)"> of delivery</span></td>'
-        + '<td style="font-family:var(--font-mono)">' + dOrders.length + ' assigned · ' + fulfilled + ' delivered</td>'
-        + '<td style="font-family:var(--font-mono);color:var(--green)">₦' + earned.toLocaleString() + '</td>'
-        + '<td style="font-size:12px;color:var(--gray)">' + (d.telegram_chat_id || '—') + '</td>'
-        + '<td><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"' + (d.active?' checked':'') + ' onchange="toggleRider(\'' + d.id + '\',this.checked)" style="width:16px;height:16px;accent-color:var(--teal)"><span style="font-size:13px;color:' + (d.active?'var(--green)':'var(--gray)') + '">' + (d.active?'Active':'Inactive') + '</span></label></td>'
-        + '<td style="display:flex;gap:6px">'
-        +   '<button class="btn btn-ghost btn-sm" onclick="openRiderDrill(\'' + d.id + '\')">View</button>'
-        +   '<button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="removeRider(\'' + d.id + '\',\'' + d.name + '\')">Remove</button>'
-        + '</td>'
-        + '</tr>';
+    var wrap=document.getElementById('riders-list');
+    if (!allDrivers.length) { wrap.innerHTML='<div class="empty-state"><div style="font-size:40px;margin-bottom:12px">\uD83D\uDEF5</div><div style="font-size:14px">No riders added yet</div></div>'; return; }
+    var rows=allDrivers.map(function(d) {
+      var dO=allRiderOrders.filter(function(o){ return o.driver_id===d.id; });
+      var earned=dO.reduce(function(a,o){ return a+(Number(o.rider_fee)||0); },0);
+      var fulfilled=dO.filter(function(o){ return o.status==='Delivered'; }).length;
+      return '<tr><td style="font-weight:600">'+d.name+'</td><td style="color:var(--gray)">'+d.phone+'</td>'
+        +'<td><span style="font-family:var(--font-mono);color:var(--teal)">'+d.percentage+'%</span><span style="font-size:11px;color:var(--gray)"> of delivery</span></td>'
+        +'<td style="font-family:var(--font-mono)">'+dO.length+' assigned \xB7 '+fulfilled+' delivered</td>'
+        +'<td style="font-family:var(--font-mono);color:var(--green)">\u20A6'+earned.toLocaleString()+'</td>'
+        +'<td style="font-size:12px;color:var(--gray)">'+(d.telegram_chat_id||'\u2014')+'</td>'
+        +'<td><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"'+(d.active?' checked':'')+' onchange="toggleRider(\''+d.id+'\',this.checked)" style="width:16px;height:16px;accent-color:var(--teal)"><span style="font-size:13px;color:'+(d.active?'var(--green)':'var(--gray)')+'">'+( d.active?'Active':'Inactive')+'</span></label></td>'
+        +'<td style="display:flex;gap:6px"><button class="btn btn-ghost btn-sm" onclick="openRiderDrill(\''+d.id+'\')">View</button><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="removeRider(\''+d.id+'\',\''+d.name+'\')">Remove</button></td></tr>';
     }).join('');
-    wrap.innerHTML = '<table><thead><tr><th>Name</th><th>Phone</th><th>Earnings</th><th>Orders</th><th>Total Earned</th><th>Telegram ID</th><th>Status</th><th></th></tr></thead><tbody>' + rows + '</tbody></table>';
+    wrap.innerHTML='<table><thead><tr><th>Name</th><th>Phone</th><th>Earnings</th><th>Orders</th><th>Total Earned</th><th>Telegram</th><th>Status</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>';
   }
 
-  /* ── RIDER DRILL-IN ── */
-  var currentRiderId = null;
+  var currentRiderId=null;
 
   function openRiderDrill(driverId) {
-    var driver = allDrivers.find(function(d){ return d.id === driverId; });
-    if (!driver) return;
-    currentRiderId = driverId;
-    document.getElementById('rider-drill').style.display = 'block';
-    document.getElementById('rider-drill-name').textContent = driver.name;
-    document.getElementById('rider-drill-sub').textContent  = driver.phone + ' · ' + driver.percentage + '% of delivery fee';
-    document.getElementById('rd-pct').textContent = driver.percentage + '%';
-    document.getElementById('rider-drill-table').innerHTML = '<div class="loading-state">Loading...</div>';
-
-    sbFetch('orders?driver_id=eq.' + driverId + '&order=created_at.desc&select=order_id,customer_name,address,items,delivery_fee,rider_fee,status,created_at,payment_status')
-      .then(function(r){ return r.json(); })
-      .then(function(orders) {
-        orders = Array.isArray(orders) ? orders : [];
-        var fulfilled = orders.filter(function(o){ return o.status === 'Delivered'; }).length;
-        var earned    = orders.reduce(function(a,o){ return a + (Number(o.rider_fee)||0); }, 0);
-        document.getElementById('rd-orders').textContent    = orders.length;
-        document.getElementById('rd-fulfilled').textContent = fulfilled;
-        document.getElementById('rd-earned').textContent    = '₦' + earned.toLocaleString();
-
-        if (!orders.length) {
-          document.getElementById('rider-drill-table').innerHTML = '<div class="empty-state"><div style="font-size:14px;color:var(--gray)">No orders assigned yet</div></div>';
-          return;
-        }
-        var rows = orders.map(function(o) {
-          var date = o.created_at ? new Date(o.created_at).toLocaleDateString('en-GB') : '';
-          var statusColor = o.status === 'Delivered' ? 'var(--green)' : o.status === 'Cancelled' ? 'var(--red)' : 'var(--amber)';
-          return '<tr>'
-            + '<td><div class="mono" style="color:var(--teal)">' + (o.order_id||'—') + '</div><div style="font-size:11px;color:var(--gray)">' + date + '</div></td>'
-            + '<td><div style="font-weight:600">' + (o.customer_name||'—') + '</div><div style="font-size:11px;color:var(--gray);max-width:160px">' + (o.address||'') + '</div></td>'
-            + '<td style="font-size:12px;color:var(--gray)">' + (o.items||'—') + '</td>'
-            + '<td><div style="font-family:var(--font-mono)">₦' + (Number(o.delivery_fee)||0).toLocaleString() + '</div><div style="font-size:11px;color:var(--green)">Rider cut: ₦' + (Number(o.rider_fee)||0).toLocaleString() + '</div></td>'
-            + '<td><span style="color:' + statusColor + ';font-size:13px;font-weight:600">' + (o.status||'—') + '</span></td>'
-            + '</tr>';
-        }).join('');
-        document.getElementById('rider-drill-table').innerHTML =
-          '<table><thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Delivery / Cut</th><th>Status</th></tr></thead><tbody>' + rows + '</tbody></table>';
-      })
-      .catch(function(){ document.getElementById('rider-drill-table').innerHTML = '<div class="empty-state"><div style="font-size:13px;color:var(--gray)">Could not load orders</div></div>'; });
+    var driver=allDrivers.find(function(d){ return d.id===driverId; }); if(!driver) return;
+    currentRiderId=driverId;
+    document.getElementById('rider-drill').style.display='block';
+    document.getElementById('rider-drill-name').textContent=driver.name;
+    document.getElementById('rider-drill-sub').textContent=driver.phone+' \xB7 '+driver.percentage+'% of delivery fee';
+    document.getElementById('rd-pct').textContent=driver.percentage+'%';
+    document.getElementById('rider-drill-table').innerHTML='<div class="loading-state">Loading...</div>';
+    sbFetch('orders?driver_id=eq.'+driverId+'&order=created_at.desc&select=order_id,customer_name,address,items,delivery_fee,rider_fee,status,created_at,payment_status')
+    .then(function(r){ return r.json(); })
+    .then(function(orders) {
+      orders=Array.isArray(orders)?orders:[];
+      var fulfilled=orders.filter(function(o){ return o.status==='Delivered'; }).length;
+      var earned=orders.reduce(function(a,o){ return a+(Number(o.rider_fee)||0); },0);
+      document.getElementById('rd-orders').textContent=orders.length;
+      document.getElementById('rd-fulfilled').textContent=fulfilled;
+      document.getElementById('rd-earned').textContent='\u20A6'+earned.toLocaleString();
+      if (!orders.length) { document.getElementById('rider-drill-table').innerHTML='<div class="empty-state"><div style="font-size:14px;color:var(--gray)">No orders assigned yet</div></div>'; return; }
+      var rows=orders.map(function(o) {
+        var date=o.created_at?new Date(o.created_at).toLocaleDateString('en-GB'):'';
+        var sc=o.status==='Delivered'?'var(--green)':o.status==='Cancelled'?'var(--red)':'var(--amber)';
+        return '<tr><td><div class="mono" style="color:var(--teal)">'+(o.order_id||'\u2014')+'</div><div style="font-size:11px;color:var(--gray)">'+date+'</div></td>'
+          +'<td><div style="font-weight:600">'+(o.customer_name||'\u2014')+'</div><div style="font-size:11px;color:var(--gray);max-width:160px">'+(o.address||'')+'</div></td>'
+          +'<td style="font-size:12px;color:var(--gray)">'+(o.items||'\u2014')+'</td>'
+          +'<td><div style="font-family:var(--font-mono)">\u20A6'+(Number(o.delivery_fee)||0).toLocaleString()+'</div><div style="font-size:11px;color:var(--green)">Rider cut: \u20A6'+(Number(o.rider_fee)||0).toLocaleString()+'</div></td>'
+          +'<td><span style="color:'+sc+';font-size:13px;font-weight:600">'+(o.status||'\u2014')+'</span></td></tr>';
+      }).join('');
+      document.getElementById('rider-drill-table').innerHTML='<table><thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Delivery/Cut</th><th>Status</th></tr></thead><tbody>'+rows+'</tbody></table>';
+    })
+    .catch(function(){ document.getElementById('rider-drill-table').innerHTML='<div class="empty-state"><div style="font-size:13px;color:var(--gray)">Could not load orders</div></div>'; });
   }
 
-  function closeRiderDrill() {
-    document.getElementById('rider-drill').style.display = 'none';
-    currentRiderId = null;
-  }
+  function closeRiderDrill() { document.getElementById('rider-drill').style.display='none'; currentRiderId=null; }
 
   function addRider() {
-    var name       = document.getElementById('rider-name').value.trim();
-    var phone      = document.getElementById('rider-phone').value.trim().replace(/\s+/g,'');
-    var pct        = parseInt(document.getElementById('rider-percentage').value) || 60;
-    var telegram   = document.getElementById('rider-telegram').value.trim() || null;
-    if (!name)  { showToast('Enter rider name', true); return; }
-    if (!phone) { showToast('Enter phone number', true); return; }
-
-    var btn = document.getElementById('add-rider-btn');
-    btn.disabled = true; btn.textContent = 'Adding...';
-
-    sbFetch('drivers', {
-      method: 'POST',
-      body: JSON.stringify({ name: name, phone: phone, percentage: pct, telegram_chat_id: telegram, active: true }),
-    })
+    var name=document.getElementById('rider-name').value.trim(), phone=document.getElementById('rider-phone').value.trim().replace(/\s+/g,'');
+    var pct=parseInt(document.getElementById('rider-percentage').value)||60, telegram=document.getElementById('rider-telegram').value.trim()||null;
+    if (!name) { showToast('Enter rider name',true); return; }
+    if (!phone) { showToast('Enter phone number',true); return; }
+    var btn=document.getElementById('add-rider-btn'); btn.disabled=true; btn.textContent='Adding...';
+    sbFetch('drivers', { method:'POST', body:JSON.stringify({ name:name, phone:phone, percentage:pct, telegram_chat_id:telegram, active:true }) })
     .then(function(r) {
-      if (r.ok) {
-        showToast(name + ' added ✓ — share register.html link with them');
-        closeAddRiderModal();
-        loadRiders();
-      } else {
-        return r.json().then(function(e){ showToast(e.message && e.message.indexOf('unique')>-1 ? 'Phone already registered' : 'Could not add rider', true); });
-      }
+      if (r.ok) { showToast(name+' added \u2713'); closeAddRiderModal(); loadRiders(); }
+      else { return r.json().then(function(e){ showToast(e.message&&e.message.indexOf('unique')>-1?'Phone already registered':'Could not add rider',true); }); }
     })
-    .catch(function(){ showToast('Could not add rider', true); })
-    .finally(function(){ btn.disabled = false; btn.textContent = 'Add Rider'; });
+    .catch(function(){ showToast('Could not add rider',true); })
+    .finally(function(){ btn.disabled=false; btn.textContent='Add Rider'; });
   }
 
   function toggleRider(id, active) {
-    sbFetch('drivers?id=eq.' + id, { method: 'PATCH', body: JSON.stringify({ active: active }) })
-      .then(function(r){ showToast(r.ok ? (active?'Rider activated ✓':'Rider deactivated ✓') : 'Update failed', !r.ok); loadRiders(); })
-      .catch(function(){ showToast('Could not update', true); });
+    sbFetch('drivers?id=eq.'+id, { method:'PATCH', body:JSON.stringify({ active:active }) }).then(function(r){ showToast(r.ok?(active?'Rider activated \u2713':'Rider deactivated \u2713'):'Update failed',!r.ok); loadRiders(); }).catch(function(){ showToast('Could not update',true); });
   }
 
   function removeRider(id, name) {
-    if (!confirm('Remove "' + name + '" from riders?')) return;
-    sbFetch('drivers?id=eq.' + id, { method: 'DELETE' })
-      .then(function(r){ showToast(r.ok ? 'Rider removed ✓' : 'Could not remove', !r.ok); loadRiders(); })
-      .catch(function(){ showToast('Could not remove', true); });
+    if (!confirm('Remove "'+name+'" from riders?')) return;
+    sbFetch('drivers?id=eq.'+id, { method:'DELETE' }).then(function(r){ showToast(r.ok?'Rider removed \u2713':'Could not remove',!r.ok); loadRiders(); }).catch(function(){ showToast('Could not remove',true); });
   }
 
   function reactivateVendor(vendorId, vendorName) {
-    if (!confirm('Reactivate "' + vendorName + '"?\n\nThey will be able to log in again immediately.')) return;
-    sbFetch('vendors?id=eq.' + vendorId, { method: 'PATCH', body: JSON.stringify({ active: true }) })
-      .then(function(r) {
-        if (r.ok) {
-          var v = allVendors.find(function(v){ return v.id === vendorId; });
-          if (v) v.active = true;
-          showToast(vendorName + ' reactivated ✓');
-          renderVendorsTable();
-          loadOverview();
-        } else {
-          showToast('Could not reactivate vendor', true);
-        }
-      })
-      .catch(function(){ showToast('Could not reactivate vendor', true); });
+    if (!confirm('Reactivate "'+vendorName+'"?')) return;
+    sbFetch('vendors?id=eq.'+vendorId, { method:'PATCH', body:JSON.stringify({ active:true }) })
+    .then(function(r) {
+      if (r.ok) { var v=allVendors.find(function(v){ return v.id===vendorId; }); if(v) v.active=true; showToast(vendorName+' reactivated \u2713'); renderVendorsTable(); loadOverview(); }
+      else showToast('Could not reactivate',true);
+    }).catch(function(){ showToast('Could not reactivate',true); });
   }
 
   /* ── SETTINGS ── */
-  var globalPlatformFeePct = 10;
-
+  var globalPlatformFeePct=10;
   function loadSettings() {
-    sbFetch('platform_settings?key=eq.platform_fee_pct&limit=1&select=value')
-      .then(function(r){ return r.json(); })
-      .then(function(data) {
-        var pct = Array.isArray(data) && data.length ? parseFloat(data[0].value) : 10;
-        globalPlatformFeePct = pct;
-        document.getElementById('settings-platform-fee').value = pct;
-        document.getElementById('settings-fee-preview').textContent = pct + '%';
-      })
-      .catch(function(){ showToast('Could not load settings', true); });
+    sbFetch('platform_settings?key=eq.platform_fee_pct&limit=1&select=value').then(function(r){ return r.json(); })
+    .then(function(data) {
+      var pct=Array.isArray(data)&&data.length?parseFloat(data[0].value):10;
+      globalPlatformFeePct=pct;
+      document.getElementById('settings-platform-fee').value=pct;
+      document.getElementById('settings-fee-preview').textContent=pct+'%';
+    }).catch(function(){ showToast('Could not load settings',true); });
   }
 
   function saveGlobalPlatformFee() {
-    var pct = parseFloat(document.getElementById('settings-platform-fee').value);
-    if (isNaN(pct) || pct < 0 || pct > 100) { showToast('Enter a valid percentage (0–100)', true); return; }
-    sbFetch('platform_settings?key=eq.platform_fee_pct', {
-      method: 'PATCH', body: JSON.stringify({ value: String(pct) }),
-    })
+    var pct=parseFloat(document.getElementById('settings-platform-fee').value);
+    if (isNaN(pct)||pct<0||pct>100) { showToast('Enter a valid percentage (0\u2013100)',true); return; }
+    sbFetch('platform_settings?key=eq.platform_fee_pct', { method:'PATCH', body:JSON.stringify({ value:String(pct) }) })
     .then(function(r) {
-      if (r.ok) { globalPlatformFeePct = pct; document.getElementById('settings-fee-preview').textContent = pct + '%'; showToast('Platform fee updated to ' + pct + '% ✓'); }
-      else showToast('Save failed', true);
-    })
-    .catch(function(){ showToast('Could not save settings', true); });
+      if (r.ok) { globalPlatformFeePct=pct; document.getElementById('settings-fee-preview').textContent=pct+'%'; showToast('Platform fee updated to '+pct+'% \u2713'); }
+      else showToast('Save failed',true);
+    }).catch(function(){ showToast('Could not save',true); });
   }
 
   /* ── EDIT VENDOR ── */
-  var editVendorId = null;
+  var editVendorId=null;
 
   function openEditVendorModal(vendorId) {
-    var v = allVendors.find(function(v){ return v.id === vendorId; });
-    if (!v) return;
-    editVendorId = vendorId;
-    document.getElementById('edit-vendor-name-display').textContent = v.name;
-    document.getElementById('ev-name').value             = v.name     || '';
-    document.getElementById('ev-slug').value             = v.slug     || '';
-    document.getElementById('ev-email').value            = v.email    || '';
-    document.getElementById('ev-phone').value            = v.phone    || '';
-    document.getElementById('ev-password').value         = '';
-    document.getElementById('ev-telegram').value         = v.telegram_chat_id || '';
-    document.getElementById('ev-platform-fee-pct').value = v.platform_fee_pct != null ? v.platform_fee_pct : '';
+    var v=allVendors.find(function(v){ return v.id===vendorId; }); if(!v) return;
+    editVendorId=vendorId;
+    document.getElementById('edit-vendor-name-display').textContent=v.name;
+    document.getElementById('ev-name').value=v.name||'';
+    document.getElementById('ev-slug').value=v.slug||'';
+    document.getElementById('ev-email').value=v.email||'';
+    document.getElementById('ev-phone').value=v.phone||'';
+    document.getElementById('ev-password').value='';
+    document.getElementById('ev-telegram').value=v.telegram_chat_id||'';
+    document.getElementById('ev-platform-fee-pct').value=v.platform_fee_pct!=null?v.platform_fee_pct:'';
+    document.getElementById('ev-address').value=v.address||'';
+    document.getElementById('ev-addr-status').textContent='Current address shown above. Search to update.';
+    document.getElementById('ev-addr-status').style.color='var(--gray)';
+    evAddressConfirmed=false; evLat=null; evLng=null;
     document.getElementById('edit-vendor-modal').classList.add('open');
   }
 
-  function closeEditVendorModal() {
-    document.getElementById('edit-vendor-modal').classList.remove('open');
-    editVendorId = null;
-  }
+  function closeEditVendorModal() { document.getElementById('edit-vendor-modal').classList.remove('open'); editVendorId=null; }
 
   function saveEditVendor() {
     if (!editVendorId) return;
-    var name          = document.getElementById('ev-name').value.trim();
-    var slug          = document.getElementById('ev-slug').value.trim();
-    var email         = document.getElementById('ev-email').value.trim().toLowerCase();
-    var phone         = document.getElementById('ev-phone').value.trim();
-    var password      = document.getElementById('ev-password').value.trim();
-    var telegram      = document.getElementById('ev-telegram').value.trim() || null;
-    var feePctRaw     = document.getElementById('ev-platform-fee-pct').value.trim();
-    var feePct        = feePctRaw !== '' ? parseFloat(feePctRaw) : null;
-
-    if (!name || !slug) { showToast('Name and slug are required', true); return; }
-    if (feePct !== null && (isNaN(feePct) || feePct < 0 || feePct > 100)) { showToast('Platform fee must be 0–100', true); return; }
-
-    var payload = { name: name, slug: slug, email: email, phone: phone, telegram_chat_id: telegram, platform_fee_pct: feePct };
-    if (password) payload.password = password;
-
-    sbFetch('vendors?id=eq.' + editVendorId, { method: 'PATCH', body: JSON.stringify(payload) })
-      .then(function(r) {
-        if (r.ok) {
-          // Update local cache
-          var v = allVendors.find(function(v){ return v.id === editVendorId; });
-          if (v) { v.name = name; v.slug = slug; v.email = email; v.phone = phone; v.telegram_chat_id = telegram; v.platform_fee_pct = feePct; }
-          showToast('Vendor updated ✓');
-          closeEditVendorModal();
-          renderVendorsTable();
-        } else {
-          r.json().then(function(e){ showToast(e.message || 'Update failed', true); });
-        }
-      })
-      .catch(function(){ showToast('Could not update vendor', true); });
+    var name=document.getElementById('ev-name').value.trim(), slug=document.getElementById('ev-slug').value.trim();
+    var email=document.getElementById('ev-email').value.trim().toLowerCase(), phone=document.getElementById('ev-phone').value.trim();
+    var password=document.getElementById('ev-password').value.trim(), telegram=document.getElementById('ev-telegram').value.trim()||null;
+    var feePctRaw=document.getElementById('ev-platform-fee-pct').value.trim(), feePct=feePctRaw!==''?parseFloat(feePctRaw):null;
+    var newAddr=document.getElementById('ev-address').value.trim();
+    if (!name||!slug) { showToast('Name and slug are required',true); return; }
+    if (feePct!==null&&(isNaN(feePct)||feePct<0||feePct>100)) { showToast('Platform fee must be 0\u2013100',true); return; }
+    var payload={ name:name, slug:slug, email:email, phone:phone, telegram_chat_id:telegram, platform_fee_pct:feePct };
+    if (password) payload.password=password;
+    if (evAddressConfirmed&&evLat&&evLng) { payload.address=newAddr; payload.lat=evLat; payload.lng=evLng; }
+    else if (newAddr) { payload.address=newAddr; }
+    sbFetch('vendors?id=eq.'+editVendorId, { method:'PATCH', body:JSON.stringify(payload) })
+    .then(function(r) {
+      if (r.ok) {
+        var v=allVendors.find(function(v){ return v.id===editVendorId; });
+        if (v) { v.name=name; v.slug=slug; v.email=email; v.phone=phone; v.telegram_chat_id=telegram; v.platform_fee_pct=feePct; if(payload.address) v.address=payload.address; if(payload.lat) v.lat=payload.lat; if(payload.lng) v.lng=payload.lng; }
+        showToast('Vendor updated \u2713'); closeEditVendorModal(); renderVendorsTable();
+      } else { r.json().then(function(e){ showToast(e.message||'Update failed',true); }); }
+    }).catch(function(){ showToast('Could not update vendor',true); });
   }
 
-  /* ── DELETE VENDOR (soft) ── */
   function deleteVendor(vendorId, vendorName) {
-    if (!confirm('Deactivate "' + vendorName + '"?\n\nTheir orders and data will be preserved. They will no longer be able to log in.')) return;
-
-    sbFetch('vendors?id=eq.' + vendorId, { method: 'PATCH', body: JSON.stringify({ active: false }) })
-      .then(function(r) {
-        if (r.ok) {
-          // Remove from local list and re-render
-          allVendors = allVendors.filter(function(v){ return v.id !== vendorId; });
-          showToast(vendorName + ' deactivated ✓');
-          renderVendorsTable();
-          loadOverview();
-        } else {
-          showToast('Could not deactivate vendor', true);
-        }
-      })
-      .catch(function(){ showToast('Could not deactivate vendor', true); });
+    if (!confirm('Deactivate "'+vendorName+'"?\n\nTheir orders and data will be preserved.')) return;
+    sbFetch('vendors?id=eq.'+vendorId, { method:'PATCH', body:JSON.stringify({ active:false }) })
+    .then(function(r) {
+      if (r.ok) { allVendors=allVendors.filter(function(v){ return v.id!==vendorId; }); showToast(vendorName+' deactivated \u2713'); renderVendorsTable(); loadOverview(); }
+      else showToast('Could not deactivate',true);
+    }).catch(function(){ showToast('Could not deactivate',true); });
   }
 
-  /* ── BRANDING MODAL ── */
-  var brandingVendorId = null;
+  /* ── BRANDING ── */
+  var brandingVendorId=null;
 
   function openBrandingModal(vendorId) {
-    var vendor = allVendors.find(function(v){ return v.id === vendorId; });
-    if (!vendor) return;
-    brandingVendorId = vendorId;
-    var color = vendor.brand_color || '';
-    var logo  = vendor.logo_url    || '';
-    document.getElementById('branding-modal-vendor-name').textContent = vendor.name;
-    document.getElementById('bm-color-hex').value    = color;
-    document.getElementById('bm-color-picker').value = color || '#B5DFCA';
-    document.getElementById('bm-color-preview').style.background = color || '#B5DFCA';
-    document.getElementById('bm-logo-url').value     = logo;
+    var vendor=allVendors.find(function(v){ return v.id===vendorId; }); if(!vendor) return;
+    brandingVendorId=vendorId;
+    var color=vendor.brand_color||'';
+    document.getElementById('branding-modal-vendor-name').textContent=vendor.name;
+    document.getElementById('bm-color-hex').value=color;
+    document.getElementById('bm-color-picker').value=color||'#B5DFCA';
+    document.getElementById('bm-color-preview').style.background=color||'#B5DFCA';
+    document.getElementById('bm-logo-url').value=vendor.logo_url||'';
     document.getElementById('branding-modal').classList.add('open');
   }
 
-  function closeBrandingModal() {
-    document.getElementById('branding-modal').classList.remove('open');
-    brandingVendorId = null;
-  }
+  function closeBrandingModal() { document.getElementById('branding-modal').classList.remove('open'); brandingVendorId=null; }
 
   function saveBrandingModal() {
     if (!brandingVendorId) return;
-    var color = document.getElementById('bm-color-hex').value.trim() || null;
-    var logo  = document.getElementById('bm-logo-url').value.trim()  || null;
-    if (color && !/^#[0-9a-fA-F]{6}$/.test(color)) { showToast('Enter a valid hex colour e.g. #7c3aed', true); return; }
-
-    sbFetch('vendors?id=eq.' + brandingVendorId, {
-      method: 'PATCH',
-      body: JSON.stringify({ brand_color: color, logo_url: logo }),
-    })
+    var color=document.getElementById('bm-color-hex').value.trim()||null, logo=document.getElementById('bm-logo-url').value.trim()||null;
+    if (color&&!/^#[0-9a-fA-F]{6}$/.test(color)) { showToast('Enter a valid hex colour',true); return; }
+    sbFetch('vendors?id=eq.'+brandingVendorId, { method:'PATCH', body:JSON.stringify({ brand_color:color, logo_url:logo }) })
     .then(function(r) {
-      if (r.ok) {
-        // Update local allVendors cache
-        var v = allVendors.find(function(v){ return v.id === brandingVendorId; });
-        if (v) { v.brand_color = color; v.logo_url = logo; }
-        showToast('Branding updated ✓');
-        closeBrandingModal();
-        renderVendorsTable();
-      } else { showToast('Save failed', true); }
-    })
-    .catch(function() { showToast('Could not save', true); });
+      if (r.ok) { var v=allVendors.find(function(v){ return v.id===brandingVendorId; }); if(v){ v.brand_color=color; v.logo_url=logo; } showToast('Branding updated \u2713'); closeBrandingModal(); renderVendorsTable(); }
+      else showToast('Save failed',true);
+    }).catch(function(){ showToast('Could not save',true); });
   }
 
-  /* ── TOAST ── */
   function showToast(msg, isError) {
-    var t = document.getElementById('toast');
-    t.textContent = msg;
-    t.className = 'toast' + (isError ? ' error' : '');
-    t.classList.add('show');
-    setTimeout(function(){ t.classList.remove('show'); }, 3000);
+    var t=document.getElementById('toast'); t.textContent=msg;
+    t.className='toast'+(isError?' error':''); t.classList.add('show');
+    setTimeout(function(){ t.classList.remove('show'); },3000);
   }
 </script>
 </body>
