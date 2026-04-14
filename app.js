@@ -39,7 +39,12 @@ var VENDOR = {
   lat:              6.5244,
   lng:              3.3792,
   telegram_chat_id: null,
-  platform_fee_pct: null, // null = use global rate
+  platform_fee_pct: null,
+  discount_type:    null,
+  discount_value:   0,
+  discount_start:   null,
+  discount_end:     null,
+  discount_active:  false,
 };
 
 var GLOBAL_PLATFORM_FEE_PCT = 10; // fallback, overwritten on bootstrap
@@ -777,16 +782,38 @@ function proceedFromOrder() {
 }
 
 /* ─── SUMMARY ─── */
+/* ─── DISCOUNT HELPER ─── */
+function getActiveDiscount(sub) {
+  if (!VENDOR.discount_active || !VENDOR.discount_type || !VENDOR.discount_value) return 0;
+  var today = new Date().toISOString().slice(0, 10);
+  if (VENDOR.discount_start && today < VENDOR.discount_start) return 0;
+  if (VENDOR.discount_end   && today > VENDOR.discount_end)   return 0;
+  if (VENDOR.discount_type === 'percentage') {
+    return Math.round(sub * VENDOR.discount_value / 100);
+  }
+  return Math.min(Math.round(VENDOR.discount_value), sub);
+}
+
 function renderSummary() {
-  var items = SERVICES.filter(function(s) { return s.qty > 0; });
-  var sub   = items.reduce(function(a, s) { return a + s.price * s.qty; }, 0);
+  var items       = SERVICES.filter(function(s) { return s.qty > 0; });
+  var rawSub      = items.reduce(function(a, s) { return a + s.price * s.qty; }, 0);
+  var discount    = getActiveDiscount(rawSub);
+  var sub         = rawSub - discount;
   var effectivePct = VENDOR.platform_fee_pct != null ? VENDOR.platform_fee_pct : GLOBAL_PLATFORM_FEE_PCT;
-  platformFee = Math.round(sub * effectivePct / 100);
-  var total = sub + deliveryFee + serviceFee; // base delivery + service fee + subtotal
+  platformFee     = Math.round(sub * effectivePct / 100);
+  serviceFee      = Math.min(Math.round(sub * 0.2), 1000);
+  var total       = sub + deliveryFee + serviceFee;
 
   orderId = genOrderId();
   document.getElementById('order-id-display').textContent = orderId;
   document.getElementById('pay-amount').textContent = '\u20A6' + total.toLocaleString();
+
+  var promoLabel = '';
+  if (discount > 0) {
+    promoLabel = VENDOR.discount_type === 'percentage'
+      ? VENDOR.discount_value + '% off applied'
+      : '\u20A6' + VENDOR.discount_value.toLocaleString() + ' off applied';
+  }
 
   document.getElementById('summary-items').innerHTML =
     items.map(function(s) {
@@ -797,6 +824,16 @@ function renderSummary() {
         + '</div>'
       );
     }).join('')
+    + (discount > 0
+      ? '<div class="summary-row" style="color:var(--teal)">'
+        + '<span>\uD83C\uDF89 Promo: ' + promoLabel + '</span>'
+        + '<span>-\u20A6' + discount.toLocaleString() + '</span>'
+        + '</div>'
+        + '<div class="summary-row sub-row">'
+        + '<span>Items subtotal</span>'
+        + '<span style="text-decoration:line-through;color:var(--gray-500)">\u20A6' + rawSub.toLocaleString() + '</span>'
+        + '</div>'
+      : '')
     + '<div class="summary-row sub-row">'
     +   '<span>Pickup &amp; Delivery <small style="color:var(--gray-500)">' + deliveryLabel + '</small></span>'
     +   '<span>\u20A6' + deliveryFee.toLocaleString() + '</span>'
@@ -816,9 +853,11 @@ function submitOrder() {
   var btn = document.getElementById('confirm-btn');
   if (btn) { btn.disabled = true; btn.textContent = 'Submitting...'; }
 
-  var items = SERVICES.filter(function(s) { return s.qty > 0; });
-  var sub   = items.reduce(function(a, s) { return a + s.price * s.qty; }, 0);
-  var total = sub + deliveryFee + serviceFee;
+  var items     = SERVICES.filter(function(s) { return s.qty > 0; });
+  var rawSub    = items.reduce(function(a, s) { return a + s.price * s.qty; }, 0);
+  var discount  = getActiveDiscount(rawSub);
+  var sub       = rawSub - discount;
+  var total     = sub + deliveryFee + serviceFee;
 
   var itemsStr = items.map(function(s) { return s.qty + 'x ' + s.name; }).join(', ');
 
@@ -959,6 +998,11 @@ function bootstrapVendor() {
     VENDOR.brand_color      = vendor.brand_color || null;
     VENDOR.logo_url         = vendor.logo_url     || null;
     VENDOR.platform_fee_pct = vendor.platform_fee_pct != null ? parseFloat(vendor.platform_fee_pct) : null;
+    VENDOR.discount_type    = vendor.discount_type   || null;
+    VENDOR.discount_value   = parseFloat(vendor.discount_value) || 0;
+    VENDOR.discount_start   = vendor.discount_start  || null;
+    VENDOR.discount_end     = vendor.discount_end    || null;
+    VENDOR.discount_active  = vendor.discount_active === true;
 
     // Apply brand colour
     if (VENDOR.brand_color) {
