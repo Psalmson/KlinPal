@@ -421,6 +421,100 @@
   </div>
 </div>
 
+<!-- ORDER DETAIL MODAL -->
+<div class="modal-overlay" id="order-detail-modal">
+  <div class="modal" style="max-width:600px">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px">
+      <div>
+        <div class="modal-title" style="margin-bottom:2px" id="odm-order-id">Order</div>
+        <div style="font-size:12px;color:var(--gray)" id="odm-date"></div>
+      </div>
+      <button class="modal-close" onclick="closeOrderDetailModal()">&#x2715;</button>
+    </div>
+
+    <!-- Customer + Items -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      <div style="background:var(--navy3);border-radius:8px;padding:14px">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);margin-bottom:8px">Customer</div>
+        <div style="font-weight:600;font-size:14px" id="odm-name"></div>
+        <div style="font-size:12px;color:var(--gray);margin-top:3px" id="odm-phone"></div>
+        <div style="font-size:11px;color:var(--gray);margin-top:6px;line-height:1.4" id="odm-address"></div>
+      </div>
+      <div style="background:var(--navy3);border-radius:8px;padding:14px">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);margin-bottom:8px">Items</div>
+        <div style="font-size:12px;color:var(--white);line-height:1.5" id="odm-items"></div>
+      </div>
+    </div>
+
+    <!-- Amount breakdown -->
+    <div style="background:var(--navy3);border-radius:8px;padding:14px;margin-bottom:16px">
+      <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);margin-bottom:10px">Amount</div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span style="color:var(--gray)">Subtotal</span><span class="mono" id="odm-subtotal"></span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span style="color:var(--gray)">Delivery fee</span><span class="mono" id="odm-delivery-fee"></span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px"><span style="color:var(--amber)">Service fee</span><span class="mono" style="color:var(--amber)" id="odm-service-fee"></span></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;border-top:1px solid var(--navy2);padding-top:8px;margin-top:4px"><span style="font-weight:600">Total</span><span class="mono" style="font-weight:600" id="odm-total"></span></div>
+    </div>
+
+    <!-- Status controls -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+      <div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);margin-bottom:6px">Payment Status</div>
+        <select class="status-select" id="odm-payment-select" onchange="odmUpdatePayment()" style="width:100%">
+          <option value="Pending">Pending</option>
+          <option value="Paid">Paid</option>
+          <option value="Not Paid">Not Paid</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);margin-bottom:6px">Order Status</div>
+        <select class="status-select" id="odm-status-select" onchange="odmUpdateStatus()" style="width:100%">
+          <option value="Pending">Pending</option>
+          <option value="Picked Up">Picked Up</option>
+          <option value="On the Way">On the Way</option>
+          <option value="Washing">Washing</option>
+          <option value="Ready">Ready</option>
+          <option value="Delivered">Delivered</option>
+          <option value="Cancelled">Cancelled</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Rider assignment -->
+    <div style="border-top:1px solid var(--navy3);padding-top:18px;margin-bottom:4px">
+      <div style="font-size:13px;font-weight:700;margin-bottom:14px">Rider Assignment</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+        <div style="background:var(--navy3);border-radius:8px;padding:14px">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);margin-bottom:8px">Pickup Rider</div>
+          <select class="status-select" id="odm-pickup-select" onchange="odmAssignPickup()" style="width:100%;margin-bottom:8px">
+            <option value="">Unassigned</option>
+          </select>
+          <div style="font-size:11px;color:var(--gray)" id="odm-pickup-commission">Commission: &mdash;</div>
+        </div>
+        <div style="background:var(--navy3);border-radius:8px;padding:14px">
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);margin-bottom:8px">Delivery Rider</div>
+          <select class="status-select" id="odm-delivery-select" onchange="odmAssignDelivery()" style="width:100%;margin-bottom:8px">
+            <option value="">Unassigned</option>
+          </select>
+          <div style="font-size:11px;color:var(--gray)" id="odm-delivery-commission">Commission: &mdash;</div>
+        </div>
+      </div>
+
+      <div style="background:var(--navy3);border-radius:8px;padding:12px 14px;font-size:12px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span style="color:var(--gray)">Pickup commission</span><span id="odm-pickup-fee-display">&mdash;</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span style="color:var(--gray)">Delivery commission</span><span id="odm-delivery-fee-display">&mdash;</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;border-top:1px solid var(--navy2);padding-top:8px;margin-top:6px;font-weight:600">
+          <span style="color:var(--teal)">Klinpal delivery revenue</span><span style="color:var(--teal)" id="odm-klinpal-revenue">&mdash;</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- BRANDING MODAL -->
 <div class="modal-overlay" id="branding-modal">
   <div class="modal" style="max-width:480px">
@@ -700,21 +794,24 @@
     var statuses    = ['Pending','Picked Up','On the Way','Washing','Ready','Delivered','Cancelled'];
     var rows = orders.map(function(o) {
       var date = o.created_at ? new Date(o.created_at).toLocaleDateString('en-GB') : '';
-      var driverOpts = '<option value="">Unassigned</option>' + allDrivers.filter(function(d){ return d.active; }).map(function(d){ return '<option value="'+d.id+'"'+(o.driver_id===d.id?' selected':'')+'>'+d.name+' ('+d.percentage+'%)</option>'; }).join('');
+      var pickupName  = o.pickup_driver_id  ? (allDrivers.find(function(d){ return d.id===o.pickup_driver_id; })||{name:'—'}).name  : '—';
+      var delivName   = o.delivery_driver_id ? (allDrivers.find(function(d){ return d.id===o.delivery_driver_id; })||{name:'—'}).name : '—';
       return '<tr>'
         +'<td><div class="mono">'+(o.order_id||'\u2014')+'</div><div style="font-size:11px;color:var(--gray);margin-top:3px">'+date+'</div></td>'
         +'<td><div style="font-weight:600">'+(o.customer_name||'\u2014')+'</div><div style="font-size:12px;color:var(--gray)">'+(o.phone||'')+'</div><div style="font-size:11px;color:var(--gray);max-width:180px;margin-top:2px">'+(o.address||'')+'</div></td>'
         +'<td style="font-size:12px;color:var(--gray);max-width:160px">'+(o.items||'\u2014')+'</td>'
-        +'<td><span class="mono">\u20A6'+(Number(o.subtotal)||0).toLocaleString()+'</span><div style="font-size:11px;color:var(--gray);margin-top:3px">+\u20A6'+(Number(o.delivery_fee)||0).toLocaleString()+' delivery</div><div style="font-size:11px;color:var(--amber);margin-top:2px">+\u20A6'+(Number(o.service_fee)||0).toLocaleString()+' svc fee</div><div style="font-size:11px;color:var(--red);margin-top:2px">-\u20A6'+(Number(o.platform_fee)||0).toLocaleString()+' platform</div></td>'
-        +'<td><select class="status-select" onchange="assignDriver(this,\''+o.order_id+'\','+(Number(o.delivery_fee)||0)+','+JSON.stringify(o.driver_id||null)+')">'+driverOpts+'</select></td>'
+        +'<td><span class="mono">\u20A6'+(Number(o.subtotal)||0).toLocaleString()+'</span><div style="font-size:11px;color:var(--gray);margin-top:3px">+\u20A6'+(Number(o.delivery_fee)||0).toLocaleString()+' delivery</div></td>'
+        +'<td><div style="font-size:12px;color:var(--white)">P: '+pickupName+'</div><div style="font-size:12px;color:var(--gray);margin-top:3px">D: '+delivName+'</div></td>'
         +'<td><select class="status-select" onchange="updatePaymentStatus(this,\''+o.order_id+'\')">'
         +payStatuses.map(function(s){ return '<option value="'+s+'"'+((o.payment_status||'Pending')===s?' selected':'')+'>'+s+'</option>'; }).join('')
         +'</select></td>'
         +'<td><select class="status-select" onchange="updateStatus(this,\''+o.order_id+'\')">'
         +statuses.map(function(s){ return '<option value="'+s+'"'+(o.status===s?' selected':'')+'>'+s+'</option>'; }).join('')
-        +'</select></td></tr>';
+        +'</select></td>'
+        +'<td><button class="btn btn-ghost btn-sm" onclick="openOrderDetailModal(\''+o.order_id+'\')">View</button></td>'
+        +'</tr>';
     }).join('');
-    document.getElementById('drill-table').innerHTML='<table><thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Amount</th><th>Rider</th><th>Payment</th><th>Status</th></tr></thead><tbody>'+rows+'</tbody></table>';
+    document.getElementById('drill-table').innerHTML='<table><thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Amount</th><th>Riders</th><th>Payment</th><th>Status</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>';
   }
 
   function updatePaymentStatus(select, orderId) {
@@ -823,23 +920,173 @@
     .finally(function(){ btn.disabled=false; btn.textContent='Onboard Laundromat'; });
   }
 
-  /* ── ASSIGN DRIVER ── */
-  function assignDriver(select, orderId, deliveryFee, prevDriverId) {
-    var driverId=select.value||null, driver=driverId?allDrivers.find(function(d){ return d.id===driverId; }):null;
-    var riderFee=driver?Math.round(deliveryFee*(driver.percentage/100)):0, klinpalDel=deliveryFee-riderFee;
-    sbFetch('orders?order_id=eq.'+orderId, { method:'PATCH', body:JSON.stringify({ driver_id:driverId, rider_fee:riderFee, klinpal_delivery_revenue:klinpalDel }) })
+  /* ── ORDER DETAIL MODAL ── */
+  var odmOrderId = null;
+
+  function openOrderDetailModal(orderId) {
+    var o = drillOrders.find(function(x){ return x.order_id === orderId; });
+    if (!o) return;
+    odmOrderId = orderId;
+
+    var date = o.created_at ? new Date(o.created_at).toLocaleDateString('en-GB') : '';
+    var total = (Number(o.subtotal)||0) + (Number(o.delivery_fee)||0) + (Number(o.service_fee)||0);
+
+    document.getElementById('odm-order-id').textContent  = o.order_id;
+    document.getElementById('odm-date').textContent       = date;
+    document.getElementById('odm-name').textContent       = o.customer_name || '\u2014';
+    document.getElementById('odm-phone').textContent      = o.phone || '';
+    document.getElementById('odm-address').textContent    = o.address || '';
+    document.getElementById('odm-items').textContent      = o.items || '\u2014';
+    document.getElementById('odm-subtotal').textContent   = '\u20A6' + (Number(o.subtotal)||0).toLocaleString();
+    document.getElementById('odm-delivery-fee').textContent = '\u20A6' + (Number(o.delivery_fee)||0).toLocaleString();
+    document.getElementById('odm-service-fee').textContent  = '\u20A6' + (Number(o.service_fee)||0).toLocaleString();
+    document.getElementById('odm-total').textContent      = '\u20A6' + total.toLocaleString();
+    document.getElementById('odm-payment-select').value   = o.payment_status || 'Pending';
+    document.getElementById('odm-status-select').value    = o.status || 'Pending';
+
+    // Populate rider dropdowns
+    var driverOpts = '<option value="">Unassigned</option>' + allDrivers.filter(function(d){ return d.active; }).map(function(d){
+      return '<option value="'+d.id+'">'+d.name+' ('+d.percentage+'%)</option>';
+    }).join('');
+    var pickupSel  = document.getElementById('odm-pickup-select');
+    var delivSel   = document.getElementById('odm-delivery-select');
+    pickupSel.innerHTML  = driverOpts;
+    delivSel.innerHTML   = driverOpts;
+    pickupSel.value  = o.pickup_driver_id  || '';
+    delivSel.value   = o.delivery_driver_id || '';
+
+    odmUpdateCommissionDisplay(o);
+    document.getElementById('order-detail-modal').classList.add('open');
+  }
+
+  function closeOrderDetailModal() {
+    document.getElementById('order-detail-modal').classList.remove('open');
+    odmOrderId = null;
+  }
+
+  function odmUpdateCommissionDisplay(o) {
+    var delivFee  = Number(o ? o.delivery_fee : 0) || 0;
+    var halfFee   = delivFee / 2;
+    var pickupId  = document.getElementById('odm-pickup-select').value  || null;
+    var delivId   = document.getElementById('odm-delivery-select').value || null;
+    var pickupDrv = pickupId  ? allDrivers.find(function(d){ return d.id === pickupId; })  : null;
+    var delivDrv  = delivId   ? allDrivers.find(function(d){ return d.id === delivId; })   : null;
+    var pickupFee = pickupDrv ? Math.round(halfFee * pickupDrv.percentage / 100)  : 0;
+    var delivFeeR = delivDrv  ? Math.round(halfFee * delivDrv.percentage  / 100)  : 0;
+    var klinpal   = delivFee - pickupFee - delivFeeR;
+
+    document.getElementById('odm-pickup-commission').textContent  = pickupDrv
+      ? 'Commission: \u20A6' + pickupFee.toLocaleString() + ' \u00B7 ' + pickupDrv.percentage + '% of \u20A6' + Math.round(halfFee).toLocaleString()
+      : 'Commission: \u2014';
+    document.getElementById('odm-delivery-commission').textContent = delivDrv
+      ? 'Commission: \u20A6' + delivFeeR.toLocaleString() + ' \u00B7 ' + delivDrv.percentage + '% of \u20A6' + Math.round(halfFee).toLocaleString()
+      : 'Commission: \u2014';
+    document.getElementById('odm-pickup-fee-display').textContent  = pickupDrv  ? '\u20A6' + pickupFee.toLocaleString()  : '\u2014';
+    document.getElementById('odm-delivery-fee-display').textContent = delivDrv   ? '\u20A6' + delivFeeR.toLocaleString() : '\u2014';
+    document.getElementById('odm-klinpal-revenue').textContent = '\u20A6' + klinpal.toLocaleString();
+  }
+
+  function odmAssignPickup() {
+    if (!odmOrderId) return;
+    var o        = drillOrders.find(function(x){ return x.order_id === odmOrderId; });
+    var pickupId = document.getElementById('odm-pickup-select').value || null;
+    var delivId  = document.getElementById('odm-delivery-select').value || null;
+    var pickupDrv= pickupId ? allDrivers.find(function(d){ return d.id === pickupId; }) : null;
+    var delivDrv = delivId  ? allDrivers.find(function(d){ return d.id === delivId;  }) : null;
+    var delivFee = Number(o ? o.delivery_fee : 0) || 0;
+    var halfFee  = delivFee / 2;
+    var pickupFee= pickupDrv ? Math.round(halfFee * pickupDrv.percentage / 100) : 0;
+    var delivFeeR= delivDrv  ? Math.round(halfFee * delivDrv.percentage  / 100) : 0;
+    var klinpal  = delivFee - pickupFee - delivFeeR;
+
+    sbFetch('orders?order_id=eq.' + odmOrderId, {
+      method: 'PATCH',
+      body: JSON.stringify({ pickup_driver_id: pickupId, pickup_rider_fee: pickupFee, klinpal_delivery_revenue: klinpal })
+    })
     .then(function(r) {
-      if (!r.ok) { showToast('Assignment failed',true); return; }
-      showToast(driver?driver.name+' assigned \u2713':'Driver removed \u2713');
-      var o=drillOrders.find(function(x){ return x.order_id===orderId; });
-      if (o) { o.driver_id=driverId; o.rider_fee=riderFee; o.klinpal_delivery_revenue=klinpalDel; }
-      if (driver&&driver.telegram_chat_id) {
-        var orderObj=drillOrders.find(function(x){ return x.order_id===orderId; })||{};
-        sendTelegram(driver.telegram_chat_id,'\uD83D\uDEF5 New Order Assigned!\n\nOrder ID: '+orderId+'\nCustomer: '+(orderObj.customer_name||'\u2014')+'\nPhone: '+(orderObj.phone||'\u2014')+'\nAddress: '+(orderObj.address||'\u2014')+'\nItems: '+(orderObj.items||'\u2014')+'\nYour cut: \u20A6'+riderFee.toLocaleString());
+      if (!r.ok) { showToast('Assignment failed', true); return; }
+      showToast(pickupDrv ? pickupDrv.name + ' assigned for pickup \u2713' : 'Pickup rider removed \u2713');
+      if (o) { o.pickup_driver_id = pickupId; o.pickup_rider_fee = pickupFee; o.klinpal_delivery_revenue = klinpal; }
+      odmUpdateCommissionDisplay(o);
+      if (pickupDrv && pickupDrv.telegram_chat_id) {
+        sendTelegram(pickupDrv.telegram_chat_id,
+          '\uD83D\uDEF5 Pickup Assignment\n\n'
+          + 'Order ID: ' + odmOrderId + '\n'
+          + 'Customer: ' + (o ? o.customer_name : '\u2014') + '\n'
+          + 'Phone: '    + (o ? o.phone : '\u2014') + '\n'
+          + 'Pickup address: ' + (o ? o.address : '\u2014') + '\n'
+          + 'Items: '    + (o ? o.items : '\u2014') + '\n'
+          + 'Your commission: \u20A6' + pickupFee.toLocaleString()
+        );
       }
     })
-    .catch(function(){ showToast('Could not assign driver',true); });
+    .catch(function(){ showToast('Could not assign pickup rider', true); });
   }
+
+  function odmAssignDelivery() {
+    if (!odmOrderId) return;
+    var o        = drillOrders.find(function(x){ return x.order_id === odmOrderId; });
+    var pickupId = document.getElementById('odm-pickup-select').value || null;
+    var delivId  = document.getElementById('odm-delivery-select').value || null;
+    var pickupDrv= pickupId ? allDrivers.find(function(d){ return d.id === pickupId; }) : null;
+    var delivDrv = delivId  ? allDrivers.find(function(d){ return d.id === delivId;  }) : null;
+    var delivFee = Number(o ? o.delivery_fee : 0) || 0;
+    var halfFee  = delivFee / 2;
+    var pickupFee= pickupDrv ? Math.round(halfFee * pickupDrv.percentage / 100) : 0;
+    var delivFeeR= delivDrv  ? Math.round(halfFee * delivDrv.percentage  / 100) : 0;
+    var klinpal  = delivFee - pickupFee - delivFeeR;
+
+    sbFetch('orders?order_id=eq.' + odmOrderId, {
+      method: 'PATCH',
+      body: JSON.stringify({ delivery_driver_id: delivId, delivery_rider_fee: delivFeeR, klinpal_delivery_revenue: klinpal })
+    })
+    .then(function(r) {
+      if (!r.ok) { showToast('Assignment failed', true); return; }
+      showToast(delivDrv ? delivDrv.name + ' assigned for delivery \u2713' : 'Delivery rider removed \u2713');
+      if (o) { o.delivery_driver_id = delivId; o.delivery_rider_fee = delivFeeR; o.klinpal_delivery_revenue = klinpal; }
+      odmUpdateCommissionDisplay(o);
+      if (delivDrv && delivDrv.telegram_chat_id) {
+        sendTelegram(delivDrv.telegram_chat_id,
+          '\uD83D\uDEF5 Delivery Assignment\n\n'
+          + 'Order ID: ' + odmOrderId + '\n'
+          + 'Customer: ' + (o ? o.customer_name : '\u2014') + '\n'
+          + 'Phone: '    + (o ? o.phone : '\u2014') + '\n'
+          + 'Delivery address: ' + (o ? o.address : '\u2014') + '\n'
+          + 'Items: '    + (o ? o.items : '\u2014') + '\n'
+          + 'Your commission: \u20A6' + delivFeeR.toLocaleString()
+        );
+      }
+    })
+    .catch(function(){ showToast('Could not assign delivery rider', true); });
+  }
+
+  function odmUpdatePayment() {
+    if (!odmOrderId) return;
+    var val = document.getElementById('odm-payment-select').value;
+    sbFetch('orders?order_id=eq.' + odmOrderId, { method:'PATCH', body:JSON.stringify({ payment_status: val }) })
+    .then(function(r){
+      showToast(r.ok ? 'Payment status updated \u2713' : 'Update failed', !r.ok);
+      var o = drillOrders.find(function(x){ return x.order_id === odmOrderId; });
+      if (o) o.payment_status = val;
+      applyDrillFilters();
+    })
+    .catch(function(){ showToast('Could not update', true); });
+  }
+
+  function odmUpdateStatus() {
+    if (!odmOrderId) return;
+    var val = document.getElementById('odm-status-select').value;
+    sbFetch('orders?order_id=eq.' + odmOrderId, { method:'PATCH', body:JSON.stringify({ status: val }) })
+    .then(function(r){
+      showToast(r.ok ? 'Status updated \u2713' : 'Update failed', !r.ok);
+      var o = drillOrders.find(function(x){ return x.order_id === odmOrderId; });
+      if (o) o.status = val;
+      applyDrillFilters();
+    })
+    .catch(function(){ showToast('Could not update', true); });
+  }
+
+
 
   function sendTelegram(chatId, text) {
     fetch('https://api.telegram.org/bot8021952716:AAFg_CsHXdp3SGl6guMiPTqHKs9cPvpv_7o/sendMessage', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ chat_id:chatId, text:text }) }).catch(function(){});
@@ -853,35 +1100,46 @@
     document.getElementById('riders-list').innerHTML='<div class="loading-state">Loading...</div>';
     Promise.all([
       sbFetch('drivers?order=created_at.desc&select=*').then(function(r){ return r.json(); }),
-      sbFetch('orders?driver_id=not.is.null&select=driver_id,rider_fee,klinpal_delivery_revenue,status').then(function(r){ return r.json(); })
+      sbFetch('orders?select=pickup_driver_id,delivery_driver_id,pickup_rider_fee,delivery_rider_fee,klinpal_delivery_revenue,status').then(function(r){ return r.json(); })
     ])
     .then(function(results) {
-      allDrivers=Array.isArray(results[0])?results[0]:[];
-      var rOrders=Array.isArray(results[1])?results[1]:[];
-      document.getElementById('rider-stat-count').textContent=allDrivers.length;
-      document.getElementById('rider-stat-payout').textContent='\u20A6'+rOrders.reduce(function(a,o){ return a+(Number(o.rider_fee)||0); },0).toLocaleString();
-      document.getElementById('rider-stat-klinpal').textContent='\u20A6'+rOrders.reduce(function(a,o){ return a+(Number(o.klinpal_delivery_revenue)||0); },0).toLocaleString();
-      renderRidersList(rOrders);
+      allDrivers = Array.isArray(results[0]) ? results[0] : [];
+      var allOrders = Array.isArray(results[1]) ? results[1] : [];
+
+      // Total payout = sum of all pickup + delivery commissions
+      var totalPayout = allOrders.reduce(function(a,o){
+        return a + (Number(o.pickup_rider_fee)||0) + (Number(o.delivery_rider_fee)||0);
+      }, 0);
+      var totalKlinpal = allOrders.reduce(function(a,o){ return a+(Number(o.klinpal_delivery_revenue)||0); }, 0);
+
+      document.getElementById('rider-stat-count').textContent   = allDrivers.length;
+      document.getElementById('rider-stat-payout').textContent  = '\u20A6' + totalPayout.toLocaleString();
+      document.getElementById('rider-stat-klinpal').textContent = '\u20A6' + totalKlinpal.toLocaleString();
+      renderRidersList(allOrders);
     })
     .catch(function(){ document.getElementById('riders-list').innerHTML='<div class="empty-state"><div style="font-size:13px">Could not load riders</div></div>'; });
   }
 
-  function renderRidersList(allRiderOrders) {
-    var wrap=document.getElementById('riders-list');
+  function renderRidersList(allOrders) {
+    var wrap = document.getElementById('riders-list');
     if (!allDrivers.length) { wrap.innerHTML='<div class="empty-state"><div style="font-size:40px;margin-bottom:12px">\uD83D\uDEF5</div><div style="font-size:14px">No riders added yet</div></div>'; return; }
-    var rows=allDrivers.map(function(d) {
-      var dO=allRiderOrders.filter(function(o){ return o.driver_id===d.id; });
-      var earned=dO.reduce(function(a,o){ return a+(Number(o.rider_fee)||0); },0);
-      var fulfilled=dO.filter(function(o){ return o.status==='Delivered'; }).length;
+    var rows = allDrivers.map(function(d) {
+      var pickups    = allOrders.filter(function(o){ return o.pickup_driver_id   === d.id; });
+      var deliveries = allOrders.filter(function(o){ return o.delivery_driver_id === d.id; });
+      var earnedPickup = pickups.reduce(function(a,o){ return a+(Number(o.pickup_rider_fee)||0); }, 0);
+      var earnedDeliv  = deliveries.reduce(function(a,o){ return a+(Number(o.delivery_rider_fee)||0); }, 0);
+      var totalEarned  = earnedPickup + earnedDeliv;
+      var totalAssigned = pickups.length + deliveries.length;
+      var fulfilled = allOrders.filter(function(o){ return (o.pickup_driver_id===d.id||o.delivery_driver_id===d.id) && o.status==='Delivered'; }).length;
       return '<tr><td style="font-weight:600">'+d.name+'</td><td style="color:var(--gray)">'+d.phone+'</td>'
-        +'<td><span style="font-family:var(--font-mono);color:var(--teal)">'+d.percentage+'%</span><span style="font-size:11px;color:var(--gray)"> of delivery</span></td>'
-        +'<td style="font-family:var(--font-mono)">'+dO.length+' assigned \xB7 '+fulfilled+' delivered</td>'
-        +'<td style="font-family:var(--font-mono);color:var(--green)">\u20A6'+earned.toLocaleString()+'</td>'
+        +'<td><span style="font-family:var(--font-mono);color:var(--teal)">'+d.percentage+'%</span><span style="font-size:11px;color:var(--gray)"> of half delivery fee</span></td>'
+        +'<td style="font-size:12px"><div>'+pickups.length+' pickups \xB7 '+deliveries.length+' deliveries</div><div style="color:var(--gray);margin-top:2px">'+fulfilled+' fulfilled</div></td>'
+        +'<td style="font-family:var(--font-mono);color:var(--green)">\u20A6'+totalEarned.toLocaleString()+'</td>'
         +'<td style="font-size:12px;color:var(--gray)">'+(d.telegram_chat_id||'\u2014')+'</td>'
         +'<td><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"'+(d.active?' checked':'')+' onchange="toggleRider(\''+d.id+'\',this.checked)" style="width:16px;height:16px;accent-color:var(--teal)"><span style="font-size:13px;color:'+(d.active?'var(--green)':'var(--gray)')+'">'+( d.active?'Active':'Inactive')+'</span></label></td>'
         +'<td style="display:flex;gap:6px"><button class="btn btn-ghost btn-sm" onclick="openRiderDrill(\''+d.id+'\')">View</button><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="removeRider(\''+d.id+'\',\''+d.name+'\')">Remove</button></td></tr>';
     }).join('');
-    wrap.innerHTML='<table><thead><tr><th>Name</th><th>Phone</th><th>Earnings</th><th>Orders</th><th>Total Earned</th><th>Telegram</th><th>Status</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>';
+    wrap.innerHTML='<table><thead><tr><th>Name</th><th>Phone</th><th>Earnings</th><th>Assignments</th><th>Total Earned</th><th>Telegram</th><th>Status</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>';
   }
 
   var currentRiderId=null;
@@ -891,29 +1149,56 @@
     currentRiderId=driverId;
     document.getElementById('rider-drill').style.display='block';
     document.getElementById('rider-drill-name').textContent=driver.name;
-    document.getElementById('rider-drill-sub').textContent=driver.phone+' \xB7 '+driver.percentage+'% of delivery fee';
+    document.getElementById('rider-drill-sub').textContent=driver.phone+' \xB7 '+driver.percentage+'% of half delivery fee per assignment';
     document.getElementById('rd-pct').textContent=driver.percentage+'%';
     document.getElementById('rider-drill-table').innerHTML='<div class="loading-state">Loading...</div>';
-    sbFetch('orders?driver_id=eq.'+driverId+'&order=created_at.desc&select=order_id,customer_name,address,items,delivery_fee,rider_fee,status,created_at,payment_status')
-    .then(function(r){ return r.json(); })
-    .then(function(orders) {
-      orders=Array.isArray(orders)?orders:[];
-      var fulfilled=orders.filter(function(o){ return o.status==='Delivered'; }).length;
-      var earned=orders.reduce(function(a,o){ return a+(Number(o.rider_fee)||0); },0);
-      document.getElementById('rd-orders').textContent=orders.length;
-      document.getElementById('rd-fulfilled').textContent=fulfilled;
-      document.getElementById('rd-earned').textContent='\u20A6'+earned.toLocaleString();
+
+    // Fetch all orders where this rider is pickup OR delivery
+    Promise.all([
+      sbFetch('orders?pickup_driver_id=eq.'+driverId+'&order=created_at.desc&select=order_id,customer_name,address,items,delivery_fee,pickup_rider_fee,delivery_rider_fee,status,created_at,pickup_driver_id,delivery_driver_id').then(function(r){ return r.json(); }),
+      sbFetch('orders?delivery_driver_id=eq.'+driverId+'&order=created_at.desc&select=order_id,customer_name,address,items,delivery_fee,pickup_rider_fee,delivery_rider_fee,status,created_at,pickup_driver_id,delivery_driver_id').then(function(r){ return r.json(); })
+    ])
+    .then(function(results) {
+      var pickupOrders   = Array.isArray(results[0]) ? results[0] : [];
+      var deliveryOrders = Array.isArray(results[1]) ? results[1] : [];
+
+      // Merge — dedupe by order_id, tagging each with role
+      var merged = {};
+      pickupOrders.forEach(function(o){ merged[o.order_id] = Object.assign({}, o, { _role: 'pickup' }); });
+      deliveryOrders.forEach(function(o){
+        if (merged[o.order_id]) merged[o.order_id]._role = 'both';
+        else merged[o.order_id] = Object.assign({}, o, { _role: 'delivery' });
+      });
+      var orders = Object.values(merged);
+
+      var pickupEarned  = pickupOrders.reduce(function(a,o){ return a+(Number(o.pickup_rider_fee)||0); }, 0);
+      var delivEarned   = deliveryOrders.reduce(function(a,o){ return a+(Number(o.delivery_rider_fee)||0); }, 0);
+      var totalEarned   = pickupEarned + delivEarned;
+      var fulfilled     = orders.filter(function(o){ return o.status==='Delivered'; }).length;
+
+      document.getElementById('rd-orders').textContent    = orders.length;
+      document.getElementById('rd-fulfilled').textContent = fulfilled;
+      document.getElementById('rd-earned').textContent    = '\u20A6' + totalEarned.toLocaleString();
+
       if (!orders.length) { document.getElementById('rider-drill-table').innerHTML='<div class="empty-state"><div style="font-size:14px;color:var(--gray)">No orders assigned yet</div></div>'; return; }
-      var rows=orders.map(function(o) {
-        var date=o.created_at?new Date(o.created_at).toLocaleDateString('en-GB'):'';
-        var sc=o.status==='Delivered'?'var(--green)':o.status==='Cancelled'?'var(--red)':'var(--amber)';
-        return '<tr><td><div class="mono" style="color:var(--teal)">'+(o.order_id||'\u2014')+'</div><div style="font-size:11px;color:var(--gray)">'+date+'</div></td>'
+
+      var rows = orders.map(function(o) {
+        var date = o.created_at ? new Date(o.created_at).toLocaleDateString('en-GB') : '';
+        var sc   = o.status==='Delivered'?'var(--green)':o.status==='Cancelled'?'var(--red)':'var(--amber)';
+        var roleLabel = o._role==='both' ? 'Pickup + Delivery' : o._role==='pickup' ? 'Pickup' : 'Delivery';
+        var myEarned = o._role==='both'
+          ? (Number(o.pickup_rider_fee)||0) + (Number(o.delivery_rider_fee)||0)
+          : o._role==='pickup' ? (Number(o.pickup_rider_fee)||0) : (Number(o.delivery_rider_fee)||0);
+        return '<tr>'
+          +'<td><div class="mono" style="color:var(--teal)">'+(o.order_id||'\u2014')+'</div><div style="font-size:11px;color:var(--gray)">'+date+'</div></td>'
           +'<td><div style="font-weight:600">'+(o.customer_name||'\u2014')+'</div><div style="font-size:11px;color:var(--gray);max-width:160px">'+(o.address||'')+'</div></td>'
           +'<td style="font-size:12px;color:var(--gray)">'+(o.items||'\u2014')+'</td>'
-          +'<td><div style="font-family:var(--font-mono)">\u20A6'+(Number(o.delivery_fee)||0).toLocaleString()+'</div><div style="font-size:11px;color:var(--green)">Rider cut: \u20A6'+(Number(o.rider_fee)||0).toLocaleString()+'</div></td>'
+          +'<td><div style="font-size:11px;color:var(--teal);font-weight:600;margin-bottom:4px">'+roleLabel+'</div>'
+          +'<div style="font-family:var(--font-mono);">\u20A6'+(Number(o.delivery_fee)||0).toLocaleString()+' total</div>'
+          +'<div style="font-size:11px;color:var(--green);margin-top:2px">Commission: \u20A6'+myEarned.toLocaleString()+'</div></td>'
           +'<td><span style="color:'+sc+';font-size:13px;font-weight:600">'+(o.status||'\u2014')+'</span></td></tr>';
       }).join('');
-      document.getElementById('rider-drill-table').innerHTML='<table><thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Delivery/Cut</th><th>Status</th></tr></thead><tbody>'+rows+'</tbody></table>';
+      document.getElementById('rider-drill-table').innerHTML='<table><thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Role / Commission</th><th>Status</th></tr></thead><tbody>'+rows+'</tbody></table>';
     })
     .catch(function(){ document.getElementById('rider-drill-table').innerHTML='<div class="empty-state"><div style="font-size:13px;color:var(--gray)">Could not load orders</div></div>'; });
   }
