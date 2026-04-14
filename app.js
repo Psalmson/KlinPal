@@ -205,34 +205,43 @@ function escHtml(str) {
 ════════════════════════════════════════════════════════════════ */
 function calculateDeliveryFee(coords) {
   setAddrStatus('Calculating...', 'loading');
+  calculateDeliveryFeeWithCallback(coords, function(km, err) {
+    if (err) {
+      setAddrStatus('Could not calculate distance', 'err');
+    } else {
+      setAddrStatus('\u2713 ' + km + ' km away', 'ok');
+    }
+  });
+}
 
+function calculateDeliveryFeeWithCallback(coords, callback) {
   var origin      = VENDOR.lat + ',' + VENDOR.lng;
   var destination = coords.lat + ',' + coords.lng;
 
   fetch(CONFIG.SUPABASE_URL + '/functions/v1/google-directions', {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
-      'apikey':       CONFIG.SUPABASE_KEY,
+      'Content-Type':  'application/json',
+      'apikey':        CONFIG.SUPABASE_KEY,
       'Authorization': 'Bearer ' + CONFIG.SUPABASE_KEY,
     },
     body: JSON.stringify({ origin: origin, destination: destination })
   })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      if (data.error) throw new Error(data.error);
-      var km          = data.km;
-      var roundTripKm = km * 2;
-      deliveryFee     = Math.round(CONFIG.BASE_DELIVERY_FEE + CONFIG.RATE_PER_KM * roundTripKm);
-      serviceFee      = Math.min(Math.round(deliveryFee * 0.2), 1000);
-      deliveryLabel   = km + ' km';
-      setAddrStatus('\u2713 ' + km + ' km away', 'ok');
-    })
-    .catch(function() {
-      deliveryFee   = CONFIG.BASE_DELIVERY_FEE;
-      deliveryLabel = 'Could not calculate';
-      setAddrStatus('Could not calculate distance', 'err');
-    });
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.error) throw new Error(data.error);
+    var km          = data.km;
+    var roundTripKm = km * 2;
+    deliveryFee     = Math.round(CONFIG.BASE_DELIVERY_FEE + CONFIG.RATE_PER_KM * roundTripKm);
+    serviceFee      = Math.min(Math.round(deliveryFee * 0.2), 1000);
+    deliveryLabel   = km + ' km';
+    if (callback) callback(km, null);
+  })
+  .catch(function() {
+    deliveryFee   = CONFIG.BASE_DELIVERY_FEE;
+    deliveryLabel = 'Could not calculate';
+    if (callback) callback(null, true);
+  });
 }
 
 function setAddrStatus(text, type) {
@@ -392,6 +401,7 @@ function selectConfirmSuggestion(result) {
   document.getElementById('confirm-new-addr').value = full;
   document.getElementById('confirm-addr-dropdown').style.display = 'none';
   document.getElementById('confirm-addr-status').textContent = 'Calculating distance...';
+  document.getElementById('confirm-addr-status').className = 'addr-status loading';
 
   fetch('https://places.googleapis.com/v1/places/' + placeId + '?fields=location', {
     headers: {
@@ -406,10 +416,20 @@ function selectConfirmSuggestion(result) {
     confirmSelectedAddress  = full;
     confirmSelectedCoords   = { lat: lat, lng: lng };
     confirmAddressConfirmed = true;
-    calculateDeliveryFee({ lat: lat, lng: lng });
+    calculateDeliveryFeeWithCallback({ lat: lat, lng: lng }, function(km, err) {
+      var statusEl = document.getElementById('confirm-addr-status');
+      if (err) {
+        statusEl.textContent = 'Could not calculate distance';
+        statusEl.className = 'addr-status err';
+      } else {
+        statusEl.textContent = '\u2713 ' + km + ' km away';
+        statusEl.className = 'addr-status ok';
+      }
+    });
   })
   .catch(function() {
     document.getElementById('confirm-addr-status').textContent = 'Could not get location';
+    document.getElementById('confirm-addr-status').className = 'addr-status err';
   });
 }
 
