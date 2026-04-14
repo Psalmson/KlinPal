@@ -287,14 +287,44 @@ function renderConfirmScreen() {
 
   // Pre-calculate delivery fee for saved address
   if (currentUser.address && !addressConfirmed) {
-    geocodeAddress(currentUser.address, function(coords) {
-      if (coords) {
-        selectedAddress  = currentUser.address;
-        selectedCoords   = coords;
-        addressConfirmed = true;
-        calculateDeliveryFee(coords);
+    selectedAddress  = currentUser.address;
+    addressConfirmed = true;
+
+    var vendorMoved = !currentUser.vendorLat || !currentUser.vendorLng
+      || Math.abs(currentUser.vendorLat - VENDOR.lat) > 0.0001
+      || Math.abs(currentUser.vendorLng - VENDOR.lng) > 0.0001;
+    var hasCachedFee = currentUser.savedFee && currentUser.lat && currentUser.lng;
+
+    if (hasCachedFee && !vendorMoved) {
+      // Use cached fee — no API calls needed
+      deliveryFee   = Number(currentUser.savedFee);
+      serviceFee    = Math.min(Math.round(deliveryFee * 0.2), 1000);
+      selectedCoords = { lat: currentUser.lat, lng: currentUser.lng };
+      var cachedKm  = ((deliveryFee - CONFIG.BASE_DELIVERY_FEE) / CONFIG.RATE_PER_KM / 2).toFixed(1);
+      deliveryLabel = cachedKm + ' km';
+    } else {
+      // Cache miss or vendor moved — recalculate via API
+      deliveryFee   = CONFIG.BASE_DELIVERY_FEE;
+      deliveryLabel = 'Calculating...';
+      if (currentUser.lat && currentUser.lng && !vendorMoved) {
+        // Have customer coords, just need new fee
+        var coords = { lat: currentUser.lat, lng: currentUser.lng };
+        selectedCoords = coords;
+        calculateDeliveryFeeWithCallback(coords, function(km, err) {
+          if (!err) saveCustomerFeeCache(coords);
+        });
+      } else {
+        // Need full geocode
+        geocodeAddress(currentUser.address, function(coords) {
+          if (coords) {
+            selectedCoords = coords;
+            calculateDeliveryFeeWithCallback(coords, function(km, err) {
+              if (!err) saveCustomerFeeCache(coords);
+            });
+          }
+        });
       }
-    });
+    }
   }
 
   // Init autocomplete for change address panel
@@ -315,6 +345,26 @@ function geocodeAddress(address, callback) {
       } else { callback(null); }
     })
     .catch(function() { callback(null); });
+}
+
+function saveCustomerFeeCache(coords) {
+  if (!currentUser || !currentUser.customerId) return;
+  sbFetch('customers?id=eq.' + currentUser.customerId, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      lat:        coords.lat,
+      lng:        coords.lng,
+      delivery_fee: deliveryFee,
+      vendor_lat: VENDOR.lat,
+      vendor_lng: VENDOR.lng,
+    })
+  }).catch(function() {});
+  // Update local cache so subsequent screens stay in sync
+  currentUser.lat       = coords.lat;
+  currentUser.lng       = coords.lng;
+  currentUser.savedFee  = deliveryFee;
+  currentUser.vendorLat = VENDOR.lat;
+  currentUser.vendorLng = VENDOR.lng;
 }
 
 function confirmAddress() {
@@ -450,15 +500,27 @@ function submitAddressChange() {
   document.getElementById('confirm-address-text').textContent = confirmSelectedAddress;
   document.getElementById('address-change-panel').style.display = 'none';
 
-  // Save new address to customer record
+  // Save new address + fee cache to customer record
   if (currentUser && currentUser.customerId) {
     sbFetch('customers?id=eq.' + currentUser.customerId, {
       method: 'PATCH',
-      body: JSON.stringify({ address: confirmSelectedAddress })
+      body: JSON.stringify({
+        address:      confirmSelectedAddress,
+        lat:          confirmSelectedCoords.lat,
+        lng:          confirmSelectedCoords.lng,
+        delivery_fee: deliveryFee,
+        vendor_lat:   VENDOR.lat,
+        vendor_lng:   VENDOR.lng,
+      })
     }).catch(function() {});
   }
 
-  currentUser.address = confirmSelectedAddress;
+  currentUser.address   = confirmSelectedAddress;
+  currentUser.lat       = confirmSelectedCoords.lat;
+  currentUser.lng       = confirmSelectedCoords.lng;
+  currentUser.savedFee  = deliveryFee;
+  currentUser.vendorLat = VENDOR.lat;
+  currentUser.vendorLng = VENDOR.lng;
   go('s-order');
 }
 
@@ -488,7 +550,19 @@ function checkPhone() {
     .then(function(data) {
       if (data && data.length) {
         var c = data[0];
-        currentUser   = { phone: c.phone, firstName: c.first_name, lastName: c.last_name, email: c.email, address: c.address, customerId: c.id };
+        currentUser   = {
+          phone:       c.phone,
+          firstName:   c.first_name,
+          lastName:    c.last_name,
+          email:       c.email,
+          address:     c.address,
+          customerId:  c.id,
+          lat:         c.lat,
+          lng:         c.lng,
+          savedFee:    c.delivery_fee,
+          vendorLat:   c.vendor_lat,
+          vendorLng:   c.vendor_lng,
+        };
         isNewCustomer = false;
         go('s-confirm');
       } else {
@@ -558,12 +632,17 @@ function submitNewCustomer() {
     method: 'POST',
     headers: { 'Prefer': 'resolution=merge-duplicates' },
     body: JSON.stringify({
-      vendor_id:  VENDOR.id,
-      phone:      currentUser.phone,
-      first_name: currentUser.firstName,
-      last_name:  currentUser.lastName,
-      email:      currentUser.email || '',
-      address:    fullAddress,
+      vendor_id:    VENDOR.id,
+      phone:        currentUser.phone,
+      first_name:   currentUser.firstName,
+      last_name:    currentUser.lastName,
+      email:        currentUser.email || '',
+      address:      fullAddress,
+      lat:          selectedCoords ? selectedCoords.lat : null,
+      lng:          selectedCoords ? selectedCoords.lng : null,
+      delivery_fee: deliveryFee,
+      vendor_lat:   VENDOR.lat,
+      vendor_lng:   VENDOR.lng,
     }),
   }).catch(function() {}); // fire and forget
 
@@ -587,36 +666,46 @@ function renderOrderScreen() {
     banner.innerHTML = '';
   }
 
-  // For returning customers, geocode their saved address to get delivery fee
+  // For returning customers, use cached fee if available
   if (!isNewCustomer && currentUser && currentUser.address && !addressConfirmed) {
     selectedAddress  = currentUser.address;
     addressConfirmed = true;
-    deliveryFee      = CONFIG.BASE_DELIVERY_FEE;
-    deliveryLabel    = 'Calculating...';
 
-    // Geocode the saved address to get coords for distance calculation
-    var geocodeUrl = 'https://maps.googleapis.com/maps/api/geocode/json'
-      + '?address=' + encodeURIComponent(currentUser.address)
-      + '&region=ng'
-      + '&key=' + CONFIG.GOOGLE_MAPS_KEY;
+    var vendorMoved = !currentUser.vendorLat || !currentUser.vendorLng
+      || Math.abs(currentUser.vendorLat - VENDOR.lat) > 0.0001
+      || Math.abs(currentUser.vendorLng - VENDOR.lng) > 0.0001;
+    var hasCachedFee = currentUser.savedFee && currentUser.lat && currentUser.lng;
 
-    fetch(geocodeUrl)
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (data.results && data.results.length) {
-          var loc    = data.results[0].geometry.location;
-          var coords = { lat: loc.lat, lng: loc.lng };
-          selectedCoords = coords;
-          calculateDeliveryFee(coords);
-        } else {
-          deliveryFee   = CONFIG.BASE_DELIVERY_FEE;
-          deliveryLabel = 'Flat rate';
-        }
-      })
-      .catch(function() {
-        deliveryFee   = CONFIG.BASE_DELIVERY_FEE;
-        deliveryLabel = 'Flat rate';
-      });
+    if (hasCachedFee && !vendorMoved) {
+      deliveryFee    = Number(currentUser.savedFee);
+      serviceFee     = Math.min(Math.round(deliveryFee * 0.2), 1000);
+      selectedCoords = { lat: currentUser.lat, lng: currentUser.lng };
+      var cachedKm   = ((deliveryFee - CONFIG.BASE_DELIVERY_FEE) / CONFIG.RATE_PER_KM / 2).toFixed(1);
+      deliveryLabel  = cachedKm + ' km';
+    } else {
+      deliveryFee   = CONFIG.BASE_DELIVERY_FEE;
+      deliveryLabel = 'Calculating...';
+      if (currentUser.lat && currentUser.lng && !vendorMoved) {
+        var coords = { lat: currentUser.lat, lng: currentUser.lng };
+        selectedCoords = coords;
+        calculateDeliveryFeeWithCallback(coords, function(km, err) {
+          if (!err) saveCustomerFeeCache(coords);
+        });
+      } else {
+        geocodeAddress(currentUser.address, function(coords) {
+          if (coords) {
+            selectedCoords = coords;
+            calculateDeliveryFeeWithCallback(coords, function(km, err) {
+              if (!err) saveCustomerFeeCache(coords);
+            });
+          } else {
+            deliveryFee   = CONFIG.BASE_DELIVERY_FEE;
+            serviceFee    = Math.min(Math.round(CONFIG.BASE_DELIVERY_FEE * 0.2), 1000);
+            deliveryLabel = 'Flat rate';
+          }
+        });
+      }
+    }
   }
 }
 
