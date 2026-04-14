@@ -217,6 +217,7 @@
       <button class="nav-item" onclick="showPage('notifications')" id="nav-notifications"><span class="icon">🔔</span> Notifications</button>
       <button class="nav-item" onclick="showPage('staff')" id="nav-staff"><span class="icon">👥</span> Staff</button>
       <button class="nav-item" onclick="showPage('branding')" id="nav-branding"><span class="icon">🎨</span> Branding</button>
+      <button class="nav-item" onclick="showPage('promotions')" id="nav-promotions"><span class="icon">🏷️</span> Promotions</button>
     </nav>
     <div class="sidebar-foot">
       <button class="nav-item" onclick="showPage('profile')" id="nav-profile"><span class="icon">👤</span> My Profile</button>
@@ -515,6 +516,71 @@
       </div>
     </div>
 
+    <!-- PROMOTIONS -->
+    <div class="page" id="page-promotions">
+      <div class="page-header">
+        <div><div class="page-title">Promotions</div><div class="page-subtitle">Set a discount on laundry services for a limited period</div></div>
+      </div>
+
+      <div class="card" style="max-width:560px;margin-bottom:20px">
+        <div class="card-header" style="justify-content:space-between">
+          <div class="card-title">Active Discount</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:13px;color:var(--gray)" id="promo-status-label">Inactive</span>
+            <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer">
+              <input type="checkbox" id="promo-toggle" onchange="savePromoToggle()" style="opacity:0;width:0;height:0">
+              <span id="promo-toggle-track" style="position:absolute;inset:0;border-radius:24px;background:var(--gray2);transition:background 0.2s"></span>
+              <span id="promo-toggle-thumb" style="position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:var(--white);transition:left 0.2s"></span>
+            </label>
+          </div>
+        </div>
+        <div class="card-body" style="padding:20px">
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+            <div>
+              <label class="field-label">Discount Type</label>
+              <select class="field-input" id="promo-type" onchange="updatePromoPreview()">
+                <option value="percentage">Percentage (%)</option>
+                <option value="fixed">Fixed Amount (₦)</option>
+              </select>
+            </div>
+            <div>
+              <label class="field-label">Discount Value</label>
+              <input class="field-input" id="promo-value" type="number" min="0" placeholder="e.g. 20" oninput="updatePromoPreview()">
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px">
+            <div>
+              <label class="field-label">Start Date</label>
+              <input class="field-input" id="promo-start" type="date">
+            </div>
+            <div>
+              <label class="field-label">End Date</label>
+              <input class="field-input" id="promo-end" type="date">
+            </div>
+          </div>
+
+          <!-- Preview -->
+          <div id="promo-preview" style="display:none;background:var(--navy3);border-radius:8px;padding:14px;margin-bottom:20px">
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);margin-bottom:8px">Preview</div>
+            <div style="font-size:13px;color:var(--white)" id="promo-preview-text"></div>
+          </div>
+
+          <button class="save-btn" onclick="savePromo()">Save Discount</button>
+          <button onclick="clearPromo()" style="margin-left:12px;background:none;border:none;color:var(--gray);font-size:13px;cursor:pointer;font-family:var(--font-body)">Clear discount</button>
+        </div>
+      </div>
+
+      <!-- Current promo summary -->
+      <div class="card" style="max-width:560px" id="promo-summary-card">
+        <div class="card-header"><div class="card-title">Current Configuration</div></div>
+        <div class="card-body" style="padding:20px">
+          <div id="promo-summary-content" style="font-size:13px;color:var(--gray)">No discount configured.</div>
+        </div>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -802,11 +868,134 @@
     document.getElementById('page-' + name).classList.add('active');
     document.getElementById('nav-' + name).classList.add('active');
     window.scrollTo(0, 0);
-    if (name === 'revenue')  renderRevenue();
-    if (name === 'services') renderServicesEditor();
-    if (name === 'staff')    loadStaff();
-    if (name === 'branding') loadBranding();
-    if (name === 'profile')  {} // fields populated on boot
+    if (name === 'revenue')     renderRevenue();
+    if (name === 'services')    renderServicesEditor();
+    if (name === 'staff')       loadStaff();
+    if (name === 'branding')    loadBranding();
+    if (name === 'promotions')  loadPromo();
+    if (name === 'profile')     {} // fields populated on boot
+  }
+
+  /* ── PROMOTIONS ── */
+  function loadPromo() {
+    sbFetch('vendors?id=eq.' + currentVendor.id + '&select=discount_type,discount_value,discount_start,discount_end,discount_active&limit=1')
+      .then(function(r){ return r.json(); })
+      .then(function(data) {
+        var v = Array.isArray(data) && data.length ? data[0] : {};
+        var toggle   = document.getElementById('promo-toggle');
+        var typeEl   = document.getElementById('promo-type');
+        var valueEl  = document.getElementById('promo-value');
+        var startEl  = document.getElementById('promo-start');
+        var endEl    = document.getElementById('promo-end');
+
+        typeEl.value  = v.discount_type  || 'percentage';
+        valueEl.value = v.discount_value || '';
+        startEl.value = v.discount_start || '';
+        endEl.value   = v.discount_end   || '';
+        toggle.checked = !!v.discount_active;
+
+        updatePromoToggleUI(!!v.discount_active);
+        updatePromoPreview();
+        renderPromoSummary(v);
+      })
+      .catch(function(){ showToast('Could not load promo settings', true); });
+  }
+
+  function updatePromoToggleUI(active) {
+    var track = document.getElementById('promo-toggle-track');
+    var thumb = document.getElementById('promo-toggle-thumb');
+    var label = document.getElementById('promo-status-label');
+    track.style.background = active ? 'var(--teal)' : 'var(--gray2)';
+    thumb.style.left       = active ? '23px' : '3px';
+    label.textContent      = active ? 'Active' : 'Inactive';
+    label.style.color      = active ? 'var(--teal)' : 'var(--gray)';
+  }
+
+  function updatePromoPreview() {
+    var type  = document.getElementById('promo-type').value;
+    var value = parseFloat(document.getElementById('promo-value').value) || 0;
+    var preview  = document.getElementById('promo-preview');
+    var previewT = document.getElementById('promo-preview-text');
+    if (!value) { preview.style.display = 'none'; return; }
+    preview.style.display = 'block';
+    var exampleSub = 10000;
+    var disc = type === 'percentage' ? Math.round(exampleSub * value / 100) : Math.min(Math.round(value), exampleSub);
+    previewT.innerHTML = 'On a <strong style="color:var(--white)">\u20A6' + exampleSub.toLocaleString() + '</strong> order: '
+      + 'customer saves <strong style="color:var(--teal)">\u20A6' + disc.toLocaleString() + '</strong>, pays <strong style="color:var(--white)">\u20A6' + (exampleSub - disc).toLocaleString() + '</strong>';
+  }
+
+  function savePromoToggle() {
+    var active = document.getElementById('promo-toggle').checked;
+    updatePromoToggleUI(active);
+    sbFetch('vendors?id=eq.' + currentVendor.id, {
+      method: 'PATCH',
+      body: JSON.stringify({ discount_active: active })
+    })
+    .then(function(r) {
+      showToast(active ? 'Discount activated \u2713' : 'Discount deactivated \u2713', !r.ok);
+    })
+    .catch(function(){ showToast('Could not update', true); });
+  }
+
+  function savePromo() {
+    var type  = document.getElementById('promo-type').value;
+    var value = parseFloat(document.getElementById('promo-value').value);
+    var start = document.getElementById('promo-start').value || null;
+    var end   = document.getElementById('promo-end').value   || null;
+
+    if (!value || value <= 0)               { showToast('Enter a valid discount value', true); return; }
+    if (type === 'percentage' && value > 100){ showToast('Percentage cannot exceed 100%', true); return; }
+    if (start && end && start > end)         { showToast('End date must be after start date', true); return; }
+
+    sbFetch('vendors?id=eq.' + currentVendor.id, {
+      method: 'PATCH',
+      body: JSON.stringify({ discount_type: type, discount_value: value, discount_start: start, discount_end: end })
+    })
+    .then(function(r) {
+      if (r.ok) {
+        showToast('Discount saved \u2713');
+        renderPromoSummary({ discount_type: type, discount_value: value, discount_start: start, discount_end: end, discount_active: document.getElementById('promo-toggle').checked });
+        updatePromoPreview();
+      } else { showToast('Save failed', true); }
+    })
+    .catch(function(){ showToast('Could not save', true); });
+  }
+
+  function clearPromo() {
+    if (!confirm('Remove the current discount configuration?')) return;
+    sbFetch('vendors?id=eq.' + currentVendor.id, {
+      method: 'PATCH',
+      body: JSON.stringify({ discount_type: null, discount_value: 0, discount_start: null, discount_end: null, discount_active: false })
+    })
+    .then(function(r) {
+      if (r.ok) {
+        ['promo-type','promo-value','promo-start','promo-end'].forEach(function(id){ document.getElementById(id).value = ''; });
+        document.getElementById('promo-toggle').checked = false;
+        updatePromoToggleUI(false);
+        document.getElementById('promo-preview').style.display = 'none';
+        renderPromoSummary({});
+        showToast('Discount cleared \u2713');
+      }
+    })
+    .catch(function(){ showToast('Could not clear', true); });
+  }
+
+  function renderPromoSummary(v) {
+    var el = document.getElementById('promo-summary-content');
+    if (!v.discount_type || !v.discount_value) {
+      el.innerHTML = '<span style="color:var(--gray)">No discount configured.</span>';
+      return;
+    }
+    var typeLabel  = v.discount_type === 'percentage' ? v.discount_value + '% off' : '\u20A6' + Number(v.discount_value).toLocaleString() + ' off';
+    var dateRange  = (v.discount_start || 'open') + ' \u2192 ' + (v.discount_end || 'open');
+    var statusColor = v.discount_active ? 'var(--teal)' : 'var(--red)';
+    var statusText  = v.discount_active ? 'Active' : 'Inactive';
+    el.innerHTML =
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'
+      + '<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);margin-bottom:4px">Discount</div><div style="font-size:18px;font-weight:700;color:var(--teal)">' + typeLabel + '</div></div>'
+      + '<div><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);margin-bottom:4px">Status</div><div style="font-size:15px;font-weight:700;color:' + statusColor + '">' + statusText + '</div></div>'
+      + '<div style="grid-column:1/-1"><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);margin-bottom:4px">Valid Period</div><div style="font-size:13px;color:var(--white)">' + dateRange + '</div></div>'
+      + '</div>';
   }
 
   /* ── LOAD ORDERS ── */
