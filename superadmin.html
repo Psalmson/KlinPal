@@ -752,6 +752,7 @@
   function loadVendorOrders(vendor) {
     if (!vendor||!vendor.id) { showToast('No vendor selected',true); return; }
     document.getElementById('drill-table').innerHTML='<div class="loading-state">Loading orders...</div>';
+    expandedRows = {};
     sbFetch('orders?vendor_id=eq.'+vendor.id+'&order=created_at.desc&select=*').then(function(r){ return r.json(); })
     .then(function(orders) {
       orders = Array.isArray(orders) ? orders : [];
@@ -789,29 +790,175 @@
 
   var allDrivers = [];
 
+  var expandedRows = {};
+
+  function toggleRiderRow(orderId) {
+    expandedRows[orderId] = !expandedRows[orderId];
+    applyDrillFilters();
+  }
+
   function renderDrillTable(orders) {
     var payStatuses = ['Pending','Paid','Not Paid'];
     var statuses    = ['Pending','Picked Up','On the Way','Washing','Ready','Delivered','Cancelled'];
+    var driverOpts  = '<option value="">Unassigned</option>' + allDrivers.filter(function(d){ return d.active; }).map(function(d){
+      return '<option value="'+d.id+'">'+d.name+' ('+d.percentage+'%)</option>';
+    }).join('');
+
     var rows = orders.map(function(o) {
-      var date = o.created_at ? new Date(o.created_at).toLocaleDateString('en-GB') : '';
-      var pickupName  = o.pickup_driver_id  ? (allDrivers.find(function(d){ return d.id===o.pickup_driver_id; })||{name:'—'}).name  : '—';
-      var delivName   = o.delivery_driver_id ? (allDrivers.find(function(d){ return d.id===o.delivery_driver_id; })||{name:'—'}).name : '—';
-      return '<tr>'
+      var date        = o.created_at ? new Date(o.created_at).toLocaleDateString('en-GB') : '';
+      var pickupName  = o.pickup_driver_id  ? (allDrivers.find(function(d){ return d.id===o.pickup_driver_id;  })||{name:'\u2014'}).name : '\u2014';
+      var delivName   = o.delivery_driver_id? (allDrivers.find(function(d){ return d.id===o.delivery_driver_id;})||{name:'\u2014'}).name : '\u2014';
+      var isExpanded  = !!expandedRows[o.order_id];
+      var delivFee    = Number(o.delivery_fee)||0;
+      var halfFee     = delivFee / 2;
+      var pickupDrv   = o.pickup_driver_id   ? allDrivers.find(function(d){ return d.id===o.pickup_driver_id;  }) : null;
+      var delivDrv    = o.delivery_driver_id  ? allDrivers.find(function(d){ return d.id===o.delivery_driver_id; }) : null;
+      var pickupComm  = pickupDrv ? Math.round(halfFee * pickupDrv.percentage / 100) : 0;
+      var delivComm   = delivDrv  ? Math.round(halfFee * delivDrv.percentage  / 100) : 0;
+      var klinpal     = delivFee - pickupComm - delivComm;
+
+      var mainRow = '<tr>'
         +'<td><div class="mono">'+(o.order_id||'\u2014')+'</div><div style="font-size:11px;color:var(--gray);margin-top:3px">'+date+'</div></td>'
         +'<td><div style="font-weight:600">'+(o.customer_name||'\u2014')+'</div><div style="font-size:12px;color:var(--gray)">'+(o.phone||'')+'</div><div style="font-size:11px;color:var(--gray);max-width:180px;margin-top:2px">'+(o.address||'')+'</div></td>'
         +'<td style="font-size:12px;color:var(--gray);max-width:160px">'+(o.items||'\u2014')+'</td>'
-        +'<td><span class="mono">\u20A6'+(Number(o.subtotal)||0).toLocaleString()+'</span><div style="font-size:11px;color:var(--gray);margin-top:3px">+\u20A6'+(Number(o.delivery_fee)||0).toLocaleString()+' delivery</div></td>'
-        +'<td><div style="font-size:12px;color:var(--white)">P: '+pickupName+'</div><div style="font-size:12px;color:var(--gray);margin-top:3px">D: '+delivName+'</div></td>'
+        +'<td><span class="mono">\u20A6'+(Number(o.subtotal)||0).toLocaleString()+'</span><div style="font-size:11px;color:var(--gray);margin-top:3px">+\u20A6'+delivFee.toLocaleString()+' delivery</div></td>'
+        +'<td>'
+        +  '<div style="font-size:12px;color:var(--white)">P: '+pickupName+'</div>'
+        +  '<div style="font-size:12px;color:var(--gray);margin-top:3px">D: '+delivName+'</div>'
+        +  '<button class="btn btn-ghost btn-sm" onclick="toggleRiderRow(\''+o.order_id+'\')" style="margin-top:6px;font-size:11px;padding:4px 10px">'
+        +    (isExpanded ? '&#x25B2; Hide' : '&#x25BC; Assign')
+        +  '</button>'
+        +'</td>'
         +'<td><select class="status-select" onchange="updatePaymentStatus(this,\''+o.order_id+'\')">'
         +payStatuses.map(function(s){ return '<option value="'+s+'"'+((o.payment_status||'Pending')===s?' selected':'')+'>'+s+'</option>'; }).join('')
         +'</select></td>'
         +'<td><select class="status-select" onchange="updateStatus(this,\''+o.order_id+'\')">'
         +statuses.map(function(s){ return '<option value="'+s+'"'+(o.status===s?' selected':'')+'>'+s+'</option>'; }).join('')
         +'</select></td>'
-        +'<td><button class="btn btn-ghost btn-sm" onclick="openOrderDetailModal(\''+o.order_id+'\')">View</button></td>'
         +'</tr>';
+
+      if (!isExpanded) return mainRow;
+
+      // Build pickup select with current value
+      var pickupOpts = driverOpts.replace('value="'+(o.pickup_driver_id||'')+'"', 'value="'+(o.pickup_driver_id||'')+'" selected');
+      var delivOpts  = driverOpts.replace('value="'+(o.delivery_driver_id||'')+'"', 'value="'+(o.delivery_driver_id||'')+'" selected');
+
+      var expandRow = '<tr style="background:var(--navy3)">'
+        +'<td colspan="7" style="padding:16px 20px">'
+        +  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:12px">'
+
+        +  '<div style="background:var(--navy2);border-radius:8px;padding:14px">'
+        +    '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);margin-bottom:8px">Pickup Rider</div>'
+        +    '<select class="status-select" style="width:100%;margin-bottom:8px" onchange="assignPickupRider(this,\''+o.order_id+'\','+delivFee+')">'
+        +      pickupOpts
+        +    '</select>'
+        +    '<div style="font-size:11px;color:var(--gray)" id="pickup-comm-'+o.order_id+'">'
+        +      (pickupDrv ? 'Commission: \u20A6'+pickupComm.toLocaleString()+' \u00B7 '+pickupDrv.percentage+'% of \u20A6'+Math.round(halfFee).toLocaleString() : 'Commission: \u2014')
+        +    '</div>'
+        +  '</div>'
+
+        +  '<div style="background:var(--navy2);border-radius:8px;padding:14px">'
+        +    '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);margin-bottom:8px">Delivery Rider</div>'
+        +    '<select class="status-select" style="width:100%;margin-bottom:8px" onchange="assignDeliveryRider(this,\''+o.order_id+'\','+delivFee+')">'
+        +      delivOpts
+        +    '</select>'
+        +    '<div style="font-size:11px;color:var(--gray)" id="deliv-comm-'+o.order_id+'">'
+        +      (delivDrv ? 'Commission: \u20A6'+delivComm.toLocaleString()+' \u00B7 '+delivDrv.percentage+'% of \u20A6'+Math.round(halfFee).toLocaleString() : 'Commission: \u2014')
+        +    '</div>'
+        +  '</div>'
+
+        +  '</div>'
+        +  '<div style="font-size:12px;color:var(--gray)">Klinpal delivery revenue: <span style="color:var(--teal);font-weight:600" id="klinpal-rev-'+o.order_id+'">\u20A6'+klinpal.toLocaleString()+'</span>'
+        +    ' <span style="color:var(--gray)">(\u20A6'+delivFee.toLocaleString()+' \u2212 \u20A6'+pickupComm.toLocaleString()+' pickup \u2212 \u20A6'+delivComm.toLocaleString()+' delivery)</span>'
+        +  '</div>'
+        +'</td>'
+        +'</tr>';
+
+      return mainRow + expandRow;
     }).join('');
-    document.getElementById('drill-table').innerHTML='<table><thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Amount</th><th>Riders</th><th>Payment</th><th>Status</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>';
+
+    document.getElementById('drill-table').innerHTML='<table><thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Amount</th><th>Riders</th><th>Payment</th><th>Status</th></tr></thead><tbody>'+rows+'</tbody></table>';
+  }
+
+  function assignPickupRider(select, orderId, delivFee) {
+    var pickupId  = select.value || null;
+    var pickupDrv = pickupId ? allDrivers.find(function(d){ return d.id===pickupId; }) : null;
+    var o         = drillOrders.find(function(x){ return x.order_id===orderId; });
+    var delivId   = o ? o.delivery_driver_id : null;
+    var delivDrv  = delivId ? allDrivers.find(function(d){ return d.id===delivId; }) : null;
+    var halfFee   = delivFee / 2;
+    var pickupComm= pickupDrv ? Math.round(halfFee * pickupDrv.percentage / 100) : 0;
+    var delivComm = delivDrv  ? Math.round(halfFee * delivDrv.percentage  / 100) : 0;
+    var klinpal   = delivFee - pickupComm - delivComm;
+
+    sbFetch('orders?order_id=eq.'+orderId, {
+      method: 'PATCH',
+      body: JSON.stringify({ pickup_driver_id: pickupId, pickup_rider_fee: pickupComm, klinpal_delivery_revenue: klinpal })
+    })
+    .then(function(r) {
+      if (!r.ok) { showToast('Assignment failed', true); return; }
+      showToast(pickupDrv ? pickupDrv.name+' assigned for pickup \u2713' : 'Pickup rider removed \u2713');
+      if (o) { o.pickup_driver_id=pickupId; o.pickup_rider_fee=pickupComm; o.klinpal_delivery_revenue=klinpal; }
+      // Update commission display inline
+      var commEl = document.getElementById('pickup-comm-'+orderId);
+      if (commEl) commEl.textContent = pickupDrv ? 'Commission: \u20A6'+pickupComm.toLocaleString()+' \u00B7 '+pickupDrv.percentage+'% of \u20A6'+Math.round(halfFee).toLocaleString() : 'Commission: \u2014';
+      var revEl = document.getElementById('klinpal-rev-'+orderId);
+      if (revEl) revEl.textContent = '\u20A6'+klinpal.toLocaleString();
+      if (pickupDrv && pickupDrv.telegram_chat_id) {
+        var vendorAddr = currentDrillVendor ? (currentDrillVendor.address || '\u2014') : '\u2014';
+        sendTelegram(pickupDrv.telegram_chat_id,
+          '\uD83D\uDEF5 Pickup Assignment\n\n'
+          +'Order ID: '+orderId+'\n'
+          +'Customer: '+(o ? o.customer_name : '\u2014')+'\n'
+          +'Phone: '+(o ? o.phone : '\u2014')+'\n'
+          +'Pickup address: '+(o ? o.address : '\u2014')+'\n'
+          +'Drop off at: '+vendorAddr+'\n'
+          +'Items: '+(o ? o.items : '\u2014')+'\n'
+          +'Your commission: \u20A6'+pickupComm.toLocaleString()
+        );
+      }
+    })
+    .catch(function(){ showToast('Could not assign pickup rider', true); });
+  }
+
+  function assignDeliveryRider(select, orderId, delivFee) {
+    var delivId   = select.value || null;
+    var delivDrv  = delivId ? allDrivers.find(function(d){ return d.id===delivId; }) : null;
+    var o         = drillOrders.find(function(x){ return x.order_id===orderId; });
+    var pickupId  = o ? o.pickup_driver_id : null;
+    var pickupDrv = pickupId ? allDrivers.find(function(d){ return d.id===pickupId; }) : null;
+    var halfFee   = delivFee / 2;
+    var pickupComm= pickupDrv ? Math.round(halfFee * pickupDrv.percentage / 100) : 0;
+    var delivComm = delivDrv  ? Math.round(halfFee * delivDrv.percentage  / 100) : 0;
+    var klinpal   = delivFee - pickupComm - delivComm;
+
+    sbFetch('orders?order_id=eq.'+orderId, {
+      method: 'PATCH',
+      body: JSON.stringify({ delivery_driver_id: delivId, delivery_rider_fee: delivComm, klinpal_delivery_revenue: klinpal })
+    })
+    .then(function(r) {
+      if (!r.ok) { showToast('Assignment failed', true); return; }
+      showToast(delivDrv ? delivDrv.name+' assigned for delivery \u2713' : 'Delivery rider removed \u2713');
+      if (o) { o.delivery_driver_id=delivId; o.delivery_rider_fee=delivComm; o.klinpal_delivery_revenue=klinpal; }
+      var commEl = document.getElementById('deliv-comm-'+orderId);
+      if (commEl) commEl.textContent = delivDrv ? 'Commission: \u20A6'+delivComm.toLocaleString()+' \u00B7 '+delivDrv.percentage+'% of \u20A6'+Math.round(halfFee).toLocaleString() : 'Commission: \u2014';
+      var revEl = document.getElementById('klinpal-rev-'+orderId);
+      if (revEl) revEl.textContent = '\u20A6'+klinpal.toLocaleString();
+      if (delivDrv && delivDrv.telegram_chat_id) {
+        var vendorAddr = currentDrillVendor ? (currentDrillVendor.address || '\u2014') : '\u2014';
+        sendTelegram(delivDrv.telegram_chat_id,
+          '\uD83D\uDEF5 Delivery Assignment\n\n'
+          +'Order ID: '+orderId+'\n'
+          +'Customer: '+(o ? o.customer_name : '\u2014')+'\n'
+          +'Phone: '+(o ? o.phone : '\u2014')+'\n'
+          +'Collect from: '+vendorAddr+'\n'
+          +'Delivery address: '+(o ? o.address : '\u2014')+'\n'
+          +'Items: '+(o ? o.items : '\u2014')+'\n'
+          +'Your commission: \u20A6'+delivComm.toLocaleString()
+        );
+      }
+    })
+    .catch(function(){ showToast('Could not assign delivery rider', true); });
   }
 
   function updatePaymentStatus(select, orderId) {
@@ -1009,12 +1156,14 @@
       if (o) { o.pickup_driver_id = pickupId; o.pickup_rider_fee = pickupFee; o.klinpal_delivery_revenue = klinpal; }
       odmUpdateCommissionDisplay(o);
       if (pickupDrv && pickupDrv.telegram_chat_id) {
+        var vendorAddr = currentDrillVendor ? (currentDrillVendor.address || '\u2014') : '\u2014';
         sendTelegram(pickupDrv.telegram_chat_id,
           '\uD83D\uDEF5 Pickup Assignment\n\n'
           + 'Order ID: ' + odmOrderId + '\n'
           + 'Customer: ' + (o ? o.customer_name : '\u2014') + '\n'
           + 'Phone: '    + (o ? o.phone : '\u2014') + '\n'
           + 'Pickup address: ' + (o ? o.address : '\u2014') + '\n'
+          + 'Drop off at: ' + vendorAddr + '\n'
           + 'Items: '    + (o ? o.items : '\u2014') + '\n'
           + 'Your commission: \u20A6' + pickupFee.toLocaleString()
         );
@@ -1046,11 +1195,13 @@
       if (o) { o.delivery_driver_id = delivId; o.delivery_rider_fee = delivFeeR; o.klinpal_delivery_revenue = klinpal; }
       odmUpdateCommissionDisplay(o);
       if (delivDrv && delivDrv.telegram_chat_id) {
+        var vendorAddr = currentDrillVendor ? (currentDrillVendor.address || '\u2014') : '\u2014';
         sendTelegram(delivDrv.telegram_chat_id,
           '\uD83D\uDEF5 Delivery Assignment\n\n'
           + 'Order ID: ' + odmOrderId + '\n'
           + 'Customer: ' + (o ? o.customer_name : '\u2014') + '\n'
           + 'Phone: '    + (o ? o.phone : '\u2014') + '\n'
+          + 'Collect from: ' + vendorAddr + '\n'
           + 'Delivery address: ' + (o ? o.address : '\u2014') + '\n'
           + 'Items: '    + (o ? o.items : '\u2014') + '\n'
           + 'Your commission: \u20A6' + delivFeeR.toLocaleString()
