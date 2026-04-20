@@ -128,6 +128,7 @@
     <nav class="sidebar-nav">
       <button class="nav-item active" onclick="showPage('overview')" id="nav-overview"><span class="icon">&#x1F3E0;</span> Overview</button>
       <button class="nav-item" onclick="showPage('vendors')" id="nav-vendors"><span class="icon">&#x1F3EA;</span> Laundromats</button>
+      <button class="nav-item" onclick="showPage('prospects')" id="nav-prospects"><span class="icon">&#x1F4CB;</span> Prospects</button>
       <button class="nav-item" onclick="showPage('onboard')" id="nav-onboard"><span class="icon">&#x2795;</span> Onboard New</button>
       <button class="nav-item" onclick="showPage('riders')" id="nav-riders"><span class="icon">&#x1F6F5;</span> Riders</button>
       <button class="nav-item" onclick="showPage('settings')" id="nav-settings"><span class="icon">&#x2699;&#xFE0F;</span> Settings</button>
@@ -191,6 +192,28 @@
       <div class="card">
         <div class="card-header"><div class="card-title">All Laundromats</div></div>
         <div id="vendors-table"><div class="loading-state">Loading...</div></div>
+      </div>
+    </div>
+
+    <!-- PROSPECTS -->
+    <div class="page" id="page-prospects">
+      <div class="page-header">
+        <div><div class="page-title">Prospects</div><div class="page-subtitle">Vendor interest submissions</div></div>
+        <button class="btn btn-ghost" onclick="loadProspects()">&#x21BB; Refresh</button>
+      </div>
+      <div class="card">
+        <div class="card-header" style="justify-content:space-between">
+          <div class="card-title">All Submissions</div>
+          <div style="display:flex;gap:8px">
+            <select id="prospect-filter" class="status-select" onchange="renderProspectsTable()" style="font-size:12px">
+              <option value="">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </div>
+        </div>
+        <div id="prospects-table"><div class="loading-state">Loading...</div></div>
       </div>
     </div>
 
@@ -540,10 +563,11 @@
 
 <div class="toast" id="toast"></div>
 
+<script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-  var SUPABASE_URL = 'https://mlgdqxqzpzfzndjhywqf.supabase.co';
-  var SUPABASE_KEY = 'sb_publishable_TS5uGf7KzLKxeQw8bxDKYw_HwBNNBeA';
+  var SUPABASE_URL = KLINPAL_ENV.SUPABASE_URL;
+  var SUPABASE_KEY = KLINPAL_ENV.SUPABASE_KEY;
   var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, storageKey: 'klinpal-superadmin-auth' }
   });
@@ -638,8 +662,9 @@
   });
 
   function showPage(name) {
-    if (name === 'settings') loadSettings();
-    if (name === 'riders')   loadRiders();
+    if (name === 'settings')   loadSettings();
+    if (name === 'riders')     loadRiders();
+    if (name === 'prospects')  loadProspects();
     if (name !== 'vendor-orders') stopDrillRealtime();
     if (name !== 'riders') closeRiderDrill();
     document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
@@ -649,6 +674,100 @@
     if (nav) nav.classList.add('active');
     window.scrollTo(0,0);
     if (name === 'vendors') renderVendorsTable();
+  }
+
+  /* ── PROSPECTS ── */
+  var allProspects = [];
+
+  function loadProspects() {
+    document.getElementById('prospects-table').innerHTML = '<div class="loading-state">Loading...</div>';
+    sbFetch('prospects?order=created_at.desc&select=*')
+      .then(function(r){ return r.json(); })
+      .then(function(data) {
+        allProspects = Array.isArray(data) ? data : [];
+        renderProspectsTable();
+      })
+      .catch(function(){ document.getElementById('prospects-table').innerHTML = '<div class="loading-state">Could not load prospects</div>'; });
+  }
+
+  function renderProspectsTable() {
+    var filter = document.getElementById('prospect-filter').value;
+    var list   = filter ? allProspects.filter(function(p){ return p.status === filter; }) : allProspects;
+
+    if (!list.length) {
+      document.getElementById('prospects-table').innerHTML = '<div class="loading-state">No prospects found</div>';
+      return;
+    }
+
+    var statusColors = { pending: '#FFB347', approved: '#00B896', rejected: '#FF5757' };
+
+    var rows = list.map(function(p) {
+      var date     = p.created_at ? new Date(p.created_at).toLocaleDateString('en-GB') : '';
+      var services = Array.isArray(p.services) ? p.services.map(function(s){ return s.name + ' ₦' + Number(s.price).toLocaleString(); }).join(', ') : '—';
+      var color    = statusColors[p.status] || '#7aA8C0';
+      return '<tr>'
+        + '<td><div style="font-weight:600;color:var(--white)">' + (p.business_name||'—') + '</div><div style="font-size:11px;color:var(--gray);margin-top:2px">' + date + '</div></td>'
+        + '<td><div style="font-size:13px">' + (p.owner_name||'—') + '</div><div style="font-size:11px;color:var(--gray)">' + (p.email||'') + '</div><div style="font-size:11px;color:var(--gray)">' + (p.phone||'') + '</div></td>'
+        + '<td style="font-size:12px;color:var(--gray);max-width:180px">' + (p.address||'—') + '</td>'
+        + '<td style="font-size:11px;color:var(--gray);max-width:160px">' + services + '</td>'
+        + '<td><span style="font-size:11px;font-weight:700;color:' + color + ';text-transform:capitalize">' + (p.status||'pending') + '</span></td>'
+        + '<td style="white-space:nowrap">'
+        +   (p.status === 'pending'
+              ? '<button class="btn btn-teal btn-sm" onclick="approveProspect(\'' + p.id + '\')" style="margin-right:6px">Approve</button>'
+              + '<button class="btn btn-ghost btn-sm" onclick="rejectProspect(\'' + p.id + '\')">Reject</button>'
+              : p.status === 'approved'
+              ? '<button class="btn btn-ghost btn-sm" onclick="prefillOnboard(\'' + p.id + '\')">Onboard →</button>'
+              : '—')
+        + '</td>'
+        + '</tr>';
+    }).join('');
+
+    document.getElementById('prospects-table').innerHTML = '<table><thead><tr>'
+      + '<th>Business</th><th>Contact</th><th>Address</th><th>Services</th><th>Status</th><th></th>'
+      + '</tr></thead><tbody>' + rows + '</tbody></table>';
+  }
+
+  function approveProspect(id) {
+    sbFetch('prospects?id=eq.' + id, { method: 'PATCH', body: JSON.stringify({ status: 'approved' }) })
+      .then(function(r) {
+        if (!r.ok) { showToast('Update failed', true); return; }
+        var p = allProspects.find(function(x){ return x.id === id; });
+        if (p) p.status = 'approved';
+        showToast('Prospect approved \u2713');
+        renderProspectsTable();
+      })
+      .catch(function(){ showToast('Could not update', true); });
+  }
+
+  function rejectProspect(id) {
+    if (!confirm('Mark this prospect as rejected?')) return;
+    sbFetch('prospects?id=eq.' + id, { method: 'PATCH', body: JSON.stringify({ status: 'rejected' }) })
+      .then(function(r) {
+        if (!r.ok) { showToast('Update failed', true); return; }
+        var p = allProspects.find(function(x){ return x.id === id; });
+        if (p) p.status = 'rejected';
+        showToast('Prospect rejected');
+        renderProspectsTable();
+      })
+      .catch(function(){ showToast('Could not update', true); });
+  }
+
+  function prefillOnboard(id) {
+    var p = allProspects.find(function(x){ return x.id === id; });
+    if (!p) return;
+    showPage('onboard');
+    document.getElementById('ob-name').value  = p.business_name || '';
+    document.getElementById('ob-slug').value  = p.slug          || '';
+    document.getElementById('ob-phone').value = p.phone         || '';
+    document.getElementById('ob-address').value = p.address     || '';
+    // Store coords for onboarding
+    obLat = p.lat || null;
+    obLng = p.lng || null;
+    if (p.lat && p.lng) {
+      document.getElementById('ob-addr-status').textContent = '\u2713 Location pre-filled from prospect';
+      obAddressConfirmed = true;
+    }
+    showToast('Form pre-filled from prospect details');
   }
 
   function loadOverview() {
