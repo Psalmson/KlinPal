@@ -263,15 +263,12 @@
             </div>
           </div>
           <div style="margin-bottom:6px;font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;font-weight:600">Address</div>
-          <div class="form-grid" style="margin-bottom:20px">
-            <div></div>
-            <div style="position:relative">
-              <label class="field-label">Street / Area</label>
-              <input class="field-input" id="ob-address" placeholder="Start typing street..." autocomplete="off" oninput="onAddressInput()">
-              <div id="ob-addr-dropdown" style="display:none;position:fixed;background:#0F2235;border:1px solid #0a1628;border-radius:8px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.5);overflow-y:auto;max-height:240px;"></div>
-              <div id="ob-addr-status" style="font-size:11px;margin-top:5px;color:var(--gray)"></div>
-              <div class="field-note">Select from suggestions &mdash; coordinates captured automatically.</div>
-            </div>
+          <div style="position:relative;margin-bottom:20px">
+            <label class="field-label">Street / Area</label>
+            <input class="field-input" id="ob-address" placeholder="Start typing street or area..." autocomplete="off" oninput="onAddressInput()">
+            <div id="ob-addr-dropdown" style="display:none;position:fixed;background:#0F2235;border:1px solid #0a1628;border-radius:8px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.5);overflow-y:auto;max-height:240px;"></div>
+            <div id="ob-addr-status" style="font-size:11px;margin-top:5px;color:var(--gray)"></div>
+            <div class="field-note">Select from suggestions &mdash; coordinates captured automatically.</div>
           </div>
           <div style="margin-bottom:6px;font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;font-weight:600">Notifications &amp; Branding</div>
           <div class="form-grid" style="margin-bottom:8px">
