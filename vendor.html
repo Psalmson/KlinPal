@@ -158,6 +158,12 @@
     .two-col    { grid-template-columns: 1fr; }
     .services-grid { grid-template-columns: 1fr; }
   }
+  .rev-chip { padding:6px 14px; border-radius:20px; border:1px solid var(--navy3,#0a1628); background:var(--navy2,#0F2235); color:var(--gray-400,#8A9AB5); font-size:12px; font-family:var(--font-body); cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+  .rev-chip:hover { border-color:var(--teal,#B5DFCA); color:var(--white,#e8f4f0); }
+  .rev-chip-active { background:var(--teal,#B5DFCA) !important; color:var(--navy,#173753) !important; border-color:var(--teal,#B5DFCA) !important; font-weight:700; }
+  .rev-date-input { background:var(--navy2,#0F2235); border:1px solid var(--navy3,#0a1628); border-radius:6px; padding:5px 10px; color:var(--white,#e8f4f0); font-size:12px; font-family:var(--font-body); outline:none; cursor:pointer; }
+  .rev-date-input:focus { border-color:var(--teal,#B5DFCA); }
+  .rev-date-input::-webkit-calendar-picker-indicator { filter:invert(0.5); cursor:pointer; }
 </style>
 </head>
 <body>
@@ -282,6 +288,23 @@
           <div class="page-title">Revenue</div>
           <div class="page-subtitle">Your laundry services earnings</div>
         </div>
+      </div>
+
+      <!-- DATE FILTER BAR -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;flex-wrap:wrap">
+        <button class="rev-chip" id="rev-chip-today"     onclick="setRevFilter('today')">Today</button>
+        <button class="rev-chip" id="rev-chip-yesterday" onclick="setRevFilter('yesterday')">Yesterday</button>
+        <button class="rev-chip" id="rev-chip-week"      onclick="setRevFilter('week')">This Week</button>
+        <button class="rev-chip rev-chip-active" id="rev-chip-all" onclick="setRevFilter('all')">All Time</button>
+        <div style="display:flex;align-items:center;gap:6px;margin-left:4px">
+          <input type="date" id="rev-filter-single" class="rev-date-input" onchange="setRevFilter('single')" title="Single day">
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <input type="date" id="rev-filter-from" class="rev-date-input" onchange="setRevFilter('range')" title="From">
+          <span style="font-size:12px;color:var(--gray-400)">—</span>
+          <input type="date" id="rev-filter-to"   class="rev-date-input" onchange="setRevFilter('range')" title="To">
+        </div>
+        <span id="rev-filter-label" style="font-size:12px;color:var(--gray-400);margin-left:4px"></span>
       </div>
       <div class="highlight-card">
         <div class="highlight-label">Vendor Earnings</div>
@@ -514,6 +537,42 @@
           <button class="save-btn" onclick="updateAddress()" style="margin-top:12px">Update Address</button>
         </div>
       </div>
+
+      <div class="card" style="max-width:560px">
+        <div class="card-header"><div class="card-title">Pickup & Delivery Windows</div></div>
+        <div class="card-body">
+          <p style="font-size:13px;color:var(--gray);margin-bottom:20px;line-height:1.6">Set the time windows shown to your customers for pickup and delivery. Leave unchanged to use the platform defaults (7am–12pm / 5pm–8pm).</p>
+          <div style="margin-bottom:20px">
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--teal2,#00B896);font-weight:600;margin-bottom:10px">Pickup Window</div>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+              <div>
+                <label class="field-label">From</label>
+                <input class="field-input" id="vendor-pickup-start" type="time" style="max-width:150px">
+              </div>
+              <span style="color:var(--gray);margin-top:18px">→</span>
+              <div>
+                <label class="field-label">To</label>
+                <input class="field-input" id="vendor-pickup-end" type="time" style="max-width:150px">
+              </div>
+            </div>
+          </div>
+          <div style="margin-bottom:24px">
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--teal2,#00B896);font-weight:600;margin-bottom:10px">Delivery Window</div>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+              <div>
+                <label class="field-label">From</label>
+                <input class="field-input" id="vendor-delivery-start" type="time" style="max-width:150px">
+              </div>
+              <span style="color:var(--gray);margin-top:18px">→</span>
+              <div>
+                <label class="field-label">To</label>
+                <input class="field-input" id="vendor-delivery-end" type="time" style="max-width:150px">
+              </div>
+            </div>
+          </div>
+          <button class="save-btn" onclick="saveVendorTimeWindows()">&#x1F4BE; Save Windows</button>
+        </div>
+      </div>
     </div>
 
     <!-- PROMOTIONS -->
@@ -599,11 +658,12 @@
 
 <div class="toast" id="toast"></div>
 
+<script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
   /* ── CONFIG ── */
-  var SUPABASE_URL = 'https://mlgdqxqzpzfzndjhywqf.supabase.co';
-  var SUPABASE_KEY = 'sb_publishable_TS5uGf7KzLKxeQw8bxDKYw_HwBNNBeA';
+  var SUPABASE_URL = KLINPAL_ENV.SUPABASE_URL;
+  var SUPABASE_KEY = KLINPAL_ENV.SUPABASE_KEY;
   var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
     auth: {
       persistSession:    true,
@@ -772,6 +832,12 @@
       if (currentVendor.services && currentVendor.services.length) services = currentVendor.services;
       renderServicesEditor();
       loadStaff();
+
+      // Load time windows
+      document.getElementById('vendor-pickup-start').value   = (currentVendor.pickup_start   || '07:00').slice(0,5);
+      document.getElementById('vendor-pickup-end').value     = (currentVendor.pickup_end     || '12:00').slice(0,5);
+      document.getElementById('vendor-delivery-start').value = (currentVendor.delivery_start || '17:00').slice(0,5);
+      document.getElementById('vendor-delivery-end').value   = (currentVendor.delivery_end   || '20:00').slice(0,5);
 
       // Fetch global platform fee then update revenue subtitle
       sbFetch('platform_settings?key=eq.platform_fee_pct&limit=1&select=value')
@@ -1100,51 +1166,103 @@
   }
   function closeModal() { document.getElementById('customer-modal').classList.remove('open'); }
 
+  /* ── REVENUE DATE FILTER ── */
+  var revFilter = { type: 'all', from: null, to: null };
+
+  function toRevDate(d) { return d.toISOString().slice(0,10); }
+
+  function setRevFilter(type) {
+    var today = new Date(); today.setHours(0,0,0,0);
+    var f = { type: type, from: null, to: null };
+    if (type === 'today') {
+      f.from = toRevDate(today); f.to = toRevDate(today);
+    } else if (type === 'yesterday') {
+      var y = new Date(today); y.setDate(y.getDate()-1);
+      f.from = toRevDate(y); f.to = toRevDate(y);
+    } else if (type === 'week') {
+      var mon = new Date(today); mon.setDate(today.getDate() - today.getDay() + (today.getDay()===0?-6:1));
+      f.from = toRevDate(mon); f.to = toRevDate(today);
+    } else if (type === 'single') {
+      var v = document.getElementById('rev-filter-single').value;
+      if (!v) return;
+      f.from = v; f.to = v;
+    } else if (type === 'range') {
+      var fr = document.getElementById('rev-filter-from').value;
+      var to = document.getElementById('rev-filter-to').value;
+      if (!fr || !to) return;
+      f.from = fr; f.to = to;
+    }
+    revFilter = f;
+
+    ['today','yesterday','week','all'].forEach(function(id) {
+      var el = document.getElementById('rev-chip-' + id);
+      if (el) el.className = 'rev-chip' + (id === type ? ' rev-chip-active' : '');
+    });
+    if (['today','yesterday','week','all'].indexOf(type) > -1) {
+      document.getElementById('rev-filter-single').value = '';
+      document.getElementById('rev-filter-from').value   = '';
+      document.getElementById('rev-filter-to').value     = '';
+    }
+    var label = document.getElementById('rev-filter-label');
+    if (type === 'all') label.textContent = '';
+    else if (f.from === f.to) label.textContent = f.from;
+    else label.textContent = f.from + ' → ' + f.to;
+
+    renderRevenue();
+  }
+
   /* ── REVENUE ── */
   function renderRevenue() {
+    var orders = allOrders;
+    if (revFilter.type !== 'all' && revFilter.from) {
+      var from = new Date(revFilter.from + 'T00:00:00');
+      var to   = new Date(revFilter.to   + 'T23:59:59');
+      orders = allOrders.filter(function(o) {
+        var d = new Date(o.created_at);
+        return d >= from && d <= to;
+      });
+    }
+
     var servicesRev   = 0, totalPlatformFee = 0;
     var serviceTotals = {}, statusCount = {};
     var paidRev = 0, pendingRev = 0, notPaidRev = 0;
 
-    if (!allOrders.length) {
-      document.getElementById('rev-total').textContent      = '₦0';
-      document.getElementById('rev-paid').textContent       = '₦0';
+    if (!orders.length) {
+      document.getElementById('rev-total').textContent       = '₦0';
+      document.getElementById('rev-paid').textContent        = '₦0';
       document.getElementById('rev-pending-pay').textContent = '₦0';
-      document.getElementById('rev-not-paid').textContent   = '₦0';
-      document.getElementById('rev-orders').textContent     = '0';
-      document.getElementById('rev-avg').textContent        = '₦0';
-      document.getElementById('rev-top').textContent        = '—';
-      document.getElementById('rev-delivered').textContent  = '0';
-      document.getElementById('rev-by-service').innerHTML   = '<div style="color:var(--gray);font-size:13px;padding:8px 0">No orders yet</div>';
-      document.getElementById('rev-breakdown').innerHTML    = '<div style="color:var(--gray);font-size:13px;padding:8px 0">No orders yet</div>';
+      document.getElementById('rev-not-paid').textContent    = '₦0';
+      document.getElementById('rev-orders').textContent      = '0';
+      document.getElementById('rev-avg').textContent         = '₦0';
+      document.getElementById('rev-top').textContent         = '—';
+      document.getElementById('rev-delivered').textContent   = '0';
+      document.getElementById('rev-by-service').innerHTML    = '<div style="color:var(--gray);font-size:13px;padding:8px 0">No orders for this period</div>';
+      document.getElementById('rev-breakdown').innerHTML     = '<div style="color:var(--gray);font-size:13px;padding:8px 0">No orders for this period</div>';
       return;
     }
 
-    allOrders.forEach(function(o) {
+    orders.forEach(function(o) {
       var sub  = Number(o.subtotal)     || 0;
       var pFee = Number(o.platform_fee) || 0;
       var net  = sub - pFee;
       servicesRev      += sub;
       totalPlatformFee += pFee;
-
-      // Payment breakdown by net payout
       var ps = o.payment_status || 'Pending';
-      if (ps === 'Paid')     paidRev    += net;
+      if (ps === 'Paid')          paidRev    += net;
       else if (ps === 'Not Paid') notPaidRev += net;
-      else                   pendingRev += net;
-
+      else                        pendingRev += net;
       if (o.items) {
         o.items.split(',').forEach(function(item) {
           var m = item.trim().match(/^(\d+)x\s+(.+)$/);
-          if (m) { var n = m[2].trim(); serviceTotals[n] = (serviceTotals[n] || 0) + parseInt(m[1]); }
+          if (m) { var n = m[2].trim(); serviceTotals[n] = (serviceTotals[n]||0) + parseInt(m[1]); }
         });
       }
       var st = o.status || 'Pending';
-      statusCount[st] = (statusCount[st] || 0) + 1;
+      statusCount[st] = (statusCount[st]||0) + 1;
     });
 
     var vendorPayout = servicesRev - totalPlatformFee;
-    var avgOrder     = Math.round(vendorPayout / allOrders.length);
+    var avgOrder     = Math.round(vendorPayout / orders.length);
     var delivered    = statusCount['Delivered'] || 0;
     var topSvc       = '—', topCount = 0;
     Object.keys(serviceTotals).forEach(function(k) { if (serviceTotals[k] > topCount) { topCount = serviceTotals[k]; topSvc = k; } });
@@ -1153,7 +1271,7 @@
     document.getElementById('rev-paid').textContent        = '₦' + paidRev.toLocaleString();
     document.getElementById('rev-pending-pay').textContent = '₦' + pendingRev.toLocaleString();
     document.getElementById('rev-not-paid').textContent    = '₦' + notPaidRev.toLocaleString();
-    document.getElementById('rev-orders').textContent      = allOrders.length;
+    document.getElementById('rev-orders').textContent      = orders.length;
     document.getElementById('rev-avg').textContent         = '₦' + avgOrder.toLocaleString();
     document.getElementById('rev-top').textContent         = topSvc;
     document.getElementById('rev-delivered').textContent   = delivered;
@@ -1167,7 +1285,7 @@
     document.getElementById('rev-breakdown').innerHTML = statusOrder
       .filter(function(s) { return statusCount[s]; })
       .map(function(s) {
-        var pct = Math.round((statusCount[s] / allOrders.length) * 100);
+        var pct = Math.round((statusCount[s] / orders.length) * 100);
         return '<div class="revenue-row"><span class="revenue-label">' + s + '</span><span class="revenue-value">' + statusCount[s] + ' <span style="color:var(--gray);font-size:11px">(' + pct + '%)</span></span></div>';
       }).join('') || '<div style="color:var(--gray);font-size:13px;padding:8px 0">No data yet</div>';
   }
@@ -1408,6 +1526,29 @@
       } else { showToast('Update failed', true); }
     })
     .catch(function() { showToast('Could not update address', true); });
+  }
+
+  function saveVendorTimeWindows() {
+    if (isStaffSession) { showToast('Staff cannot update time windows', true); return; }
+    var ps = document.getElementById('vendor-pickup-start').value;
+    var pe = document.getElementById('vendor-pickup-end').value;
+    var ds = document.getElementById('vendor-delivery-start').value;
+    var de = document.getElementById('vendor-delivery-end').value;
+    if (!ps || !pe || !ds || !de) { showToast('Please fill in all time fields', true); return; }
+    if (ps >= pe) { showToast('Pickup end must be after pickup start', true); return; }
+    if (ds >= de) { showToast('Delivery end must be after delivery start', true); return; }
+    sbFetch('vendors?id=eq.' + currentVendor.id, {
+      method: 'PATCH',
+      body: JSON.stringify({ pickup_start: ps, pickup_end: pe, delivery_start: ds, delivery_end: de })
+    })
+    .then(function(r) {
+      if (r.ok) {
+        currentVendor.pickup_start   = ps; currentVendor.pickup_end   = pe;
+        currentVendor.delivery_start = ds; currentVendor.delivery_end = de;
+        showToast('Time windows saved \u2713');
+      } else { showToast('Save failed', true); }
+    })
+    .catch(function() { showToast('Could not save time windows', true); });
   }
 
   document.addEventListener('click', function(e) {
