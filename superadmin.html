@@ -264,7 +264,7 @@
           </div>
           <div style="margin-bottom:6px;font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;font-weight:600">Address</div>
           <div class="form-grid" style="margin-bottom:20px">
-            <div><label class="field-label">House / Unit No.</label><input class="field-input" id="ob-house" placeholder="e.g. 12B"></div>
+            <div></div>
             <div style="position:relative">
               <label class="field-label">Street / Area</label>
               <input class="field-input" id="ob-address" placeholder="Start typing street..." autocomplete="off" oninput="onAddressInput()">
@@ -1327,19 +1327,18 @@
   /* ── ONBOARD ── */
   function onboardVendor() {
     var name=document.getElementById('ob-name').value.trim(), slug=document.getElementById('ob-slug').value.trim();
-    var phone=document.getElementById('ob-phone').value.trim(), house=document.getElementById('ob-house').value.trim();
+    var phone=document.getElementById('ob-phone').value.trim();
     var street=document.getElementById('ob-address').value.trim(), telegram=document.getElementById('ob-telegram').value.trim();
     var brandColor=document.getElementById('ob-brand-color').value.trim()||null, logoUrl=document.getElementById('ob-logo-url').value.trim()||null;
     if (!name||!slug) { showToast('Name and slug are required',true); return; }
     if (!obAddressConfirmed||!obLat||!obLng) { showToast('Please select a street from the suggestions',true); return; }
     if (brandColor&&!/^#[0-9a-fA-F]{6}$/.test(brandColor)) { showToast('Brand colour must be a valid hex',true); return; }
-    var address=house?house+', '+street:street;
     var btn=document.getElementById('ob-btn'); btn.disabled=true; btn.textContent='Onboarding...';
-    sbFetch('vendors', { method:'POST', body:JSON.stringify({ name:name, slug:slug, phone:phone, address:address, lat:obLat, lng:obLng, telegram_chat_id:telegram||null, brand_color:brandColor, logo_url:logoUrl }) })
+    sbFetch('vendors', { method:'POST', body:JSON.stringify({ name:name, slug:slug, phone:phone, address:street, lat:obLat, lng:obLng, telegram_chat_id:telegram||null, brand_color:brandColor, logo_url:logoUrl }) })
     .then(function(r) {
       if (!r.ok) { return r.json().then(function(e){ showToast(e.message||'Onboarding failed',true); }); }
       showToast(name+' onboarded \u2713');
-      ['ob-name','ob-slug','ob-phone','ob-house','ob-address','ob-telegram','ob-brand-color','ob-logo-url'].forEach(function(id){ document.getElementById(id).value=''; });
+      ['ob-name','ob-slug','ob-phone','ob-address','ob-telegram','ob-brand-color','ob-logo-url'].forEach(function(id){ document.getElementById(id).value=''; });
       obLat=null; obLng=null; obAddressConfirmed=false;
       document.getElementById('ob-addr-status').textContent='';
       loadOverview(); setTimeout(function(){ showPage('vendors'); }, 1500);
