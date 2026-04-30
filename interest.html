@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Partner with Klinpal — Register Your Interest</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Inria+Sans:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:   #1C274C;
+      --navy2:  #162040;
+      --navy3:  #0f1830;
+      --blue:   #28ABE1;
+      --bluelt: #a8dcf5;
+      --white:  #EDF6FB;
+      --gray:   #7a9bb5;
+      --gray2:  #2a3a5a;
+      --red:    #FF5757;
+      --font-head: 'Instrument Sans', sans-serif;
+      --font-body: 'Inria Sans', sans-serif;
+    }
+
+    body {
+      background: var(--navy3);
+      color: var(--white);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      background: var(--navy);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid rgba(40,171,225,0.15);
+    }
+    .logo { font-family: var(--font-head); font-size: 22px; font-weight: 700; color: var(--blue); }
+    .header-sub { font-size: 13px; color: var(--gray); }
+
+    .hero {
+      background: var(--navy);
+      padding: 44px 24px 36px;
+      text-align: center;
+      border-bottom: 1px solid rgba(40,171,225,0.1);
+    }
+    .hero-eyebrow {
+      display: inline-block;
+      background: rgba(40,171,225,0.12);
+      color: var(--blue);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      padding: 5px 16px;
+      border-radius: 20px;
+      margin-bottom: 18px;
+    }
+    .hero h1 {
+      font-family: var(--font-head);
+      font-size: clamp(24px, 4.5vw, 38px);
+      font-weight: 700;
+      color: var(--white);
+      line-height: 1.2;
+      max-width: 560px;
+      margin: 0 auto 14px;
+    }
+    .hero p {
+      font-size: 15px;
+      color: var(--gray);
+      max-width: 460px;
+      margin: 0 auto;
+      line-height: 1.65;
+    }
+
+    /* STEPPER */
+    .stepper-wrap {
+      max-width: 560px;
+      margin: 32px auto 0;
+      padding: 0 20px;
+    }
+    .stepper { display: flex; align-items: flex-start; }
+    .step { display: flex; flex-direction: column; align-items: center; flex: 1; }
+    .step-circle {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      background: var(--navy2);
+      border: 2px solid var(--gray2);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-head);
+      font-size: 13px; font-weight: 700;
+      color: var(--gray);
+      transition: all 0.25s;
+      position: relative; z-index: 1;
+    }
+    .step.active .step-circle { background: var(--blue); border-color: var(--blue); color: var(--navy3); }
+    .step.done   .step-circle { background: rgba(40,171,225,0.15); border-color: var(--blue); color: var(--blue); }
+    .step-label {
+      font-size: 11px; color: var(--gray);
+      margin-top: 6px; text-align: center;
+      font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .step.active .step-label { color: var(--blue); }
+    .step.done   .step-label { color: var(--bluelt); }
+    .step-line {
+      flex: 1; height: 2px;
+      background: var(--gray2);
+      margin-top: 16px;
+      transition: background 0.25s;
+    }
+    .step-line.done { background: var(--blue); }
+
+    /* FORM */
+    .form-wrapper {
+      max-width: 560px;
+      width: 100%;
+      margin: 28px auto 60px;
+      padding: 0 20px;
+    }
+
+    .step-panel { display: none; }
+    .step-panel.active { display: block; }
+
+    .panel-title {
+      font-family: var(--font-head);
+      font-size: 20px; font-weight: 700;
+      color: var(--white);
+      margin-bottom: 4px;
+    }
+    .panel-sub { font-size: 14px; color: var(--gray); margin-bottom: 24px; }
+
+    .field { margin-bottom: 18px; }
+    .field-label {
+      display: block;
+      font-size: 12px; font-weight: 700;
+      color: var(--gray);
+      margin-bottom: 7px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .field-input {
+      width: 100%;
+      background: var(--navy2);
+      border: 1.5px solid var(--gray2);
+      border-radius: 10px;
+      padding: 13px 16px;
+      font-size: 15px;
+      color: var(--white);
+      font-family: var(--font-body);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .field-input:focus { border-color: var(--blue); }
+    .field-input::placeholder { color: #3a5270; }
+    .field-input.error { border-color: var(--red); }
+    .field-note { font-size: 12px; color: var(--gray); margin-top: 6px; }
+    .field-error { font-size: 12px; color: var(--red); margin-top: 5px; display: none; }
+
+    .slug-preview {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: rgba(40,171,225,0.08);
+      border: 1px solid rgba(40,171,225,0.2);
+      border-radius: 20px;
+      padding: 5px 14px;
+      margin-top: 8px;
+      font-size: 12px; color: var(--gray);
+    }
+    .slug-preview span { color: var(--blue); font-weight: 700; }
+
+    /* ADDRESS */
+    .addr-wrap { position: relative; }
+    .addr-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 4px); left: 0; right: 0;
+      background: var(--navy);
+      border: 1.5px solid rgba(40,171,225,0.2);
+      border-radius: 10px;
+      z-index: 999;
+      max-height: 220px; overflow-y: auto;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    }
+    .addr-item { padding: 12px 16px; cursor: pointer; border-bottom: 1px solid rgba(40,171,225,0.06); }
+    .addr-item:last-child { border-bottom: none; }
+    .addr-item:hover { background: rgba(40,171,225,0.06); }
+    .addr-item-main { font-size: 13px; color: var(--white); display: block; }
+    .addr-item-sub  { font-size: 11px; color: var(--gray); display: block; margin-top: 2px; }
+    .addr-status { font-size: 12px; margin-top: 7px; color: var(--gray); }
+    .addr-status.ok  { color: var(--blue); }
+    .addr-status.err { color: var(--red); }
+
+    /* REVIEW */
+    .review-card {
+      background: var(--navy2);
+      border: 1.5px solid rgba(40,171,225,0.12);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .review-section-title {
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1px;
+      color: var(--blue);
+      padding: 11px 18px;
+      border-bottom: 1px solid rgba(40,171,225,0.1);
+      background: rgba(40,171,225,0.04);
+    }
+    .review-row {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      padding: 11px 18px;
+      border-bottom: 1px solid rgba(40,171,225,0.06);
+      gap: 12px;
+    }
+    .review-row:last-child { border-bottom: none; }
+    .review-key { font-size: 12px; color: var(--gray); min-width: 90px; }
+    .review-val { font-size: 13px; color: var(--white); text-align: right; }
+
+    /* BUTTONS */
+    .btn-row { display: flex; gap: 12px; margin-top: 24px; }
+    .btn-next {
+      flex: 1; padding: 15px;
+      background: var(--blue); color: var(--navy3);
+      border: none; border-radius: 10px;
+      font-family: var(--font-head); font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: opacity 0.15s;
+    }
+    .btn-next:hover { opacity: 0.9; }
+    .btn-next:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-back {
+      padding: 15px 22px;
+      background: transparent; color: var(--gray);
+      border: 1.5px solid var(--gray2); border-radius: 10px;
+      font-family: var(--font-head); font-size: 15px; font-weight: 600;
+      cursor: pointer; transition: border-color 0.15s, color 0.15s;
+    }
+    .btn-back:hover { border-color: var(--blue); color: var(--blue); }
+
+    /* SUCCESS */
+    .success-screen {
+      display: none;
+      text-align: center;
+      padding: 64px 24px;
+    }
+    .success-icon {
+      width: 80px; height: 80px;
+      background: rgba(40,171,225,0.12);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 38px;
+      margin: 0 auto 28px;
+      border: 2px solid rgba(40,171,225,0.25);
+    }
+    .success-screen h2 { font-family: var(--font-head); font-size: 26px; color: var(--white); margin-bottom: 14px; }
+    .success-screen p  { font-size: 15px; color: var(--gray); max-width: 400px; margin: 0 auto; line-height: 1.7; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="logo">klinpal</div>
+    <div class="header-sub">&nbsp;— Partner Registration</div>
+  </div>
+
+  <div class="hero">
+    <div class="hero-eyebrow">For Laundromats &amp; Dry Cleaners</div>
+    <h1>Grow your laundry business with Klinpal</h1>
+    <p>Register your interest and we'll set you up with your own branded ordering system — no tech skills needed.</p>
+  </div>
+
+  <div class="stepper-wrap" id="stepper-wrap">
+    <div class="stepper">
+      <div class="step active" id="step-ind-1">
+        <div class="step-circle" id="step-circle-1">1</div>
+        <div class="step-label">Business</div>
+      </div>
+      <div class="step-line" id="step-line-1"></div>
+      <div class="step" id="step-ind-2">
+        <div class="step-circle" id="step-circle-2">2</div>
+        <div class="step-label">Location</div>
+      </div>
+      <div class="step-line" id="step-line-2"></div>
+      <div class="step" id="step-ind-3">
+        <div class="step-circle" id="step-circle-3">3</div>
+        <div class="step-label">Review</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-wrapper">
+
+    <div class="success-screen" id="success-screen">
+      <div class="success-icon">✓</div>
+      <h2>You're on the list!</h2>
+      <p>Your details have been received. You will receive an onboarding email upon confirmation.</p>
+    </div>
+
+    <!-- STEP 1 -->
+    <div class="step-panel active" id="panel-1">
+      <div class="panel-title">Business Information</div>
+      <div class="panel-sub">Tell us about your laundry business.</div>
+
+      <div class="field">
+        <label class="field-label">Business Name *</label>
+        <input class="field-input" id="f-name" type="text" placeholder="e.g. Fresh Press Laundry" oninput="onNameInput()">
+        <div class="field-error" id="err-name">Please enter your business name</div>
+      </div>
+      <div class="field">
+        <label class="field-label">Preferred URL Slug *</label>
+        <input class="field-input" id="f-slug" type="text" placeholder="e.g. freshpress" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9]/g,'');updateSlugPreview()">
+        <div class="slug-preview">klinpal.app/<span id="slug-preview">yourslug</span></div>
+        <div class="field-note" style="margin-top:8px">Lowercase letters and numbers only.</div>
+        <div class="field-error" id="err-slug">Please enter a slug</div>
+      </div>
+      <div class="field">
+        <label class="field-label">Owner / Contact Name *</label>
+        <input class="field-input" id="f-owner" type="text" placeholder="e.g. Amara Okonkwo">
+        <div class="field-error" id="err-owner">Please enter a contact name</div>
+      </div>
+      <div class="field">
+        <label class="field-label">Email Address *</label>
+        <input class="field-input" id="f-email" type="email" placeholder="e.g. amara@freshpress.com">
+        <div class="field-error" id="err-email">Enter a valid email address</div>
+      </div>
+      <div class="field">
+        <label class="field-label">Phone Number *</label>
+        <input class="field-input" id="f-phone" type="tel" placeholder="e.g. 08012345678">
+        <div class="field-error" id="err-phone">Please enter a phone number</div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-next" onclick="goToStep(2)">Next &rarr;</button>
+      </div>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="step-panel" id="panel-2">
+      <div class="panel-title">Business Location</div>
+      <div class="panel-sub">Where is your laundromat located?</div>
+
+      <div class="field">
+        <label class="field-label">Street / Area *</label>
+        <div class="addr-wrap">
+          <input class="field-input" id="f-address" type="text" placeholder="Start typing your address..." autocomplete="off" oninput="onAddrInput()">
+          <div class="addr-dropdown" id="addr-dropdown"></div>
+        </div>
+        <div class="addr-status" id="addr-status"></div>
+        <div class="field-error" id="err-address">Please select an address from the suggestions</div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-back" onclick="goToStep(1)">&larr; Back</button>
+        <button class="btn-next" onclick="goToStep(3)">Next &rarr;</button>
+      </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="step-panel" id="panel-3">
+      <div class="panel-title">Review &amp; Submit</div>
+      <div class="panel-sub">Check your details before submitting.</div>
+
+      <div class="review-card">
+        <div class="review-section-title">Business Details</div>
+        <div class="review-row"><div class="review-key">Business Name</div><div class="review-val" id="rev-name">—</div></div>
+        <div class="review-row"><div class="review-key">URL</div><div class="review-val" id="rev-slug">—</div></div>
+        <div class="review-row"><div class="review-key">Owner</div><div class="review-val" id="rev-owner">—</div></div>
+        <div class="review-row"><div class="review-key">Email</div><div class="review-val" id="rev-email">—</div></div>
+        <div class="review-row"><div class="review-key">Phone</div><div class="review-val" id="rev-phone">—</div></div>
+      </div>
+      <div class="review-card">
+        <div class="review-section-title">Location</div>
+        <div class="review-row"><div class="review-key">Address</div><div class="review-val" id="rev-address">—</div></div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-back" onclick="goToStep(2)">&larr; Back</button>
+        <button class="btn-next" id="submit-btn" onclick="submitInterest()">Submit Registration</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script>
+    var GOOGLE_MAPS_KEY = 'AIzaSyA4mpTBCqmyZpCZFtP-_oVvjs_8AhNoSa0';
+    var SUPERADMIN_CHAT = '-5041093515';
+    var BOT_TOKEN       = '8021952716:AAFg_CsHXdp3SGl6guMiPTqHKs9cPvpv_7o';
+
+    var sb = supabase.createClient(KLINPAL_ENV.SUPABASE_URL, KLINPAL_ENV.SUPABASE_KEY);
+
+    var currentStep   = 1;
+    var addrConfirmed = false;
+    var addrSelected  = '';
+    var addrLat       = null;
+    var addrLng       = null;
+    var addrDebounce  = null;
+
+    /* ── STEPPER ── */
+    function goToStep(step) {
+      if (step > currentStep && !validateStep(currentStep)) return;
+
+      for (var i = 1; i <= 3; i++) {
+        var ind    = document.getElementById('step-ind-' + i);
+        var circle = document.getElementById('step-circle-' + i);
+        ind.className    = 'step' + (i === step ? ' active' : i < step ? ' done' : '');
+        circle.textContent = i < step ? '\u2713' : String(i);
+      }
+      document.getElementById('step-line-1').className = 'step-line' + (step > 1 ? ' done' : '');
+      document.getElementById('step-line-2').className = 'step-line' + (step > 2 ? ' done' : '');
+
+      document.querySelectorAll('.step-panel').forEach(function(p){ p.classList.remove('active'); });
+      document.getElementById('panel-' + step).classList.add('active');
+      if (step === 3) populateReview();
+      currentStep = step;
+      window.scrollTo(0, 0);
+    }
+
+    /* ── VALIDATION ── */
+    function validateStep(step) {
+      return step === 1 ? validateStep1() : step === 2 ? validateStep2() : true;
+    }
+
+    function validateStep1() {
+      var ok = true;
+      function chk(id, errId, cond) {
+        var el = document.getElementById(id), err = document.getElementById(errId);
+        if (!cond) { el.classList.add('error'); err.style.display = 'block'; ok = false; }
+        else       { el.classList.remove('error'); err.style.display = 'none'; }
+      }
+      chk('f-name',  'err-name',  document.getElementById('f-name').value.trim().length > 0);
+      chk('f-slug',  'err-slug',  document.getElementById('f-slug').value.trim().length > 0);
+      chk('f-owner', 'err-owner', document.getElementById('f-owner').value.trim().length > 0);
+      chk('f-email', 'err-email', /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(document.getElementById('f-email').value.trim()));
+      chk('f-phone', 'err-phone', document.getElementById('f-phone').value.trim().length >= 7);
+      return ok;
+    }
+
+    function validateStep2() {
+      var ok  = addrConfirmed;
+      var el  = document.getElementById('f-address');
+      var err = document.getElementById('err-address');
+      if (!ok) { el.classList.add('error'); err.style.display = 'block'; }
+      else     { el.classList.remove('error'); err.style.display = 'none'; }
+      return ok;
+    }
+
+    /* ── REVIEW ── */
+    function populateReview() {
+      document.getElementById('rev-name').textContent    = document.getElementById('f-name').value.trim();
+      document.getElementById('rev-slug').textContent    = 'klinpal.app/' + document.getElementById('f-slug').value.trim();
+      document.getElementById('rev-owner').textContent   = document.getElementById('f-owner').value.trim();
+      document.getElementById('rev-email').textContent   = document.getElementById('f-email').value.trim();
+      document.getElementById('rev-phone').textContent   = document.getElementById('f-phone').value.trim();
+      document.getElementById('rev-address').textContent = addrSelected;
+    }
+
+    /* ── SLUG ── */
+    function onNameInput() {
+      var slug = document.getElementById('f-name').value.toLowerCase().replace(/[^a-z0-9]/g, '');
+      document.getElementById('f-slug').value = slug;
+      updateSlugPreview();
+    }
+    function updateSlugPreview() {
+      document.getElementById('slug-preview').textContent = document.getElementById('f-slug').value || 'yourslug';
+    }
+
+    /* ── ADDRESS ── */
+    function onAddrInput() {
+      addrConfirmed = false; addrSelected = ''; addrLat = null; addrLng = null;
+      var st = document.getElementById('addr-status');
+      st.textContent = ''; st.className = 'addr-status';
+      clearTimeout(addrDebounce);
+      var q = document.getElementById('f-address').value.trim();
+      if (q.length < 3) { document.getElementById('addr-dropdown').style.display = 'none'; return; }
+      addrDebounce = setTimeout(function(){ fetchSuggestions(q); }, 350);
+    }
+
+    function fetchSuggestions(q) {
+      fetch('https://places.googleapis.com/v1/places:autocomplete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': GOOGLE_MAPS_KEY },
+        body: JSON.stringify({ input: q, includedRegionCodes: ['ng'] })
+      })
+      .then(function(r){ return r.json(); })
+      .then(function(data) {
+        var sug = (data.suggestions || []).filter(function(s){ return s.placePrediction; });
+        renderDropdown(sug);
+      })
+      .catch(function(){ document.getElementById('addr-dropdown').style.display = 'none'; });
+    }
+
+    function renderDropdown(results) {
+      var dd = document.getElementById('addr-dropdown');
+      if (!results.length) { dd.style.display = 'none'; return; }
+      dd.innerHTML = results.map(function(r, i) {
+        var pred = r.placePrediction;
+        var main = pred.structuredFormat && pred.structuredFormat.mainText ? pred.structuredFormat.mainText.text : pred.text.text;
+        var sub  = pred.structuredFormat && pred.structuredFormat.secondaryText ? pred.structuredFormat.secondaryText.text : '';
+        return '<div class="addr-item" data-idx="' + i + '">'
+          + '<span class="addr-item-main">' + main + '</span>'
+          + (sub ? '<span class="addr-item-sub">' + sub + '</span>' : '')
+          + '</div>';
+      }).join('');
+      dd.querySelectorAll('.addr-item').forEach(function(el, i){
+        el.addEventListener('click', function(){ selectAddr(results[i]); });
+      });
+      dd.style.display = 'block';
+    }
+
+    function selectAddr(result) {
+      var pred    = result.placePrediction;
+      var placeId = pred.placeId;
+      var full    = pred.text.text;
+      document.getElementById('f-address').value = full;
+      document.getElementById('addr-dropdown').style.display = 'none';
+      var st = document.getElementById('addr-status');
+      st.textContent = 'Getting coordinates...'; st.className = 'addr-status';
+
+      fetch('https://places.googleapis.com/v1/places/' + placeId + '?fields=location', {
+        headers: { 'X-Goog-Api-Key': GOOGLE_MAPS_KEY, 'X-Goog-FieldMask': 'location' }
+      })
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        addrLat = data.location.latitude; addrLng = data.location.longitude;
+        addrSelected = full; addrConfirmed = true;
+        st.textContent = '\u2713 Location confirmed'; st.className = 'addr-status ok';
+        document.getElementById('f-address').classList.remove('error');
+        document.getElementById('err-address').style.display = 'none';
+      })
+      .catch(function(){
+        st.textContent = 'Could not get location — please try again';
+        st.className = 'addr-status err';
+      });
+    }
+
+    document.addEventListener('click', function(e){
+      var dd = document.getElementById('addr-dropdown');
+      var inp = document.getElementById('f-address');
+      if (dd && !dd.contains(e.target) && inp && !inp.contains(e.target)) dd.style.display = 'none';
+    });
+
+    /* ── SUBMIT ── */
+    function submitInterest() {
+      var btn = document.getElementById('submit-btn');
+      btn.disabled = true; btn.textContent = 'Submitting...';
+
+      var payload = {
+        business_name: document.getElementById('f-name').value.trim(),
+        slug:          document.getElementById('f-slug').value.trim(),
+        owner_name:    document.getElementById('f-owner').value.trim(),
+        email:         document.getElementById('f-email').value.trim(),
+        phone:         document.getElementById('f-phone').value.trim(),
+        address:       addrSelected,
+        lat:           addrLat,
+        lng:           addrLng,
+        status:        'pending',
+      };
+
+      sb.from('prospects').insert([payload])
+        .then(function(res){
+          if (res.error) throw res.error;
+          sendTelegramAlert(payload);
+          showSuccess();
+        })
+        .catch(function(err){
+          console.error(err);
+          btn.disabled = false; btn.textContent = 'Submit Registration';
+          alert('Something went wrong. Please try again.');
+        });
+    }
+
+    function sendTelegramAlert(p) {
+      var text = '\uD83C\uDFE2 New Vendor Interest\n\n'
+        + 'Business: ' + p.business_name + '\n'
+        + 'Slug: '     + p.slug          + '\n'
+        + 'Owner: '    + p.owner_name    + '\n'
+        + 'Email: '    + p.email         + '\n'
+        + 'Phone: '    + p.phone         + '\n'
+        + 'Address: '  + p.address       + '\n\n'
+        + 'Review in superadmin \u2192 Prospects';
+      fetch('https://api.telegram.org/bot' + BOT_TOKEN + '/sendMessage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: SUPERADMIN_CHAT, text: text })
+      }).catch(function(){});
+    }
+
+    function showSuccess() {
+      document.getElementById('stepper-wrap').style.display = 'none';
+      document.querySelectorAll('.step-panel').forEach(function(p){ p.style.display = 'none'; });
+      document.getElementById('success-screen').style.display = 'block';
+    }
+  </script>
+</body>
+</html>
