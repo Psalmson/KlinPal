@@ -265,14 +265,13 @@
 
   <div class="header">
     <a href="landing.html" style="text-decoration:none"><img src="images/logo-white.svg" alt="KlinPal" height="28"></a>
-    <a href="landing.html" style="font-family:var(--font-body);font-size:14px;color:var(--gray);text-decoration:none;display:inline-flex;align-items:center;gap:6px;margin-top:8px">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-      Back to Home
-    </a>
-    <div class="header-sub">&nbsp;</div>
   </div>
 
   <div class="hero">
+    <a href="landing.html" style="font-family:var(--font-body);font-size:14px;color:var(--gray);text-decoration:none;display:inline-flex;align-items:center;gap:6px;margin-bottom:16px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Back to Home
+    </a>
     <div class="hero-eyebrow">For Laundromats &amp; Dry Cleaners</div>
     <h1>Grow your laundry business with Klinpal</h1>
     <p>Register your interest and we'll set you up with your own branded ordering system — no tech skills needed.</p>
@@ -312,15 +311,8 @@
 
       <div class="field">
         <label class="field-label">Business Name *</label>
-        <input class="field-input" id="f-name" type="text" placeholder="e.g. Fresh Press Laundry" oninput="onNameInput()">
+        <input class="field-input" id="f-name" type="text" placeholder="e.g. Fresh Press Laundry">
         <div class="field-error" id="err-name">Please enter your business name</div>
-      </div>
-      <div class="field">
-        <label class="field-label">Preferred URL Slug *</label>
-        <input class="field-input" id="f-slug" type="text" placeholder="e.g. freshpress" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9]/g,'');updateSlugPreview()">
-        <div class="slug-preview">klinpal.app/<span id="slug-preview">yourslug</span></div>
-        <div class="field-note" style="margin-top:8px">Lowercase letters and numbers only.</div>
-        <div class="field-error" id="err-slug">Please enter a slug</div>
       </div>
       <div class="field">
         <label class="field-label">Owner / Contact Name *</label>
@@ -372,7 +364,6 @@
       <div class="review-card">
         <div class="review-section-title">Business Details</div>
         <div class="review-row"><div class="review-key">Business Name</div><div class="review-val" id="rev-name">—</div></div>
-        <div class="review-row"><div class="review-key">URL</div><div class="review-val" id="rev-slug">—</div></div>
         <div class="review-row"><div class="review-key">Owner</div><div class="review-val" id="rev-owner">—</div></div>
         <div class="review-row"><div class="review-key">Email</div><div class="review-val" id="rev-email">—</div></div>
         <div class="review-row"><div class="review-key">Phone</div><div class="review-val" id="rev-phone">—</div></div>
@@ -439,7 +430,6 @@
         else       { el.classList.remove('error'); err.style.display = 'none'; }
       }
       chk('f-name',  'err-name',  document.getElementById('f-name').value.trim().length > 0);
-      chk('f-slug',  'err-slug',  document.getElementById('f-slug').value.trim().length > 0);
       chk('f-owner', 'err-owner', document.getElementById('f-owner').value.trim().length > 0);
       chk('f-email', 'err-email', /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(document.getElementById('f-email').value.trim()));
       chk('f-phone', 'err-phone', document.getElementById('f-phone').value.trim().length >= 7);
@@ -458,21 +448,10 @@
     /* ── REVIEW ── */
     function populateReview() {
       document.getElementById('rev-name').textContent    = document.getElementById('f-name').value.trim();
-      document.getElementById('rev-slug').textContent    = 'klinpal.app/' + document.getElementById('f-slug').value.trim();
       document.getElementById('rev-owner').textContent   = document.getElementById('f-owner').value.trim();
       document.getElementById('rev-email').textContent   = document.getElementById('f-email').value.trim();
       document.getElementById('rev-phone').textContent   = document.getElementById('f-phone').value.trim();
       document.getElementById('rev-address').textContent = addrSelected;
-    }
-
-    /* ── SLUG ── */
-    function onNameInput() {
-      var slug = document.getElementById('f-name').value.toLowerCase().replace(/[^a-z0-9]/g, '');
-      document.getElementById('f-slug').value = slug;
-      updateSlugPreview();
-    }
-    function updateSlugPreview() {
-      document.getElementById('slug-preview').textContent = document.getElementById('f-slug').value || 'yourslug';
     }
 
     /* ── ADDRESS ── */
@@ -557,7 +536,7 @@
 
       var payload = {
         business_name: document.getElementById('f-name').value.trim(),
-        slug:          document.getElementById('f-slug').value.trim(),
+        slug:          document.getElementById('f-name').value.trim().toLowerCase().replace(/[^a-z0-9]/g, ''),
         owner_name:    document.getElementById('f-owner').value.trim(),
         email:         document.getElementById('f-email').value.trim(),
         phone:         document.getElementById('f-phone').value.trim(),
