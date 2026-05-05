@@ -161,9 +161,6 @@
         <button class="date-chip" id="chip-week"      onclick="setDateFilter('week')">This Week</button>
         <button class="date-chip" id="chip-all"       onclick="setDateFilter('all')">All Time</button>
         <div style="display:flex;align-items:center;gap:6px;margin-left:4px">
-          <input type="date" id="filter-single-date" class="date-input" onchange="setDateFilter('single')" title="Single day">
-        </div>
-        <div style="display:flex;align-items:center;gap:6px">
           <input type="date" id="filter-from" class="date-input" onchange="setDateFilter('range')" title="From">
           <span style="font-size:12px;color:var(--gray)">—</span>
           <input type="date" id="filter-to"   class="date-input" onchange="setDateFilter('range')" title="To">
@@ -299,9 +296,6 @@
         <button class="date-chip" id="drill-chip-week"      onclick="setDrillDateFilter('week')">This Week</button>
         <button class="date-chip active" id="drill-chip-all" onclick="setDrillDateFilter('all')">All Time</button>
         <div style="display:flex;align-items:center;gap:6px;margin-left:4px">
-          <input type="date" id="drill-filter-single" class="date-input" onchange="setDrillDateFilter('single')" title="Single day">
-        </div>
-        <div style="display:flex;align-items:center;gap:6px">
           <input type="date" id="drill-filter-from" class="date-input" onchange="setDrillDateFilter('range')" title="From">
           <span style="font-size:12px;color:var(--gray)">—</span>
           <input type="date" id="drill-filter-to"   class="date-input" onchange="setDrillDateFilter('range')" title="To">
@@ -863,10 +857,6 @@
     } else if (type === 'week') {
       var mon = new Date(today); mon.setDate(today.getDate() - today.getDay() + (today.getDay()===0?-6:1));
       f.from = toLocalDate(mon); f.to = toLocalDate(today);
-    } else if (type === 'single') {
-      var v = document.getElementById('filter-single-date').value;
-      if (!v) return;
-      f.from = v; f.to = v;
     } else if (type === 'range') {
       var fr = document.getElementById('filter-from').value;
       var to = document.getElementById('filter-to').value;
@@ -884,7 +874,6 @@
 
     // Clear calendar inputs if chip selected
     if (['today','yesterday','week','all'].includes(type)) {
-      document.getElementById('filter-single-date').value = '';
       document.getElementById('filter-from').value = '';
       document.getElementById('filter-to').value   = '';
     }
@@ -1012,11 +1001,10 @@
     if (type === 'today')     { f.from = toLocalDate(today); f.to = toLocalDate(today); }
     else if (type === 'yesterday') { var y=new Date(today); y.setDate(y.getDate()-1); f.from=toLocalDate(y); f.to=toLocalDate(y); }
     else if (type === 'week') { var m=new Date(today); m.setDate(today.getDate()-today.getDay()+(today.getDay()===0?-6:1)); f.from=toLocalDate(m); f.to=toLocalDate(today); }
-    else if (type === 'single') { var v=document.getElementById('drill-filter-single').value; if(!v)return; f.from=v; f.to=v; }
     else if (type === 'range')  { var fr=document.getElementById('drill-filter-from').value, to=document.getElementById('drill-filter-to').value; if(!fr||!to)return; f.from=fr; f.to=to; }
     drillFilter = f;
     ['today','yesterday','week','all'].forEach(function(id){ var el=document.getElementById('drill-chip-'+id); if(el) el.classList.toggle('active', id===type); });
-    if (['today','yesterday','week','all'].includes(type)) { document.getElementById('drill-filter-single').value=''; document.getElementById('drill-filter-from').value=''; document.getElementById('drill-filter-to').value=''; }
+    if (['today','yesterday','week','all'].includes(type)) { document.getElementById('drill-filter-from').value=''; document.getElementById('drill-filter-to').value=''; }
     var lbl = document.getElementById('drill-filter-label');
     if (type==='all') lbl.textContent=''; else if (f.from===f.to) lbl.textContent=f.from; else lbl.textContent=f.from+' → '+f.to;
     loadVendorOrders(currentDrillVendor);
