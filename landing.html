@@ -81,6 +81,15 @@ button{font-family:inherit;cursor:pointer;border:none}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .hero h1{font-family:var(--font-display);font-size:clamp(36px,5vw,56px);line-height:1.1;color:var(--navy);margin-bottom:24px;animation:fadeInUp .6s .1s ease both}
 .hero h1 em{font-style:italic;color:var(--blue)}
+.bolt{display:inline-block;font-style:normal;animation:boltPulse 2.5s ease-in-out infinite;filter:drop-shadow(0 0 6px rgba(245,158,11,.4))}
+@keyframes boltPulse{0%,100%{transform:scale(1) rotate(0deg);filter:drop-shadow(0 0 6px rgba(245,158,11,.4))}25%{transform:scale(1.2) rotate(-8deg);filter:drop-shadow(0 0 12px rgba(245,158,11,.6))}50%{transform:scale(1) rotate(0deg);filter:drop-shadow(0 0 6px rgba(245,158,11,.4))}75%{transform:scale(1.15) rotate(6deg);filter:drop-shadow(0 0 10px rgba(245,158,11,.5))}}
+
+/* ── CUSTOM CURSOR ── */
+.cursor-dot{position:fixed;top:0;left:0;width:8px;height:8px;background:var(--blue);border-radius:50%;pointer-events:none;z-index:9999;transition:transform .15s ease,opacity .15s ease;mix-blend-mode:difference;opacity:0}
+.cursor-ring{position:fixed;top:0;left:0;width:32px;height:32px;border:1.5px solid var(--blue);border-radius:50%;pointer-events:none;z-index:9998;transition:transform .08s ease,width .3s ease,height .3s ease,opacity .15s ease;opacity:0}
+.cursor-ring.hover{width:48px;height:48px;border-color:var(--blue);background:rgba(40,171,225,.06)}
+body.cursor-active .cursor-dot,body.cursor-active .cursor-ring{opacity:1}
+@media(pointer:coarse){.cursor-dot,.cursor-ring{display:none!important}}
 .hero-sub{font-size:18px;color:var(--gray-600);max-width:480px;margin-bottom:36px;animation:fadeInUp .6s .2s ease both}
 .hero-actions{display:flex;gap:16px;flex-wrap:wrap;animation:fadeInUp .6s .3s ease both}
 .btn-primary{display:inline-flex;align-items:center;gap:8px;background:var(--blue);color:var(--white);padding:16px 32px;border-radius:8px;font-size:16px;font-weight:600;transition:var(--transition)}
@@ -89,7 +98,8 @@ button{font-family:inherit;cursor:pointer;border:none}
 .btn-secondary{display:inline-flex;align-items:center;gap:8px;background:var(--white);color:var(--navy);padding:16px 32px;border-radius:8px;font-size:16px;font-weight:600;border:2px solid var(--gray-200);transition:var(--transition)}
 .btn-secondary:hover{border-color:var(--navy);transform:translateY(-2px)}
 .hero-visual{position:relative;animation:fadeInUp .8s .4s ease both}
-.hero-phone{width:280px;margin:0 auto;background:var(--navy);border-radius:36px;padding:12px;box-shadow:var(--shadow-xl),0 0 0 1px rgba(255,255,255,.1) inset}
+.hero-phone{width:280px;margin:0 auto;background:var(--navy);border-radius:36px;padding:6px;box-shadow:var(--shadow-xl),0 0 0 1px rgba(255,255,255,.1) inset;animation:phoneFloat 5s ease-in-out infinite}
+@keyframes phoneFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
 .hero-phone-screen{background:var(--white);border-radius:26px;overflow:hidden;aspect-ratio:9/16;display:flex;flex-direction:column}
 .phone-header{background:var(--blue);padding:20px 16px 16px;text-align:center}
 .phone-header .phone-logo{font-size:14px;font-weight:700;color:var(--white);opacity:.9;margin-bottom:4px}
@@ -110,6 +120,9 @@ button{font-family:inherit;cursor:pointer;border:none}
 .float-revenue{bottom:25%;left:-30px;animation-delay:2s}
 .float-revenue .float-amount{font-size:18px;font-weight:700;color:var(--green)}
 .float-revenue .float-label{font-size:11px;color:var(--gray-400)}
+.float-top-service{bottom:8%;right:-10px;display:flex;align-items:center;gap:10px;animation-delay:1s}
+.float-top-service .float-icon{width:36px;height:36px;background:#FEF3C7;border-radius:10px;display:flex;align-items:center;justify-content:center}
+.float-service-name{font-size:14px;font-weight:700;color:var(--navy)}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 @keyframes fadeInUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
 
@@ -227,12 +240,14 @@ button{font-family:inherit;cursor:pointer;border:none}
 </style>
 </head>
 <body>
+<div class="cursor-dot" id="cursor-dot"></div>
+<div class="cursor-ring" id="cursor-ring"></div>
 
 <!-- ════ NAV ════ -->
 <nav class="nav" id="nav">
   <div class="container nav-inner">
-    <a href="#" class="nav-logo">
-      <svg viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#28ABE1"/><path d="M9 11h3v10H9V11zm5.5 0H18l3.5 6.5V11H25v10h-3.5l-3.5-6.5V21h-3.5V11z" fill="white"/></svg>
+    <a href="landing.html" class="nav-logo">
+      <svg viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="6" fill="#28ABE1"/><path d="M7.5 8.5h2.5v11H7.5V8.5zm4.5 0h3l3 5.5V8.5h2.5v11H18l-3-5.5v5.5h-3V8.5z" fill="white"/></svg>
       klinpal
     </a>
     <div class="nav-links" id="nav-links">
@@ -254,7 +269,7 @@ button{font-family:inherit;cursor:pointer;border:none}
       <div class="hero-badge">
         <span></span> Now onboarding vendors in Lagos
       </div>
-      <h1>Your laundry business, now <em>supercharged</em></h1>
+      <h1>Your laundry business, now <em>supercharged</em><span class="bolt">⚡</span></h1>
       <p class="hero-sub">Smarter orders, real revenue, zero tech headache. KlinPal gives your laundromat a branded ordering system, delivery management, and a revenue dashboard — in minutes.</p>
       <div class="hero-actions">
         <a href="interest.html" class="btn-primary">
@@ -275,10 +290,10 @@ button{font-family:inherit;cursor:pointer;border:none}
             <div class="phone-welcome">Welcome back,</div>
             <div class="phone-name">Amara Okonkwo 👋</div>
             <div class="phone-services-title">Choose Services</div>
-            <div class="phone-service"><span>Express Wash</span><span>₦300/item</span></div>
-            <div class="phone-service"><span>Wash + Fold</span><span>₦300/item</span></div>
-            <div class="phone-service"><span>Wash + Iron</span><span>₦300/item</span></div>
-            <div class="phone-service"><span>Dry-clean</span><span>₦500/item</span></div>
+            <div class="phone-service"><span>Express Wash</span><span>₦2,500/item</span></div>
+            <div class="phone-service"><span>Wash + Fold</span><span>₦900/item</span></div>
+            <div class="phone-service"><span>Wash + Iron</span><span>₦1,500/item</span></div>
+            <div class="phone-service"><span>Dry-clean</span><span>₦2,000/item</span></div>
             <div style="flex:1"></div>
             <div class="phone-btn">Review Order →</div>
           </div>
@@ -293,6 +308,12 @@ button{font-family:inherit;cursor:pointer;border:none}
       <div class="hero-float-card float-revenue">
         <div class="float-amount">₦235,332</div>
         <div class="float-label">Revenue earned</div>
+      </div>
+      <div class="hero-float-card float-top-service">
+        <div class="float-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </div>
+        <div><div class="float-service-name">Express Wash</div><div class="float-label">Most ordered</div></div>
       </div>
     </div>
   </div>
@@ -525,6 +546,22 @@ barsObserver.observe(document.getElementById('revenue-bars'));
 document.querySelectorAll('.nav-links a').forEach(function(a){
   a.addEventListener('click',function(){document.getElementById('nav-links').classList.remove('open')});
 });
+
+// ── Custom cursor (desktop only) ──
+(function(){
+  if(window.matchMedia('(pointer:coarse)').matches) return;
+  var dot=document.getElementById('cursor-dot');
+  var ring=document.getElementById('cursor-ring');
+  var mx=0,my=0,rx=0,ry=0;
+  document.body.classList.add('cursor-active');
+  document.addEventListener('mousemove',function(e){mx=e.clientX;my=e.clientY;dot.style.transform='translate('+(mx-4)+'px,'+(my-4)+'px)'});
+  function lerp(){rx+=(mx-rx)*.12;ry+=(my-ry)*.12;ring.style.transform='translate('+(rx-16)+'px,'+(ry-16)+'px)';requestAnimationFrame(lerp)}
+  lerp();
+  document.querySelectorAll('a,button,.btn-primary,.btn-secondary,.btn-white,.nav-cta,.problem-card,.feature-card,.how-card').forEach(function(el){
+    el.addEventListener('mouseenter',function(){ring.classList.add('hover')});
+    el.addEventListener('mouseleave',function(){ring.classList.remove('hover')});
+  });
+})();
 </script>
 </body>
 </html>
