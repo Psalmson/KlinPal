@@ -81,8 +81,7 @@ button{font-family:inherit;cursor:pointer;border:none}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .hero h1{font-family:var(--font-display);font-size:clamp(36px,5vw,56px);line-height:1.1;color:var(--navy);margin-bottom:24px;animation:fadeInUp .6s .1s ease both}
 .hero h1 em{font-style:italic;color:var(--blue)}
-.bolt{display:inline-block;font-style:normal;animation:boltPulse 2.5s ease-in-out infinite;filter:drop-shadow(0 0 6px rgba(245,158,11,.4))}
-@keyframes boltPulse{0%,100%{transform:scale(1) rotate(0deg);filter:drop-shadow(0 0 6px rgba(245,158,11,.4))}25%{transform:scale(1.2) rotate(-8deg);filter:drop-shadow(0 0 12px rgba(245,158,11,.6))}50%{transform:scale(1) rotate(0deg);filter:drop-shadow(0 0 6px rgba(245,158,11,.4))}75%{transform:scale(1.15) rotate(6deg);filter:drop-shadow(0 0 10px rgba(245,158,11,.5))}}
+.bolt{display:inline-block;font-style:normal}
 
 /* ── CUSTOM CURSOR ── */
 .cursor-dot{position:fixed;top:0;left:0;width:8px;height:8px;background:var(--blue);border-radius:50%;pointer-events:none;z-index:9999;transition:transform .15s ease,opacity .15s ease;mix-blend-mode:difference;opacity:0}
