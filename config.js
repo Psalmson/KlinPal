@@ -7,6 +7,6 @@
    All files load this before their own scripts.
 ─────────────────────────────────────────────────────────────── */
 var KLINPAL_ENV = {
-  SUPABASE_URL: 'https://idrxwzqfycurkvmgimye.supabase.co',
-  SUPABASE_KEY: 'sb_publishable_2ZpeQSJvaCqTxozV7HtPBg_qhoev5jH',
+  SUPABASE_URL: 'https://mlgdqxqzpzfzndjhywqf.supabase.co',
+  SUPABASE_KEY: 'sb_publishable_TS5uGf7KzLKxeQw8bxDKYw_HwBNNBeA',
 };
