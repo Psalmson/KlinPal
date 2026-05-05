@@ -5,9 +5,9 @@ var CONFIG = {
   // Google Maps API key — address autocomplete + distance calculation
   GOOGLE_MAPS_KEY: 'AIzaSyA4mpTBCqmyZpCZFtP-_oVvjs_8AhNoSa0',
 
-  // Supabase
-  SUPABASE_URL:  'https://mlgdqxqzpzfzndjhywqf.supabase.co',
-  SUPABASE_KEY:  'sb_publishable_TS5uGf7KzLKxeQw8bxDKYw_HwBNNBeA',
+  // Supabase — loaded from config.js (environment-aware)
+  SUPABASE_URL:  KLINPAL_ENV.SUPABASE_URL,
+  SUPABASE_KEY:  KLINPAL_ENV.SUPABASE_KEY,
 
   // Pricing defaults — overridden by vendor config
   BASE_DELIVERY_FEE: 1500,

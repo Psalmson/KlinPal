@@ -57,6 +57,12 @@
   .page-subtitle { color: var(--gray); font-size: 13px; margin-top: 4px; }
   .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 28px; }
   .stat-card  { background: var(--navy2); border: 1px solid var(--navy3); border-radius: var(--radius); padding: 20px; }
+  .date-chip { padding:6px 14px; border-radius:20px; border:1px solid var(--navy3); background:var(--navy2); color:var(--gray); font-size:12px; font-family:var(--font-body); cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+  .date-chip:hover { border-color:var(--teal); color:var(--white); }
+  .date-chip.active { background:var(--teal); color:var(--navy); border-color:var(--teal); font-weight:700; }
+  .date-input { background:var(--navy2); border:1px solid var(--navy3); border-radius:6px; padding:5px 10px; color:var(--white); font-size:12px; font-family:var(--font-body); outline:none; cursor:pointer; }
+  .date-input:focus { border-color:var(--teal); }
+  .date-input::-webkit-calendar-picker-indicator { filter:invert(0.5); cursor:pointer; }
   .stat-label { font-size: 11px; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; font-weight: 500; }
   .stat-value { font-family: var(--font-head); font-size: 28px; font-weight: 800; color: var(--white); margin: 6px 0 2px; letter-spacing: -1px; }
   .stat-value.teal { color: var(--teal); }
@@ -146,6 +152,23 @@
       <div class="page-header">
         <div><div class="page-title">Platform Overview</div><div class="page-subtitle">All laundromats on Klinpal</div></div>
         <button class="btn btn-ghost" onclick="loadOverview()">&#x21BB; Refresh</button>
+      </div>
+
+      <!-- DATE FILTER BAR -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;flex-wrap:wrap">
+        <button class="date-chip" id="chip-today"     onclick="setDateFilter('today')">Today</button>
+        <button class="date-chip" id="chip-yesterday" onclick="setDateFilter('yesterday')">Yesterday</button>
+        <button class="date-chip" id="chip-week"      onclick="setDateFilter('week')">This Week</button>
+        <button class="date-chip" id="chip-all"       onclick="setDateFilter('all')">All Time</button>
+        <div style="display:flex;align-items:center;gap:6px;margin-left:4px">
+          <input type="date" id="filter-single-date" class="date-input" onchange="setDateFilter('single')" title="Single day">
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <input type="date" id="filter-from" class="date-input" onchange="setDateFilter('range')" title="From">
+          <span style="font-size:12px;color:var(--gray)">—</span>
+          <input type="date" id="filter-to"   class="date-input" onchange="setDateFilter('range')" title="To">
+        </div>
+        <span id="filter-label" style="font-size:12px;color:var(--gray);margin-left:4px"></span>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
         <div style="background:var(--navy2);border:1px solid var(--navy3);border-radius:var(--radius);padding:20px 24px;display:flex;align-items:center">
@@ -240,15 +263,12 @@
             </div>
           </div>
           <div style="margin-bottom:6px;font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;font-weight:600">Address</div>
-          <div class="form-grid" style="margin-bottom:20px">
-            <div><label class="field-label">House / Unit No.</label><input class="field-input" id="ob-house" placeholder="e.g. 12B"></div>
-            <div style="position:relative">
-              <label class="field-label">Street / Area</label>
-              <input class="field-input" id="ob-address" placeholder="Start typing street..." autocomplete="off" oninput="onAddressInput()">
-              <div id="ob-addr-dropdown" style="display:none;position:fixed;background:#0F2235;border:1px solid #0a1628;border-radius:8px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.5);overflow-y:auto;max-height:240px;"></div>
-              <div id="ob-addr-status" style="font-size:11px;margin-top:5px;color:var(--gray)"></div>
-              <div class="field-note">Select from suggestions &mdash; coordinates captured automatically.</div>
-            </div>
+          <div style="position:relative;margin-bottom:20px">
+            <label class="field-label">Street / Area</label>
+            <input class="field-input" id="ob-address" placeholder="Start typing street or area..." autocomplete="off" oninput="onAddressInput()">
+            <div id="ob-addr-dropdown" style="display:none;position:fixed;background:#0F2235;border:1px solid #0a1628;border-radius:8px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.5);overflow-y:auto;max-height:240px;"></div>
+            <div id="ob-addr-status" style="font-size:11px;margin-top:5px;color:var(--gray)"></div>
+            <div class="field-note">Select from suggestions &mdash; coordinates captured automatically.</div>
           </div>
           <div style="margin-bottom:6px;font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;font-weight:600">Notifications &amp; Branding</div>
           <div class="form-grid" style="margin-bottom:8px">
@@ -270,6 +290,23 @@
       <div class="page-header">
         <div><div class="page-title" id="drill-title">Orders</div><div class="page-subtitle" id="drill-subtitle"></div></div>
         <button class="btn btn-ghost" onclick="loadVendorOrders(currentDrillVendor)">&#x21BB; Refresh</button>
+      </div>
+
+      <!-- DATE FILTER BAR -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;flex-wrap:wrap">
+        <button class="date-chip" id="drill-chip-today"     onclick="setDrillDateFilter('today')">Today</button>
+        <button class="date-chip" id="drill-chip-yesterday" onclick="setDrillDateFilter('yesterday')">Yesterday</button>
+        <button class="date-chip" id="drill-chip-week"      onclick="setDrillDateFilter('week')">This Week</button>
+        <button class="date-chip active" id="drill-chip-all" onclick="setDrillDateFilter('all')">All Time</button>
+        <div style="display:flex;align-items:center;gap:6px;margin-left:4px">
+          <input type="date" id="drill-filter-single" class="date-input" onchange="setDrillDateFilter('single')" title="Single day">
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <input type="date" id="drill-filter-from" class="date-input" onchange="setDrillDateFilter('range')" title="From">
+          <span style="font-size:12px;color:var(--gray)">—</span>
+          <input type="date" id="drill-filter-to"   class="date-input" onchange="setDrillDateFilter('range')" title="To">
+        </div>
+        <span id="drill-filter-label" style="font-size:12px;color:var(--gray);margin-left:4px"></span>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
         <div style="background:var(--navy2);border:1px solid var(--navy3);border-radius:var(--radius);padding:20px 24px;display:flex;align-items:center">
@@ -345,7 +382,7 @@
     <!-- SETTINGS -->
     <div class="page" id="page-settings">
       <div class="page-header"><div><div class="page-title">Settings</div><div class="page-subtitle">Platform-wide configuration</div></div></div>
-      <div class="card" style="max-width:540px">
+      <div class="card" style="max-width:540px;margin-bottom:20px">
         <div class="card-header"><div class="card-title">Platform Fee</div></div>
         <div style="padding:24px">
           <p style="font-size:13px;color:var(--gray);margin-bottom:20px;line-height:1.6">Global platform fee % charged on every order's subtotal. Individual vendors can override this in their Edit modal.</p>
@@ -356,6 +393,42 @@
           </div>
           <div style="font-size:11px;color:var(--gray);margin-bottom:20px">Applies to all new orders where no vendor-specific rate is set.</div>
           <button class="save-btn" onclick="saveGlobalPlatformFee()">&#x1F4BE; Save</button>
+        </div>
+      </div>
+
+      <div class="card" style="max-width:540px">
+        <div class="card-header"><div class="card-title">Global Pickup & Delivery Windows</div></div>
+        <div style="padding:24px">
+          <p style="font-size:13px;color:var(--gray);margin-bottom:20px;line-height:1.6">Default pickup and delivery time windows shown to customers. Individual vendors can override these in their profile.</p>
+          <div style="margin-bottom:20px">
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);font-weight:600;margin-bottom:10px">Pickup Window</div>
+            <div style="display:flex;align-items:center;gap:12px">
+              <div>
+                <label class="field-label">From</label>
+                <input class="field-input" id="settings-pickup-start" type="time" style="max-width:140px">
+              </div>
+              <span style="color:var(--gray);margin-top:18px">→</span>
+              <div>
+                <label class="field-label">To</label>
+                <input class="field-input" id="settings-pickup-end" type="time" style="max-width:140px">
+              </div>
+            </div>
+          </div>
+          <div style="margin-bottom:24px">
+            <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);font-weight:600;margin-bottom:10px">Delivery Window</div>
+            <div style="display:flex;align-items:center;gap:12px">
+              <div>
+                <label class="field-label">From</label>
+                <input class="field-input" id="settings-delivery-start" type="time" style="max-width:140px">
+              </div>
+              <span style="color:var(--gray);margin-top:18px">→</span>
+              <div>
+                <label class="field-label">To</label>
+                <input class="field-input" id="settings-delivery-end" type="time" style="max-width:140px">
+              </div>
+            </div>
+          </div>
+          <button class="save-btn" onclick="saveGlobalTimeWindows()">&#x1F4BE; Save Windows</button>
         </div>
       </div>
     </div>
@@ -770,14 +843,77 @@
     showToast('Form pre-filled from prospect details');
   }
 
+  /* ── DATE FILTER ── */
+  var activeFilter = { type: 'all', from: null, to: null };
+
+  function toLocalDate(d) {
+    return d.toISOString().slice(0, 10);
+  }
+
+  function setDateFilter(type) {
+    var today = new Date();
+    today.setHours(0,0,0,0);
+    var f = { type: type, from: null, to: null };
+
+    if (type === 'today') {
+      f.from = toLocalDate(today); f.to = toLocalDate(today);
+    } else if (type === 'yesterday') {
+      var y = new Date(today); y.setDate(y.getDate()-1);
+      f.from = toLocalDate(y); f.to = toLocalDate(y);
+    } else if (type === 'week') {
+      var mon = new Date(today); mon.setDate(today.getDate() - today.getDay() + (today.getDay()===0?-6:1));
+      f.from = toLocalDate(mon); f.to = toLocalDate(today);
+    } else if (type === 'single') {
+      var v = document.getElementById('filter-single-date').value;
+      if (!v) return;
+      f.from = v; f.to = v;
+    } else if (type === 'range') {
+      var fr = document.getElementById('filter-from').value;
+      var to = document.getElementById('filter-to').value;
+      if (!fr || !to) return;
+      f.from = fr; f.to = to;
+    }
+
+    activeFilter = f;
+
+    // Update chip active states
+    ['today','yesterday','week','all'].forEach(function(id) {
+      var el = document.getElementById('chip-' + id);
+      if (el) el.classList.toggle('active', id === type);
+    });
+
+    // Clear calendar inputs if chip selected
+    if (['today','yesterday','week','all'].includes(type)) {
+      document.getElementById('filter-single-date').value = '';
+      document.getElementById('filter-from').value = '';
+      document.getElementById('filter-to').value   = '';
+    }
+
+    // Update label
+    var label = document.getElementById('filter-label');
+    if (type === 'all') label.textContent = '';
+    else if (f.from === f.to) label.textContent = f.from;
+    else label.textContent = f.from + ' → ' + f.to;
+
+    loadOverview();
+  }
+
+  function getOrderDateFilter() {
+    if (activeFilter.type === 'all' || !activeFilter.from) return '';
+    var from = activeFilter.from + 'T00:00:00';
+    var to   = activeFilter.to   + 'T23:59:59';
+    return '&created_at=gte.' + encodeURIComponent(from) + '&created_at=lte.' + encodeURIComponent(to);
+  }
+
   function loadOverview() {
     ['stat-vendors','stat-orders','stat-revenue','stat-delivery','stat-service-fee','stat-platform-fee','stat-klinpal-total','stat-pending'].forEach(function(id){ document.getElementById(id).textContent = '...'; });
     document.getElementById('overview-table').innerHTML = '<div class="loading-state">Loading...</div>';
+    var dateQ = getOrderDateFilter();
     sbFetch('vendors?select=*&order=created_at.desc').then(function(r){ return r.json(); })
     .then(function(vendors) {
       allVendors = Array.isArray(vendors) ? vendors : [];
       document.getElementById('stat-vendors').textContent = allVendors.length;
-      return sbFetch('orders?select=vendor_id,subtotal,delivery_fee,service_fee,platform_fee,status');
+      return sbFetch('orders?select=vendor_id,subtotal,delivery_fee,service_fee,platform_fee,status' + dateQ);
     })
     .then(function(r){ return r.json(); })
     .then(function(orders) {
@@ -868,11 +1004,34 @@
     startDrillRealtime(vendor.id);
   }
 
+  var drillFilter = { type: 'all', from: null, to: null };
+
+  function setDrillDateFilter(type) {
+    var today = new Date(); today.setHours(0,0,0,0);
+    var f = { type: type, from: null, to: null };
+    if (type === 'today')     { f.from = toLocalDate(today); f.to = toLocalDate(today); }
+    else if (type === 'yesterday') { var y=new Date(today); y.setDate(y.getDate()-1); f.from=toLocalDate(y); f.to=toLocalDate(y); }
+    else if (type === 'week') { var m=new Date(today); m.setDate(today.getDate()-today.getDay()+(today.getDay()===0?-6:1)); f.from=toLocalDate(m); f.to=toLocalDate(today); }
+    else if (type === 'single') { var v=document.getElementById('drill-filter-single').value; if(!v)return; f.from=v; f.to=v; }
+    else if (type === 'range')  { var fr=document.getElementById('drill-filter-from').value, to=document.getElementById('drill-filter-to').value; if(!fr||!to)return; f.from=fr; f.to=to; }
+    drillFilter = f;
+    ['today','yesterday','week','all'].forEach(function(id){ var el=document.getElementById('drill-chip-'+id); if(el) el.classList.toggle('active', id===type); });
+    if (['today','yesterday','week','all'].includes(type)) { document.getElementById('drill-filter-single').value=''; document.getElementById('drill-filter-from').value=''; document.getElementById('drill-filter-to').value=''; }
+    var lbl = document.getElementById('drill-filter-label');
+    if (type==='all') lbl.textContent=''; else if (f.from===f.to) lbl.textContent=f.from; else lbl.textContent=f.from+' → '+f.to;
+    loadVendorOrders(currentDrillVendor);
+  }
+
+  function getDrillDateQuery() {
+    if (drillFilter.type==='all'||!drillFilter.from) return '';
+    return '&created_at=gte.'+encodeURIComponent(drillFilter.from+'T00:00:00')+'&created_at=lte.'+encodeURIComponent(drillFilter.to+'T23:59:59');
+  }
+
   function loadVendorOrders(vendor) {
     if (!vendor||!vendor.id) { showToast('No vendor selected',true); return; }
     document.getElementById('drill-table').innerHTML='<div class="loading-state">Loading orders...</div>';
     expandedRows = {};
-    sbFetch('orders?vendor_id=eq.'+vendor.id+'&order=created_at.desc&select=*').then(function(r){ return r.json(); })
+    sbFetch('orders?vendor_id=eq.'+vendor.id+'&order=created_at.desc&select=*'+getDrillDateQuery()).then(function(r){ return r.json(); })
     .then(function(orders) {
       orders = Array.isArray(orders) ? orders : [];
       drillOrders = orders;
@@ -890,7 +1049,7 @@
       document.getElementById('drill-service-fee').textContent='\u20A6'+fee.toLocaleString();
       document.getElementById('drill-service-fee-platform').textContent='\u20A6'+plt.toLocaleString();
       document.getElementById('drill-klinpal-total').textContent='\u20A6'+(fee+plt).toLocaleString();
-      if (!orders.length) { document.getElementById('drill-table').innerHTML='<div class="empty-state"><div style="font-size:14px;color:var(--gray)">No orders yet</div></div>'; return; }
+      if (!orders.length) { document.getElementById('drill-table').innerHTML='<div class="empty-state"><div style="font-size:14px;color:var(--gray)">No orders for this period</div></div>'; return; }
       renderDrillTable(orders);
     })
     .catch(function(e){ console.error(e); document.getElementById('drill-table').innerHTML='<div class="empty-state"><div style="font-size:14px;color:var(--gray)">Could not load orders</div></div>'; });
@@ -1165,19 +1324,18 @@
   /* ── ONBOARD ── */
   function onboardVendor() {
     var name=document.getElementById('ob-name').value.trim(), slug=document.getElementById('ob-slug').value.trim();
-    var phone=document.getElementById('ob-phone').value.trim(), house=document.getElementById('ob-house').value.trim();
+    var phone=document.getElementById('ob-phone').value.trim();
     var street=document.getElementById('ob-address').value.trim(), telegram=document.getElementById('ob-telegram').value.trim();
     var brandColor=document.getElementById('ob-brand-color').value.trim()||null, logoUrl=document.getElementById('ob-logo-url').value.trim()||null;
     if (!name||!slug) { showToast('Name and slug are required',true); return; }
     if (!obAddressConfirmed||!obLat||!obLng) { showToast('Please select a street from the suggestions',true); return; }
     if (brandColor&&!/^#[0-9a-fA-F]{6}$/.test(brandColor)) { showToast('Brand colour must be a valid hex',true); return; }
-    var address=house?house+', '+street:street;
     var btn=document.getElementById('ob-btn'); btn.disabled=true; btn.textContent='Onboarding...';
-    sbFetch('vendors', { method:'POST', body:JSON.stringify({ name:name, slug:slug, phone:phone, address:address, lat:obLat, lng:obLng, telegram_chat_id:telegram||null, brand_color:brandColor, logo_url:logoUrl }) })
+    sbFetch('vendors', { method:'POST', body:JSON.stringify({ name:name, slug:slug, phone:phone, address:street, lat:obLat, lng:obLng, telegram_chat_id:telegram||null, brand_color:brandColor, logo_url:logoUrl }) })
     .then(function(r) {
       if (!r.ok) { return r.json().then(function(e){ showToast(e.message||'Onboarding failed',true); }); }
       showToast(name+' onboarded \u2713');
-      ['ob-name','ob-slug','ob-phone','ob-house','ob-address','ob-telegram','ob-brand-color','ob-logo-url'].forEach(function(id){ document.getElementById(id).value=''; });
+      ['ob-name','ob-slug','ob-phone','ob-address','ob-telegram','ob-brand-color','ob-logo-url'].forEach(function(id){ document.getElementById(id).value=''; });
       obLat=null; obLng=null; obAddressConfirmed=false;
       document.getElementById('ob-addr-status').textContent='';
       loadOverview(); setTimeout(function(){ showPage('vendors'); }, 1500);
@@ -1509,25 +1667,54 @@
   }
 
   /* ── SETTINGS ── */
-  var globalPlatformFeePct=10;
+  var globalPlatformFeePct = 10;
   function loadSettings() {
-    sbFetch('platform_settings?key=eq.platform_fee_pct&limit=1&select=value').then(function(r){ return r.json(); })
-    .then(function(data) {
-      var pct=Array.isArray(data)&&data.length?parseFloat(data[0].value):10;
-      globalPlatformFeePct=pct;
-      document.getElementById('settings-platform-fee').value=pct;
-      document.getElementById('settings-fee-preview').textContent=pct+'%';
-    }).catch(function(){ showToast('Could not load settings',true); });
+    sbFetch('platform_settings?key=in.(platform_fee_pct,pickup_start,pickup_end,delivery_start,delivery_end)&select=key,value')
+      .then(function(r){ return r.json(); })
+      .then(function(data) {
+        data = Array.isArray(data) ? data : [];
+        var get = function(k, def) { var r=data.find(function(d){ return d.key===k; }); return r ? r.value : def; };
+        var pct = parseFloat(get('platform_fee_pct', '10'));
+        globalPlatformFeePct = pct;
+        document.getElementById('settings-platform-fee').value = pct;
+        document.getElementById('settings-fee-preview').textContent = pct + '%';
+        document.getElementById('settings-pickup-start').value   = get('pickup_start',   '07:00');
+        document.getElementById('settings-pickup-end').value     = get('pickup_end',     '12:00');
+        document.getElementById('settings-delivery-start').value = get('delivery_start', '17:00');
+        document.getElementById('settings-delivery-end').value   = get('delivery_end',   '20:00');
+      }).catch(function(){ showToast('Could not load settings', true); });
   }
 
   function saveGlobalPlatformFee() {
-    var pct=parseFloat(document.getElementById('settings-platform-fee').value);
-    if (isNaN(pct)||pct<0||pct>100) { showToast('Enter a valid percentage (0\u2013100)',true); return; }
+    var pct = parseFloat(document.getElementById('settings-platform-fee').value);
+    if (isNaN(pct)||pct<0||pct>100) { showToast('Enter a valid percentage (0\u2013100)', true); return; }
     sbFetch('platform_settings?key=eq.platform_fee_pct', { method:'PATCH', body:JSON.stringify({ value:String(pct) }) })
     .then(function(r) {
       if (r.ok) { globalPlatformFeePct=pct; document.getElementById('settings-fee-preview').textContent=pct+'%'; showToast('Platform fee updated to '+pct+'% \u2713'); }
-      else showToast('Save failed',true);
-    }).catch(function(){ showToast('Could not save',true); });
+      else showToast('Save failed', true);
+    }).catch(function(){ showToast('Could not save', true); });
+  }
+
+  function saveGlobalTimeWindows() {
+    var ps = document.getElementById('settings-pickup-start').value;
+    var pe = document.getElementById('settings-pickup-end').value;
+    var ds = document.getElementById('settings-delivery-start').value;
+    var de = document.getElementById('settings-delivery-end').value;
+    if (!ps||!pe||!ds||!de) { showToast('Please fill in all time fields', true); return; }
+    if (ps >= pe) { showToast('Pickup end must be after pickup start', true); return; }
+    if (ds >= de) { showToast('Delivery end must be after delivery start', true); return; }
+
+    var updates = [
+      { key:'pickup_start',   value:ps },
+      { key:'pickup_end',     value:pe },
+      { key:'delivery_start', value:ds },
+      { key:'delivery_end',   value:de },
+    ];
+    Promise.all(updates.map(function(u) {
+      return sbFetch('platform_settings?key=eq.'+u.key, { method:'PATCH', body:JSON.stringify({ value:u.value }) });
+    }))
+    .then(function() { showToast('Time windows saved \u2713'); })
+    .catch(function(){ showToast('Could not save time windows', true); });
   }
 
   /* ── EDIT VENDOR ── */
