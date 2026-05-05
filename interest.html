@@ -84,8 +84,8 @@
       margin: 32px auto 0;
       padding: 0 20px;
     }
-    .stepper { display: flex; align-items: flex-start; }
-    .step { display: flex; flex-direction: column; align-items: center; flex: 1; }
+    .stepper { display: flex; align-items: flex-start; gap: 0; }
+    .step { display: flex; flex-direction: column; align-items: center; flex: 0 0 auto; min-width: 60px; }
     .step-circle {
       width: 34px; height: 34px;
       border-radius: 50%;
@@ -111,6 +111,9 @@
       flex: 1; height: 2px;
       background: var(--gray2);
       margin-top: 16px;
+      min-width: 40px;
+      margin-left: 8px;
+      margin-right: 8px;
       transition: background 0.25s;
     }
     .step-line.done { background: var(--blue); }
@@ -261,12 +264,12 @@
 <body>
 
   <div class="header">
-    <a href="landing.html" class="logo" style="text-decoration:none;color:var(--blue)">klinpal</a>
+    <a href="landing.html" style="text-decoration:none"><img src="images/logo-white.svg" alt="KlinPal" height="28"></a>
     <a href="landing.html" style="font-family:var(--font-body);font-size:14px;color:var(--gray);text-decoration:none;display:inline-flex;align-items:center;gap:6px;margin-top:8px">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
       Back to Home
     </a>
-    <div class="header-sub">&nbsp;— Partner Registration</div>
+    <div class="header-sub">&nbsp;</div>
   </div>
 
   <div class="hero">
