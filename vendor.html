@@ -297,9 +297,6 @@
         <button class="rev-chip" id="rev-chip-week"      onclick="setRevFilter('week')">This Week</button>
         <button class="rev-chip rev-chip-active" id="rev-chip-all" onclick="setRevFilter('all')">All Time</button>
         <div style="display:flex;align-items:center;gap:6px;margin-left:4px">
-          <input type="date" id="rev-filter-single" class="rev-date-input" onchange="setRevFilter('single')" title="Single day">
-        </div>
-        <div style="display:flex;align-items:center;gap:6px">
           <input type="date" id="rev-filter-from" class="rev-date-input" onchange="setRevFilter('range')" title="From">
           <span style="font-size:12px;color:var(--gray-400)">—</span>
           <input type="date" id="rev-filter-to"   class="rev-date-input" onchange="setRevFilter('range')" title="To">
@@ -1182,10 +1179,6 @@
     } else if (type === 'week') {
       var mon = new Date(today); mon.setDate(today.getDate() - today.getDay() + (today.getDay()===0?-6:1));
       f.from = toRevDate(mon); f.to = toRevDate(today);
-    } else if (type === 'single') {
-      var v = document.getElementById('rev-filter-single').value;
-      if (!v) return;
-      f.from = v; f.to = v;
     } else if (type === 'range') {
       var fr = document.getElementById('rev-filter-from').value;
       var to = document.getElementById('rev-filter-to').value;
@@ -1199,7 +1192,6 @@
       if (el) el.className = 'rev-chip' + (id === type ? ' rev-chip-active' : '');
     });
     if (['today','yesterday','week','all'].indexOf(type) > -1) {
-      document.getElementById('rev-filter-single').value = '';
       document.getElementById('rev-filter-from').value   = '';
       document.getElementById('rev-filter-to').value     = '';
     }
