@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<link rel="icon" href="images/favicon.svg" type="image/svg+xml">  
+<link rel="icon" href="images/favicon.svg" type="image/svg+xml">
 <title>Klinpal – Fresh Clothes, Zero Stress</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -176,12 +176,51 @@
     <p class="summary-note">* Special treatments (spot removal, dye, bleach) will incur extra charges.</p>
     <div class="pay-cta">
       <div class="pay-total" id="pay-amount">₦0</div>
-      <button class="btn-primary btn-green" id="confirm-btn" onclick="submitOrder()">Send Payment Proof →</button>
+      <button class="btn-primary btn-green" id="confirm-btn" onclick="submitOrder()">Continue to Payment →</button>
     </div>
   </div>
 </section>
 
-<!-- S7: SUCCESS -->
+<!-- S7: PAYMENT DETAILS -->
+<section class="screen" id="s-payment">
+  <div class="topbar">
+    <button class="back-btn" onclick="go('s-summary')">← Back</button>
+    <div class="logo"><img src="" alt="Klinpal" class="logo-img"></div>
+  </div>
+  <div class="screen-body">
+    <div class="screen-head">
+      <div class="review-chip">PAYMENT</div>
+      <h2 class="screen-title">Transfer Details</h2>
+    </div>
+    <div class="summary-card">
+      <p style="margin:0 0 16px;font-size:14px;color:var(--gray-500)">Please transfer the exact amount below to complete your order.</p>
+      <div class="summary-row total">
+        <span>Amount</span>
+        <span id="pay-amount-2">₦0</span>
+      </div>
+      <div style="margin-top:20px;padding:20px;background:var(--gray-50);border-radius:12px">
+        <div style="margin-bottom:12px">
+          <div style="font-size:12px;color:var(--gray-500);margin-bottom:2px">Bank Name</div>
+          <div style="font-size:15px;font-weight:600;color:var(--gray-900)">Moniepoint</div>
+        </div>
+        <div style="margin-bottom:12px">
+          <div style="font-size:12px;color:var(--gray-500);margin-bottom:2px">Account Number</div>
+          <div style="font-size:15px;font-weight:600;color:var(--gray-900)">01234567890</div>
+        </div>
+        <div>
+          <div style="font-size:12px;color:var(--gray-500);margin-bottom:2px">Account Name</div>
+          <div style="font-size:15px;font-weight:600;color:var(--gray-900)">Cedwood Technologies Limited</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;font-size:12px;color:var(--gray-500)">Order ID: <strong id="pay-order-id"></strong></div>
+    </div>
+    <div class="pay-cta">
+      <button class="btn-primary btn-green" onclick="sendPaymentProof()">Send Payment Proof →</button>
+    </div>
+  </div>
+</section>
+
+<!-- S8: SUCCESS -->
 <section class="screen" id="s-success">
   <div class="topbar">
     <div class="logo"><img src="" alt="Klinpal" class="logo-img"></div>
