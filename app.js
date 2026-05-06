@@ -896,27 +896,38 @@ function submitOrder() {
       .then(function(d) { console.log('Notify result:', d); })
       .catch(function(e) { console.error('Notify error:', e); });
 
-      // Open WhatsApp with pre-filled payment proof message
-      var customerAddress = selectedAddress || (currentUser ? currentUser.address : '');
-      var waMsg = encodeURIComponent(
-        'Hi ' + VENDOR.name + ' \uD83D\uDC4B\n\n'
-        + 'I just placed an order and have made payment.\n\n'
-        + 'Order ID: ' + orderId + '\n'
-        + 'Amount Paid: \u20A6' + total.toLocaleString() + '\n'
-        + 'Pickup & Delivery Address: ' + customerAddress + '\n\n'
-        + 'Please find my payment receipt attached.'
-      );
-      window.open('https://wa.me/2349031186357?text=' + waMsg, '_blank');
-
-      go('s-success');
+      // Show payment details screen
+      document.getElementById('pay-amount-2').textContent = '\u20A6' + total.toLocaleString();
+      document.getElementById('pay-order-id').textContent = orderId;
+      go('s-payment');
     } else {
       alert('Something went wrong. Please try again.');
-      if (btn) { btn.disabled = false; btn.textContent = 'Confirm Order'; }
+      if (btn) { btn.disabled = false; btn.textContent = 'Continue to Payment →'; }
     }
   })
   .catch(function() {
-    go('s-success');
+    go('s-payment');
   });
+}
+
+/* ─── SEND PAYMENT PROOF VIA WHATSAPP ─── */
+function sendPaymentProof() {
+  var items = SERVICES.filter(function(s) { return s.qty > 0; });
+  var rawSub = items.reduce(function(a, s) { return a + s.price * s.qty; }, 0);
+  var discount = getActiveDiscount(rawSub);
+  var sub = rawSub - discount;
+  var total = sub + deliveryFee + serviceFee;
+  var customerAddress = selectedAddress || (currentUser ? currentUser.address : '');
+  var waMsg = encodeURIComponent(
+    'Hi ' + VENDOR.name + ' \uD83D\uDC4B\n\n'
+    + 'I just placed an order and have made payment.\n\n'
+    + 'Order ID: ' + orderId + '\n'
+    + 'Amount Paid: \u20A6' + total.toLocaleString() + '\n'
+    + 'Pickup & Delivery Address: ' + customerAddress + '\n\n'
+    + 'Please find my payment receipt attached.'
+  );
+  window.open('https://wa.me/2348101363583?text=' + waMsg, '_blank');
+  go('s-success');
 }
 
 /* ─── RESET ─── */
