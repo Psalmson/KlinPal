@@ -822,7 +822,7 @@
     document.getElementById('nav-branding').style.display      = staffOnly ? 'none' : '';
 
     // Customer link
-    document.getElementById('customer-link').textContent = window.location.origin + '/?vendor=' + currentVendor.slug;
+    document.getElementById('customer-link').textContent = window.location.origin + '/order?vendor=' + currentVendor.slug;
 
     // Vendor-only setup
     if (!isStaffSession) {
@@ -1327,7 +1327,7 @@
 
   /* ── COPY LINK ── */
   function copyLink() {
-    var url = window.location.origin + '/?vendor=' + currentVendor.slug;
+    var url = window.location.origin + '/order?vendor=' + currentVendor.slug;
     if (navigator.clipboard) {
       navigator.clipboard.writeText(url).then(function() { showToast('Link copied ✓'); }).catch(fallbackCopy);
     } else { fallbackCopy(); }
