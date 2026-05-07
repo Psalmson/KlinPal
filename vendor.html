@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" href="images/favicon.svg" type="image/svg+xml">  
+<link rel="icon" href="images/favicon.svg" type="image/svg+xml">
 <title>Klinpal — Laundromat Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Inria+Sans:wght@300;400;700&display=swap" rel="stylesheet">
 <style>
@@ -822,7 +822,7 @@
     document.getElementById('nav-branding').style.display      = staffOnly ? 'none' : '';
 
     // Customer link
-    document.getElementById('customer-link').textContent = window.location.origin + '/?vendor=' + currentVendor.slug;
+    document.getElementById('customer-link').textContent = window.location.origin + '/order?vendor=' + currentVendor.slug;
 
     // Vendor-only setup
     if (!isStaffSession) {
@@ -1327,7 +1327,7 @@
 
   /* ── COPY LINK ── */
   function copyLink() {
-    var url = window.location.origin + '/?vendor=' + currentVendor.slug;
+    var url = window.location.origin + '/order?vendor=' + currentVendor.slug;
     if (navigator.clipboard) {
       navigator.clipboard.writeText(url).then(function() { showToast('Link copied ✓'); }).catch(fallbackCopy);
     } else { fallbackCopy(); }
