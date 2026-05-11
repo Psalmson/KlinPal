@@ -60,6 +60,7 @@ var SERVICES = [
 var currentUser      = null;
 var isNewCustomer    = false;
 var orderId          = '';
+var orderPayload     = null;
 var deliveryFee      = CONFIG.BASE_DELIVERY_FEE;
 var serviceFee       = 0;
 var platformFee      = 0;
@@ -214,7 +215,7 @@ function calculateDeliveryFee(coords) {
     if (err) {
       setAddrStatus('Could not calculate distance', 'err');
     } else {
-      setAddrStatus('\u2713 ' + km + ' km away', 'ok');
+      setAddrStatus('\u2713 Address confirmed', 'ok');
     }
   });
 }
@@ -477,7 +478,7 @@ function selectConfirmSuggestion(result) {
         statusEl.textContent = 'Could not calculate distance';
         statusEl.className = 'addr-status err';
       } else {
-        statusEl.textContent = '\u2713 ' + km + ' km away';
+        statusEl.textContent = '\u2713 Address confirmed';
         statusEl.className = 'addr-status ok';
       }
     });
@@ -835,7 +836,11 @@ function renderSummary() {
         + '</div>'
       : '')
     + '<div class="summary-row sub-row">'
-    +   '<span>Pickup &amp; Delivery <small style="color:var(--gray-500)">' + deliveryLabel + '</small></span>'
+    +   '<span>Subtotal</span>'
+    +   '<span>\u20A6' + sub.toLocaleString() + '</span>'
+    + '</div>'
+    + '<div class="summary-row sub-row">'
+    +   '<span>Pickup &amp; Delivery</span>'
     +   '<span>\u20A6' + deliveryFee.toLocaleString() + '</span>'
     + '</div>'
     + '<div class="summary-row sub-row">'
@@ -861,7 +866,7 @@ function submitOrder() {
 
   var itemsStr = items.map(function(s) { return s.qty + 'x ' + s.name; }).join(', ');
 
-  var orderPayload = {
+  orderPayload = {
     order_id:      orderId,
     vendor_id:     VENDOR.id,
     customer_name: currentUser ? (currentUser.firstName + ' ' + currentUser.lastName) : '',
@@ -882,20 +887,6 @@ function submitOrder() {
   })
   .then(function(r) {
     if (r.ok) {
-      // Fire Telegram notification — fire and forget
-      fetch(CONFIG.SUPABASE_URL + '/functions/v1/notify-order', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          order:          orderPayload,
-          vendor_name:    VENDOR.name,
-          vendor_chat_id: VENDOR.telegram_chat_id || null,
-        }),
-      })
-      .then(function(r) { return r.json(); })
-      .then(function(d) { console.log('Notify result:', d); })
-      .catch(function(e) { console.error('Notify error:', e); });
-
       // Show payment details screen
       document.getElementById('pay-amount-2').textContent = '\u20A6' + total.toLocaleString();
       document.getElementById('pay-order-id').textContent = orderId;
@@ -918,6 +909,21 @@ function sendPaymentProof() {
   var sub = rawSub - discount;
   var total = sub + deliveryFee + serviceFee;
   var customerAddress = selectedAddress || (currentUser ? currentUser.address : '');
+
+  // Fire Telegram notification — fire and forget
+  fetch(CONFIG.SUPABASE_URL + '/functions/v1/notify-order', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      order:          orderPayload,
+      vendor_name:    VENDOR.name,
+      vendor_chat_id: VENDOR.telegram_chat_id || null,
+    }),
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) { console.log('Notify result:', d); })
+  .catch(function(e) { console.error('Notify error:', e); });
+
   var waMsg = encodeURIComponent(
     'Hi ' + VENDOR.name + ' \uD83D\uDC4B\n\n'
     + 'I just placed an order and have made payment.\n\n'
