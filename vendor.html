@@ -414,7 +414,7 @@
           </div>
         </div>
         <div style="background:rgba(181,223,202,0.08);border:1px solid rgba(181,223,202,0.2);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--gray);margin-bottom:16px;line-height:1.5">
-          🔑 Staff sets their own email &amp; PIN at <strong style="color:var(--teal)">klin-pal.vercel.app/register.html</strong> using their phone number.
+          🔑 Staff sets their own email &amp; PIN at <strong style="color:var(--teal)">klinpal.app/register.html</strong> using their phone number.
         </div>
         <button class="save-btn" onclick="addStaff()">Add Staff</button>
       </div>
@@ -523,7 +523,7 @@
         </div>
       </div>
 
-      <div class="card">
+      <div class="card" id="profile-address-section">
         <div class="card-header"><div class="card-title">Update Pickup Address</div></div>
         <div class="card-body">
           <label class="field-label">New Address</label>
@@ -536,7 +536,7 @@
         </div>
       </div>
 
-      <div class="card" style="max-width:560px">
+      <div class="card" id="profile-time-section" style="max-width:560px">
         <div class="card-header"><div class="card-title">Pickup & Delivery Windows</div></div>
         <div class="card-body">
           <p style="font-size:13px;color:var(--gray);margin-bottom:20px;line-height:1.6">Set the time windows shown to your customers for pickup and delivery. Leave unchanged to use the platform defaults (7am–12pm / 5pm–8pm).</p>
@@ -820,6 +820,11 @@
     document.getElementById('nav-notifications').style.display = staffOnly ? 'none' : '';
     document.getElementById('nav-staff').style.display         = staffOnly ? 'none' : '';
     document.getElementById('nav-branding').style.display      = staffOnly ? 'none' : '';
+    document.getElementById('nav-promotions').style.display    = staffOnly ? 'none' : '';
+
+    // Hide address and time window fields from staff in Profile
+    if (document.getElementById('profile-address-section')) document.getElementById('profile-address-section').style.display = staffOnly ? 'none' : '';
+    if (document.getElementById('profile-time-section')) document.getElementById('profile-time-section').style.display = staffOnly ? 'none' : '';
 
     // Customer link
     document.getElementById('customer-link').textContent = window.location.origin + '/order?vendor=' + currentVendor.slug;
@@ -1109,9 +1114,9 @@
         +     '<div style="font-size:11px;color:var(--gray);max-width:180px;margin-top:2px">' + (o.address || '') + '</div></td>'
         + '<td style="font-size:12px;color:var(--gray);max-width:160px">' + (o.items || '—') + '</td>'
         + '<td><div style="font-family:var(--font-mono)">₦' + (Number(o.subtotal) || 0).toLocaleString() + '</div>'
-        +     '<div style="font-size:11px;color:var(--gray)">+₦' + (Number(o.delivery_fee) || 0).toLocaleString() + ' pickup & delivery</div>'
-        +     '<div style="font-size:11px;color:var(--gray)">+₦' + (Number(o.service_fee) || 0).toLocaleString() + ' service fee</div>'
-        +     '<div style="font-size:11px;color:var(--red)">-₦' + (Number(o.platform_fee) || 0).toLocaleString() + ' platform fee</div></td>'
+        +     (isStaffSession ? '' : '<div style="font-size:11px;color:var(--gray)">+₦' + (Number(o.delivery_fee) || 0).toLocaleString() + ' pickup & delivery</div>')
+        +     (isStaffSession ? '' : '<div style="font-size:11px;color:var(--gray)">+₦' + (Number(o.service_fee) || 0).toLocaleString() + ' service fee</div>')
+        +     (isStaffSession ? '' : '<div style="font-size:11px;color:var(--red)">-₦' + (Number(o.platform_fee) || 0).toLocaleString() + ' platform fee</div>') + '</td>'
         + '<td><span style="font-size:12px;color:' + ((o.payment_status==='Paid') ? 'var(--green)' : (o.payment_status==='Not Paid') ? 'var(--red)' : 'var(--amber)') + '">' + (o.payment_status || 'Pending') + '</span></td>'
         + '<td><select class="status-select" onchange="updateStatus(\'' + o.order_id + '\',this.value)">'
         +   statuses.map(function(s) { return '<option value="' + s + '"' + (o.status === s ? ' selected' : '') + '>' + s + '</option>'; }).join('')
