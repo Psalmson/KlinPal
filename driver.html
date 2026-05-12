@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
-<title>Klinpal — Driver</title>
+<title>Klinpal — Rider</title>
 <link href="https://fonts.googleapis.com/css2?family=Inria+Serif:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -92,7 +92,7 @@
 <div id="login-screen">
   <div class="login-card">
     <div class="login-logo">klinpal</div>
-    <div class="login-badge">Driver</div>
+    <div class="login-badge">Rider</div>
     <label class="login-label">Email</label>
     <input class="login-input" id="login-email" type="email" placeholder="your@email.com" autocomplete="off">
     <label class="login-label">PIN</label>
@@ -338,7 +338,7 @@
   /* ── ORDERS ── */
   function loadOrders() {
     document.getElementById('orders-wrap').innerHTML = '<div class="loading-state">Loading...</div>';
-    sbFetch('orders?driver_id=eq.' + currentDriver.id + '&order=created_at.desc&select=*')
+    sbFetch('orders?or=(pickup_driver_id.eq.' + currentDriver.id + ',delivery_driver_id.eq.' + currentDriver.id + ')&order=created_at.desc&select=*')
       .then(function(r) { return r.json(); })
       .then(function(data) {
         allOrders = Array.isArray(data) ? data : [];
@@ -433,20 +433,29 @@
   function startRealtime() {
     if (realtimeChannel) stopRealtime();
     realtimeChannel = sb.channel('driver-' + currentDriver.id)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: 'driver_id=eq.' + currentDriver.id }, function(payload) {
-        if (payload.eventType === 'INSERT') {
-          allOrders.unshift(payload.new);
-          showToast('New order assigned!');
-        } else if (payload.eventType === 'UPDATE') {
-          var idx = allOrders.findIndex(function(o) { return o.id === payload.new.id; });
-          if (idx > -1) allOrders[idx] = payload.new; else allOrders.unshift(payload.new);
-        } else if (payload.eventType === 'DELETE') {
-          allOrders = allOrders.filter(function(o) { return o.id !== payload.old.id; });
-        }
-        renderOrders();
-        updateEarnings();
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: 'pickup_driver_id=eq.' + currentDriver.id }, function(payload) {
+        handleRealtimePayload(payload);
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: 'delivery_driver_id=eq.' + currentDriver.id }, function(payload) {
+        handleRealtimePayload(payload);
       })
       .subscribe();
+  }
+
+  function handleRealtimePayload(payload) {
+    if (payload.eventType === 'INSERT') {
+      if (!allOrders.find(function(o) { return o.id === payload.new.id; })) {
+        allOrders.unshift(payload.new);
+        showToast('New order assigned!');
+      }
+    } else if (payload.eventType === 'UPDATE') {
+      var idx = allOrders.findIndex(function(o) { return o.id === payload.new.id; });
+      if (idx > -1) allOrders[idx] = payload.new; else allOrders.unshift(payload.new);
+    } else if (payload.eventType === 'DELETE') {
+      allOrders = allOrders.filter(function(o) { return o.id !== payload.old.id; });
+    }
+    renderOrders();
+    updateEarnings();
   }
 
   function stopRealtime() {
