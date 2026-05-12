@@ -230,6 +230,7 @@
               <option value="">All Statuses</option>
               <option value="pending">Pending</option>
               <option value="approved">Approved</option>
+              <option value="onboarded">Onboarded</option>
               <option value="rejected">Rejected</option>
             </select>
           </div>
@@ -337,7 +338,7 @@
               <option value="">All Payments</option><option value="Paid">Paid</option><option value="Pending">Pending</option><option value="Not Paid">Not Paid</option>
             </select>
             <select id="drill-filter-status" onchange="applyDrillFilters()" style="background:var(--navy3);border:1px solid var(--gray2);border-radius:6px;padding:7px 10px;color:var(--white);font-size:13px;outline:none;cursor:pointer">
-              <option value="">All Statuses</option><option value="Pending">Pending</option><option value="Picked Up">Picked Up</option><option value="Washing">Washing</option><option value="Ready">Ready</option><option value="Delivered">Delivered</option><option value="Cancelled">Cancelled</option>
+              <option value="">All Statuses</option><option value="Pending">Pending</option><option value="Picked Up">Picked Up</option><option value="Processing">Processing</option><option value="Ready">Ready</option><option value="Delivered">Delivered</option><option value="Cancelled">Cancelled</option>
             </select>
           </div>
         </div>
@@ -347,7 +348,7 @@
 
     <!-- RIDERS -->
     <div class="page" id="page-riders">
-      <div class="page-header"><div><div class="page-title">Riders</div><div class="page-subtitle">Manage drivers and their earnings</div></div></div>
+      <div class="page-header"><div><div class="page-title">Riders</div><div class="page-subtitle">Manage riders and their earnings</div></div></div>
       <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:24px">
         <div class="stat-card"><div class="stat-label">Total Riders</div><div class="stat-value teal" id="rider-stat-count">&mdash;</div><div class="stat-sub">Registered</div></div>
         <div class="stat-card"><div class="stat-label">Total Rider Payout</div><div class="stat-value" id="rider-stat-payout">&mdash;</div><div class="stat-sub">Across all orders</div></div>
@@ -562,7 +563,7 @@
           <option value="Pending">Pending</option>
           <option value="Picked Up">Picked Up</option>
           <option value="On the Way">On the Way</option>
-          <option value="Washing">Washing</option>
+          <option value="Processing">Processing</option>
           <option value="Ready">Ready</option>
           <option value="Delivered">Delivered</option>
           <option value="Cancelled">Cancelled</option>
@@ -767,7 +768,7 @@
       return;
     }
 
-    var statusColors = { pending: '#FFB347', approved: '#00B896', rejected: '#FF5757' };
+    var statusColors = { pending: '#FFB347', approved: '#00B896', rejected: '#FF5757', onboarded: '#5BC4F5' };
 
     var rows = list.map(function(p) {
       var date     = p.created_at ? new Date(p.created_at).toLocaleDateString('en-GB') : '';
@@ -785,6 +786,8 @@
               + '<button class="btn btn-ghost btn-sm" onclick="rejectProspect(\'' + p.id + '\')">Reject</button>'
               : p.status === 'approved'
               ? '<button class="btn btn-ghost btn-sm" onclick="prefillOnboard(\'' + p.id + '\')">Onboard →</button>'
+              : p.status === 'onboarded'
+              ? '<span style="font-size:11px;font-weight:600;color:#5BC4F5">Onboarded ✓</span>'
               : '—')
         + '</td>'
         + '</tr>';
@@ -1066,7 +1069,7 @@
 
   function renderDrillTable(orders) {
     var payStatuses = ['Pending','Paid','Not Paid'];
-    var statuses    = ['Pending','Picked Up','On the Way','Washing','Ready','Delivered','Cancelled'];
+    var statuses    = ['Pending','Picked Up','On the Way','Processing','Ready','Delivered','Cancelled'];
     var driverOpts  = '<option value="">Unassigned</option>' + allDrivers.filter(function(d){ return d.active; }).map(function(d){
       return '<option value="'+d.id+'">'+d.name+' ('+d.percentage+'%)</option>';
     }).join('');
@@ -1323,6 +1326,12 @@
     sbFetch('vendors', { method:'POST', body:JSON.stringify({ name:name, slug:slug, phone:phone, address:street, lat:obLat, lng:obLng, telegram_chat_id:telegram||null, brand_color:brandColor, logo_url:logoUrl }) })
     .then(function(r) {
       if (!r.ok) { return r.json().then(function(e){ showToast(e.message||'Onboarding failed',true); }); }
+      // Mark matching prospect as onboarded
+      var prospect = allProspects.find(function(p) { return p.slug === slug || p.business_name === name; });
+      if (prospect) {
+        sbFetch('prospects?id=eq.' + prospect.id, { method: 'PATCH', body: JSON.stringify({ status: 'onboarded' }) });
+        prospect.status = 'onboarded';
+      }
       showToast(name+' onboarded \u2713');
       ['ob-name','ob-slug','ob-phone','ob-address','ob-telegram','ob-brand-color','ob-logo-url'].forEach(function(id){ document.getElementById(id).value=''; });
       obLat=null; obLng=null; obAddressConfirmed=false;
