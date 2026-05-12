@@ -271,7 +271,7 @@
               <option value="">All Order Statuses</option>
               <option value="Pending">Pending</option>
               <option value="Picked Up">Picked Up</option>
-              <option value="Washing">Washing</option>
+              <option value="Processing">Processing</option>
               <option value="Ready">Ready</option>
               <option value="Delivered">Delivered</option>
               <option value="Cancelled">Cancelled</option>
@@ -1093,7 +1093,7 @@
   function updateStats() {
     document.getElementById('s-total').textContent     = allOrders.length;
     document.getElementById('s-pending').textContent   = allOrders.filter(function(o) { return o.status === 'Pending'; }).length;
-    document.getElementById('s-progress').textContent  = allOrders.filter(function(o) { return ['Picked Up','Washing','Ready'].indexOf(o.status) > -1; }).length;
+    document.getElementById('s-progress').textContent  = allOrders.filter(function(o) { return ['Picked Up','Processing','Ready'].indexOf(o.status) > -1; }).length;
     document.getElementById('s-delivered').textContent = allOrders.filter(function(o) { return o.status === 'Delivered'; }).length;
   }
 
@@ -1104,7 +1104,7 @@
       wrap.innerHTML = '<div class="empty-state"><div style="font-size:40px;margin-bottom:12px">📭</div><div style="font-size:14px">' + (allOrders.length ? 'No matching orders' : 'No orders yet') + '</div></div>';
       return;
     }
-    var statuses = ['Pending','Picked Up','Washing','Ready','Delivered','Cancelled'];
+    var statuses = ['Pending','Picked Up','Processing','Ready','Delivered','Cancelled'];
     var rows = list.map(function(o, i) {
       var date = o.created_at ? new Date(o.created_at).toLocaleDateString('en-GB') : '';
       return '<tr>'
@@ -1119,7 +1119,7 @@
         +     (isStaffSession ? '' : '<div style="font-size:11px;color:var(--red)">-₦' + (Number(o.platform_fee) || 0).toLocaleString() + ' platform fee</div>') + '</td>'
         + '<td><span style="font-size:12px;color:' + ((o.payment_status==='Paid') ? 'var(--green)' : (o.payment_status==='Not Paid') ? 'var(--red)' : 'var(--amber)') + '">' + (o.payment_status || 'Pending') + '</span></td>'
         + '<td><select class="status-select" onchange="updateStatus(\'' + o.order_id + '\',this.value)">'
-        +   statuses.map(function(s) { return '<option value="' + s + '"' + (o.status === s ? ' selected' : '') + '>' + s + '</option>'; }).join('')
+        +   statuses.map(function(s) { var dis = (s !== 'Processing' && s !== 'Ready') ? ' disabled' : ''; return '<option value="' + s + '"' + (o.status === s ? ' selected' : '') + dis + '>' + s + '</option>'; }).join('')
         + '</select>'
         + (o.last_updated_by ? '<div style="font-size:10px;color:var(--gray);margin-top:4px">by ' + o.last_updated_by + '</div>' : '')
         + '</td>'
@@ -1279,7 +1279,7 @@
       ? svcKeys.map(function(k) { return '<div class="revenue-row"><span class="revenue-label">' + k + '</span><span class="revenue-value">' + serviceTotals[k] + ' items</span></div>'; }).join('')
       : '<div style="color:var(--gray);font-size:13px;padding:8px 0">No data yet</div>';
 
-    var statusOrder = ['Pending','Picked Up','Washing','Ready','Delivered','Cancelled'];
+    var statusOrder = ['Pending','Picked Up','Processing','Ready','Delivered','Cancelled'];
     document.getElementById('rev-breakdown').innerHTML = statusOrder
       .filter(function(s) { return statusCount[s]; })
       .map(function(s) {
