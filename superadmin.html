@@ -648,7 +648,7 @@
   }
 
   var allVendors = [], currentDrillVendor = null;
-  var obAddressConfirmed = false, obLat = null, obLng = null, obDebounce = null;
+  var obAddressConfirmed = false, obLat = null, obLng = null, obDebounce = null, obProspectId = null;
   var evAddressConfirmed = false, evLat = null, evLng = null, evDebounce = null;
   var realtimeChannel = null, drillRealtimeChannel = null;
 
@@ -826,6 +826,7 @@
   function prefillOnboard(id) {
     var p = allProspects.find(function(x){ return x.id === id; });
     if (!p) return;
+    obProspectId = id;
     showPage('onboard');
     document.getElementById('ob-name').value  = p.business_name || '';
     document.getElementById('ob-slug').value  = p.slug          || '';
@@ -1091,7 +1092,10 @@
         +'<td><div class="mono">'+(o.order_id||'\u2014')+'</div><div style="font-size:11px;color:var(--gray);margin-top:3px">'+date+'</div></td>'
         +'<td><div style="font-weight:600">'+(o.customer_name||'\u2014')+'</div><div style="font-size:12px;color:var(--gray)">'+(o.phone||'')+'</div><div style="font-size:11px;color:var(--gray);max-width:180px;margin-top:2px">'+(o.address||'')+'</div></td>'
         +'<td style="font-size:12px;color:var(--gray);max-width:160px">'+(o.items||'\u2014')+'</td>'
-        +'<td><span class="mono">\u20A6'+(Number(o.subtotal)||0).toLocaleString()+'</span><div style="font-size:11px;color:var(--gray);margin-top:3px">+\u20A6'+delivFee.toLocaleString()+' delivery</div></td>'
+        +'<td><span class="mono">\u20A6'+(Number(o.subtotal)||0).toLocaleString()+'</span>'
+        +'<div style="font-size:11px;color:var(--gray);margin-top:3px">+\u20A6'+delivFee.toLocaleString()+' pickup & delivery</div>'
+        +'<div style="font-size:11px;color:var(--gray)">+\u20A6'+(Number(o.service_fee)||0).toLocaleString()+' service fee</div>'
+        +'<div style="font-size:11px;color:var(--red)">-\u20A6'+(Number(o.platform_fee)||0).toLocaleString()+' platform fee</div></td>'
         +'<td>'
         +  '<div style="font-size:12px;color:var(--white)">P: '+pickupName+'</div>'
         +  '<div style="font-size:12px;color:var(--gray);margin-top:3px">D: '+delivName+'</div>'
@@ -1241,7 +1245,7 @@
 
   /* ── SHARED ADDRESS AUTOCOMPLETE ── */
   function onAddressInput() {
-    obAddressConfirmed=false; obLat=null; obLng=null;
+    obAddressConfirmed=false; obLat=null; obLng=null; obProspectId=null;
     document.getElementById('ob-addr-status').textContent='';
     clearTimeout(obDebounce);
     var q=document.getElementById('ob-address').value.trim();
@@ -1326,11 +1330,12 @@
     sbFetch('vendors', { method:'POST', body:JSON.stringify({ name:name, slug:slug, phone:phone, address:street, lat:obLat, lng:obLng, telegram_chat_id:telegram||null, brand_color:brandColor, logo_url:logoUrl }) })
     .then(function(r) {
       if (!r.ok) { return r.json().then(function(e){ showToast(e.message||'Onboarding failed',true); }); }
-      // Mark matching prospect as onboarded
-      var prospect = allProspects.find(function(p) { return p.slug === slug || p.business_name === name; });
-      if (prospect) {
-        sbFetch('prospects?id=eq.' + prospect.id, { method: 'PATCH', body: JSON.stringify({ status: 'onboarded' }) });
-        prospect.status = 'onboarded';
+      // Mark prospect as onboarded if linked
+      if (obProspectId) {
+        sbFetch('prospects?id=eq.' + obProspectId, { method: 'PATCH', body: JSON.stringify({ status: 'onboarded' }) });
+        var prospect = allProspects.find(function(x) { return x.id === obProspectId; });
+        if (prospect) prospect.status = 'onboarded';
+        obProspectId = null;
       }
       showToast(name+' onboarded \u2713');
       ['ob-name','ob-slug','ob-phone','ob-address','ob-telegram','ob-brand-color','ob-logo-url'].forEach(function(id){ document.getElementById(id).value=''; });
