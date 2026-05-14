@@ -188,35 +188,67 @@
     <div class="logo"><img src="" alt="Klinpal" class="logo-img"></div>
   </div>
   <div class="screen-body">
-    <div class="screen-head">
-      <div class="review-chip">PAYMENT</div>
-      <h2 class="screen-title">Transfer Details</h2>
-    </div>
-    <div class="summary-card">
-      <p style="margin:0 0 16px;font-size:14px;color:var(--gray-500)">Please transfer the exact amount below to complete your order.</p>
-      <div class="summary-row total">
-        <span>Amount</span>
-        <span id="pay-amount-2">₦0</span>
+    <div class="summary-card" style="padding:24px 20px">
+
+      <!-- Amount -->
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="font-size:13px;color:var(--gray-500);margin-bottom:4px">Amount to pay</div>
+        <div style="font-family:var(--font-head);font-size:32px;font-weight:700;color:var(--navy)" id="pay-amount-2">₦0</div>
+        <div style="font-size:12px;color:var(--gray-500);margin-top:6px">Order ID: <strong id="pay-order-id" style="font-family:var(--font-body)"></strong></div>
       </div>
-      <div style="margin-top:20px;padding:20px;background:var(--gray-50);border-radius:12px">
-        <div style="margin-bottom:12px">
-          <div style="font-size:12px;color:var(--gray-500);margin-bottom:2px">Bank Name</div>
-          <div style="font-size:15px;font-weight:600;color:var(--gray-900)">Fidelity Bank</div>
-        </div>
-        <div style="margin-bottom:12px">
-          <div style="font-size:12px;color:var(--gray-500);margin-bottom:2px">Account Number</div>
-          <div style="font-size:15px;font-weight:600;color:var(--gray-900)">5601592807</div>
+
+      <!-- Divider -->
+      <div style="border-top:1px solid var(--gray-100);margin-bottom:16px"></div>
+
+      <!-- Transfer to label -->
+      <div style="font-size:11px;font-weight:600;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px">Transfer to</div>
+
+      <!-- Bank icon + name -->
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <div style="width:40px;height:40px;border-radius:50%;background:#e8f4fc;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1a6fa8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M3 10h18"/><path d="M12 3l9 7H3z"/><path d="M5 10v11"/><path d="M19 10v11"/><path d="M9 10v11"/><path d="M14 10v11"/></svg>
         </div>
         <div>
-          <div style="font-size:12px;color:var(--gray-500);margin-bottom:2px">Account Name</div>
-          <div style="font-size:15px;font-weight:600;color:var(--gray-900)">Cedwood Technologies</div>
+          <div style="font-size:15px;font-weight:600;color:var(--navy)">Fidelity Bank</div>
+          <div style="font-size:13px;color:var(--gray-500)">Cedwood Technologies</div>
         </div>
       </div>
-      <div style="margin-top:12px;font-size:12px;color:var(--gray-500)">Order ID: <strong id="pay-order-id"></strong></div>
+
+      <!-- Account number with copy -->
+      <div style="background:var(--gray-50);border-radius:var(--radius-sm);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div>
+          <div style="font-size:11px;color:var(--gray-500);margin-bottom:2px">Account number</div>
+          <div style="font-size:20px;font-weight:700;letter-spacing:1.5px;color:var(--navy);font-family:var(--font-body)" id="acct-number">5601592807</div>
+        </div>
+        <button onclick="copyAcctNumber()" id="copy-btn" style="background:var(--white);border:1px solid var(--gray-300);border-radius:var(--radius-sm);padding:6px 12px;font-size:12px;font-family:var(--font-body);color:var(--gray-500);cursor:pointer;display:flex;align-items:center;gap:4px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          <span id="copy-text">Copy</span>
+        </button>
+      </div>
+
+      <!-- Info tip -->
+      <div style="background:#e6f7f1;border-radius:var(--radius-sm);padding:10px 14px;display:flex;gap:8px;align-items:flex-start">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0f6e56" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <div style="font-size:12px;color:#085041;line-height:1.5">Transfer the exact amount above. After payment, tap below to send your receipt via WhatsApp.</div>
+      </div>
+
     </div>
-    <div class="pay-cta">
-      <button class="btn-primary btn-green" onclick="sendPaymentProof()">Send Payment Proof →</button>
+
+    <!-- WhatsApp button -->
+    <div class="pay-cta" style="margin-top:20px">
+      <button class="btn-primary btn-green" onclick="sendPaymentProof()" style="display:flex;align-items:center;justify-content:center;gap:8px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.832-1.438A9.955 9.955 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm0 18a8 8 0 01-4.29-1.24l-.28-.17-2.84.84.84-2.84-.17-.28A8 8 0 1112 20z"/></svg>
+        Send payment proof
+      </button>
     </div>
+
+    <!-- Back to order -->
+    <div style="text-align:center;margin-top:14px">
+      <button onclick="go('s-summary')" style="background:none;border:none;font-size:13px;font-family:var(--font-body);color:var(--gray-500);cursor:pointer;padding:8px">
+        ← Back to order
+      </button>
+    </div>
+
   </div>
 </section>
 
