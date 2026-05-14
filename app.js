@@ -657,7 +657,6 @@ function submitNewCustomer() {
 
 /* ─── ORDER SCREEN ─── */
 function renderOrderScreen() {
-  SERVICES.forEach(function(s) { s.qty = 0; });
   renderServices();
   var banner = document.getElementById('welcome-banner');
   if (currentUser && currentUser.firstName) {
@@ -796,6 +795,9 @@ function getActiveDiscount(sub) {
 }
 
 function renderSummary() {
+  // Re-enable the submit button in case it was disabled from a previous submission
+  var btn = document.getElementById('confirm-btn');
+  if (btn) { btn.disabled = false; btn.textContent = 'Continue to Payment →'; }
   var items       = SERVICES.filter(function(s) { return s.qty > 0; });
   var rawSub      = items.reduce(function(a, s) { return a + s.price * s.qty; }, 0);
   var discount    = getActiveDiscount(rawSub);
@@ -897,6 +899,7 @@ function submitOrder() {
     }
   })
   .catch(function() {
+    if (btn) { btn.disabled = false; btn.textContent = 'Continue to Payment →'; }
     go('s-payment');
   });
 }
@@ -976,6 +979,8 @@ function resetApp() {
   setAddrStatus('', '');
   hideDropdown();
   SERVICES.forEach(function(s) { s.qty = 0; });
+  var btn = document.getElementById('confirm-btn');
+  if (btn) { btn.disabled = false; btn.textContent = 'Continue to Payment →'; }
   go('s-landing');
 }
 
