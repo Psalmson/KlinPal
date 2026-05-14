@@ -902,6 +902,23 @@ function submitOrder() {
 }
 
 /* ─── SEND PAYMENT PROOF VIA WHATSAPP ─── */
+/* ─── COPY ACCOUNT NUMBER ─── */
+function copyAcctNumber() {
+  var num = document.getElementById('acct-number').textContent;
+  navigator.clipboard.writeText(num).then(function() {
+    var btn = document.getElementById('copy-text');
+    btn.textContent = 'Copied!';
+    setTimeout(function() { btn.textContent = 'Copy'; }, 2000);
+  }).catch(function() {
+    var el = document.getElementById('acct-number');
+    var range = document.createRange();
+    range.selectNodeContents(el);
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  });
+}
+
 function sendPaymentProof() {
   var items = SERVICES.filter(function(s) { return s.qty > 0; });
   var rawSub = items.reduce(function(a, s) { return a + s.price * s.qty; }, 0);
