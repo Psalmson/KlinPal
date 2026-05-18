@@ -1338,13 +1338,17 @@
       if (revEl) revEl.textContent = '\u20A6'+klinpal.toLocaleString();
       if (pickupDrv && pickupDrv.telegram_chat_id) {
         var vendorAddr = currentDrillVendor ? (currentDrillVendor.address || '\u2014') : '\u2014';
+        var vendorName = currentDrillVendor ? (currentDrillVendor.name || '\u2014') : '\u2014';
+        var vendorPhone = currentDrillVendor ? (currentDrillVendor.phone || '\u2014') : '\u2014';
         sendTelegram(pickupDrv.telegram_chat_id,
           '\uD83D\uDEF5 Pickup Assignment\n\n'
           +'Order ID: '+orderId+'\n'
           +'Customer: '+(o ? o.customer_name : '\u2014')+'\n'
           +'Phone: '+(o ? o.phone : '\u2014')+'\n'
           +'Pickup address: '+(o ? o.address : '\u2014')+'\n'
-          +'Drop off at: '+vendorAddr+'\n'
+          +'Drop off at: '+vendorName+'\n'
+          +'Vendor address: '+vendorAddr+'\n'
+          +'Vendor phone: '+vendorPhone+'\n'
           +'Items: '+(o ? o.items : '\u2014')+'\n'
           +'Your commission: \u20A6'+pickupComm.toLocaleString()
         );
@@ -1378,12 +1382,16 @@
       if (revEl) revEl.textContent = '\u20A6'+klinpal.toLocaleString();
       if (delivDrv && delivDrv.telegram_chat_id) {
         var vendorAddr = currentDrillVendor ? (currentDrillVendor.address || '\u2014') : '\u2014';
+        var vendorName = currentDrillVendor ? (currentDrillVendor.name || '\u2014') : '\u2014';
+        var vendorPhone = currentDrillVendor ? (currentDrillVendor.phone || '\u2014') : '\u2014';
         sendTelegram(delivDrv.telegram_chat_id,
           '\uD83D\uDEF5 Delivery Assignment\n\n'
           +'Order ID: '+orderId+'\n'
           +'Customer: '+(o ? o.customer_name : '\u2014')+'\n'
           +'Phone: '+(o ? o.phone : '\u2014')+'\n'
-          +'Collect from: '+vendorAddr+'\n'
+          +'Collect from: '+vendorName+'\n'
+          +'Vendor address: '+vendorAddr+'\n'
+          +'Vendor phone: '+vendorPhone+'\n'
           +'Delivery address: '+(o ? o.address : '\u2014')+'\n'
           +'Items: '+(o ? o.items : '\u2014')+'\n'
           +'Your commission: \u20A6'+delivComm.toLocaleString()
@@ -1604,13 +1612,17 @@
       odmUpdateCommissionDisplay(o);
       if (pickupDrv && pickupDrv.telegram_chat_id) {
         var vendorAddr = currentDrillVendor ? (currentDrillVendor.address || '\u2014') : '\u2014';
+        var vendorName = currentDrillVendor ? (currentDrillVendor.name || '\u2014') : '\u2014';
+        var vendorPhone = currentDrillVendor ? (currentDrillVendor.phone || '\u2014') : '\u2014';
         sendTelegram(pickupDrv.telegram_chat_id,
           '\uD83D\uDEF5 Pickup Assignment\n\n'
           + 'Order ID: ' + odmOrderId + '\n'
           + 'Customer: ' + (o ? o.customer_name : '\u2014') + '\n'
           + 'Phone: '    + (o ? o.phone : '\u2014') + '\n'
           + 'Pickup address: ' + (o ? o.address : '\u2014') + '\n'
-          + 'Drop off at: ' + vendorAddr + '\n'
+          + 'Drop off at: ' + vendorName + '\n'
+          + 'Vendor address: ' + vendorAddr + '\n'
+          + 'Vendor phone: ' + vendorPhone + '\n'
           + 'Items: '    + (o ? o.items : '\u2014') + '\n'
           + 'Your commission: \u20A6' + pickupFee.toLocaleString()
         );
@@ -1643,12 +1655,16 @@
       odmUpdateCommissionDisplay(o);
       if (delivDrv && delivDrv.telegram_chat_id) {
         var vendorAddr = currentDrillVendor ? (currentDrillVendor.address || '\u2014') : '\u2014';
+        var vendorName = currentDrillVendor ? (currentDrillVendor.name || '\u2014') : '\u2014';
+        var vendorPhone = currentDrillVendor ? (currentDrillVendor.phone || '\u2014') : '\u2014';
         sendTelegram(delivDrv.telegram_chat_id,
           '\uD83D\uDEF5 Delivery Assignment\n\n'
           + 'Order ID: ' + odmOrderId + '\n'
           + 'Customer: ' + (o ? o.customer_name : '\u2014') + '\n'
           + 'Phone: '    + (o ? o.phone : '\u2014') + '\n'
-          + 'Collect from: ' + vendorAddr + '\n'
+          + 'Collect from: ' + vendorName + '\n'
+          + 'Vendor address: ' + vendorAddr + '\n'
+          + 'Vendor phone: ' + vendorPhone + '\n'
           + 'Delivery address: ' + (o ? o.address : '\u2014') + '\n'
           + 'Items: '    + (o ? o.items : '\u2014') + '\n'
           + 'Your commission: \u20A6' + delivFeeR.toLocaleString()
