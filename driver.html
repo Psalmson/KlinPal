@@ -80,10 +80,29 @@
   .toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
   .toast.error{background:var(--red);color:white;}
 
+  /* ── RESPONSIVE: TABLET (768px) ── */
+  @media (max-width: 768px) {
+    #app { padding: 20px 16px; }
+    .app-header { flex-wrap: wrap; gap: 10px; }
+    .earnings-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .earnings-card { padding: 14px; }
+    .order-card { padding: 14px; }
+    .order-header { flex-direction: column; gap: 8px; align-items: flex-start; }
+    .action-btn { font-size: 12px; padding: 8px 14px; width: 100%; text-align: center; }
+  }
+
+  /* ── RESPONSIVE: MOBILE (480px) ── */
   @media(max-width:480px){
-    .login-card{padding:36px 24px;}
+    .login-card{padding:36px 24px; margin: 0 12px;}
     #app{padding:16px 12px;}
-    .earnings-card{grid-template-columns:1fr 1fr;}
+    .earnings-grid{grid-template-columns:1fr 1fr; gap: 8px;}
+    .earnings-card{padding: 12px;}
+    .earnings-card .ec-val{font-size: 18px;}
+    .order-card{padding: 12px;}
+    .app-logo{font-size: 18px;}
+    .tab-bar{gap: 0;}
+    .tab-btn{font-size: 12px; padding: 8px 12px;}
+    .section-title{font-size: 14px;}
   }
 </style>
 </head>
