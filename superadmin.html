@@ -108,6 +108,64 @@
   .modal-field { margin-bottom: 14px; }
   .modal-field-label { font-size: 11px; color: var(--gray); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px; }
   .modal-close { background: var(--navy3); border: none; border-radius: 8px; padding: 10px 20px; color: var(--gray); cursor: pointer; font-family: var(--font-body); }
+  /* ── MOBILE HAMBURGER ── */
+  .mobile-header { display:none; position:fixed; top:0; left:0; right:0; z-index:200; background:var(--navy2); border-bottom:1px solid var(--navy3); padding:12px 16px; align-items:center; justify-content:space-between; }
+  .mobile-header .mob-logo { font-family:var(--font-head); font-size:20px; font-weight:800; color:var(--teal); }
+  .hamburger { background:none; border:none; color:var(--white); cursor:pointer; padding:4px; }
+  .hamburger svg { width:24px; height:24px; }
+  .sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:99; }
+
+  /* ── RESPONSIVE: TABLET (1024px) ── */
+  @media (max-width: 1024px) {
+    .main { padding: 24px; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    table { font-size: 13px; }
+    td, th { padding: 10px 12px; }
+  }
+
+  /* ── RESPONSIVE: TABLET PORTRAIT (768px) ── */
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); transition: transform 0.3s ease; }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-overlay.open { display: block; }
+    .mobile-header { display: flex; }
+    .main { margin-left: 0; padding: 16px; padding-top: 64px; }
+    .page-header { flex-direction: column; gap: 12px; }
+    .page-header .btn { width: 100%; text-align: center; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .stats-card { padding: 14px 16px; }
+    .stats-label { font-size: 10px; }
+    .stats-num { font-size: 22px; }
+    .card-header { padding: 14px 16px; }
+    .card-body { padding: 16px; }
+    .date-chip { font-size: 11px; padding: 5px 10px; }
+    .date-input { font-size: 11px; padding: 4px 8px; }
+    table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; }
+    thead { white-space: nowrap; }
+    th { font-size: 10px; }
+    td { font-size: 12px; padding: 10px 12px; }
+    .status-select { font-size: 11px; padding: 4px 6px; }
+    .vendor-card { padding: 16px; }
+    .field-input, .login-input { font-size: 14px; }
+    .login-card { padding: 36px 24px; }
+    .modal { width: 95%; max-width: none; margin: 16px; padding: 20px; }
+  }
+
+  /* ── RESPONSIVE: MOBILE (480px) ── */
+  @media (max-width: 480px) {
+    .main { padding: 12px; padding-top: 60px; }
+    .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .stats-card { padding: 12px; }
+    .stats-num { font-size: 20px; }
+    .page-title { font-size: 20px; }
+    .page-subtitle { font-size: 12px; }
+    .card-header { padding: 12px 14px; flex-wrap: wrap; gap: 8px; }
+    .card-body { padding: 14px; }
+    .btn { font-size: 12px; padding: 8px 14px; }
+    .date-chip { padding: 4px 8px; font-size: 10px; }
+    .vendor-card { padding: 12px; }
+    .login-card { margin: 0 12px; padding: 28px 20px; }
+  }
 </style>
 </head>
 <body>
@@ -129,6 +187,14 @@
 </div>
 
 <div id="app">
+  <!-- Mobile header -->
+  <div class="mobile-header">
+    <span class="mob-logo">klinpal</span>
+    <button class="hamburger" onclick="toggleSidebar()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
   <aside class="sidebar">
     <div class="sidebar-logo">klinpal</div>
     <div class="sidebar-tag"><span>Superadmin</span></div>
@@ -338,7 +404,7 @@
               <option value="">All Payments</option><option value="Paid">Paid</option><option value="Pending">Pending</option><option value="Not Paid">Not Paid</option>
             </select>
             <select id="drill-filter-status" onchange="applyDrillFilters()" style="background:var(--navy3);border:1px solid var(--gray2);border-radius:6px;padding:7px 10px;color:var(--white);font-size:13px;outline:none;cursor:pointer">
-              <option value="">All Statuses</option><option value="Pending">Pending</option><option value="Picked Up">Picked Up</option><option value="Processing">Processing</option><option value="Ready">Ready</option><option value="Delivered">Delivered</option><option value="Cancelled">Cancelled</option>
+              <option value="">All Statuses</option><option value="Pending">Pending</option><option value="Picked Up">Picked Up</option><option value="Delivered to Vendor">Delivered to Vendor</option><option value="Processing">Processing</option><option value="Ready">Ready</option><option value="Delivered to Customer">Delivered to Customer</option><option value="Cancelled">Cancelled</option>
             </select>
           </div>
         </div>
@@ -562,10 +628,10 @@
         <select class="status-select" id="odm-status-select" onchange="odmUpdateStatus()" style="width:100%">
           <option value="Pending">Pending</option>
           <option value="Picked Up">Picked Up</option>
-          <option value="On the Way">On the Way</option>
+          <option value="Delivered to Vendor">Delivered to Vendor</option>
           <option value="Processing">Processing</option>
           <option value="Ready">Ready</option>
-          <option value="Delivered">Delivered</option>
+          <option value="Delivered to Customer">Delivered to Customer</option>
           <option value="Cancelled">Cancelled</option>
         </select>
       </div>
@@ -664,6 +730,13 @@
     else { input.type = 'password'; btn.textContent = 'Show'; }
   }
 
+  function toggleSidebar() {
+    var sb = document.querySelector('.sidebar');
+    var ov = document.getElementById('sidebar-overlay');
+    sb.classList.toggle('open');
+    ov.classList.toggle('open');
+  }
+
   function doLogin() {
     var email = document.getElementById('login-email').value.trim().toLowerCase();
     var pass  = document.getElementById('login-pass').value.trim();
@@ -731,6 +804,11 @@
   });
 
   function showPage(name) {
+    // Close sidebar on mobile when navigating
+    var sb = document.querySelector('.sidebar');
+    var ov = document.getElementById('sidebar-overlay');
+    if (sb) sb.classList.remove('open');
+    if (ov) ov.classList.remove('open');
     if (name === 'settings')   loadSettings();
     if (name === 'riders')     loadRiders();
     if (name === 'prospects')  loadProspects();
@@ -1029,7 +1107,7 @@
       orders = Array.isArray(orders) ? orders : [];
       drillOrders = orders;
       var pen = orders.filter(function(o){ return o.status==='Pending'; }).length;
-      var del = orders.filter(function(o){ return o.status==='Delivered'; }).length;
+      var del = orders.filter(function(o){ return o.status==='Delivered to Customer'; }).length;
       var svc = orders.reduce(function(a,o){ return a+(Number(o.subtotal)||0); },0);
       var dlv = orders.reduce(function(a,o){ return a+(Number(o.delivery_fee)||0); },0);
       var fee = orders.reduce(function(a,o){ return a+(Number(o.service_fee)||0); },0);
@@ -1070,7 +1148,7 @@
 
   function renderDrillTable(orders) {
     var payStatuses = ['Pending','Paid','Not Paid'];
-    var statuses    = ['Pending','Picked Up','On the Way','Processing','Ready','Delivered','Cancelled'];
+    var statuses    = ['Pending','Picked Up','Delivered to Vendor','Processing','Ready','Delivered to Customer','Cancelled'];
     var driverOpts  = '<option value="">Unassigned</option>' + allDrivers.filter(function(d){ return d.active; }).map(function(d){
       return '<option value="'+d.id+'">'+d.name+' ('+d.percentage+'%)</option>';
     }).join('');
@@ -1561,7 +1639,7 @@
       var earnedDeliv  = deliveries.reduce(function(a,o){ return a+(Number(o.delivery_rider_fee)||0); }, 0);
       var totalEarned  = earnedPickup + earnedDeliv;
       var totalAssigned = pickups.length + deliveries.length;
-      var fulfilled = allOrders.filter(function(o){ return (o.pickup_driver_id===d.id||o.delivery_driver_id===d.id) && o.status==='Delivered'; }).length;
+      var fulfilled = allOrders.filter(function(o){ return (o.pickup_driver_id===d.id||o.delivery_driver_id===d.id) && o.status==='Delivered to Customer'; }).length;
       return '<tr><td style="font-weight:600">'+d.name+'</td><td style="color:var(--gray)">'+d.phone+'</td>'
         +'<td><span style="font-family:var(--font-mono);color:var(--teal)">'+d.percentage+'%</span><span style="font-size:11px;color:var(--gray)"> of half delivery fee</span></td>'
         +'<td style="font-size:12px"><div>'+pickups.length+' pickups \xB7 '+deliveries.length+' deliveries</div><div style="color:var(--gray);margin-top:2px">'+fulfilled+' fulfilled</div></td>'
@@ -1605,7 +1683,7 @@
       var pickupEarned  = pickupOrders.reduce(function(a,o){ return a+(Number(o.pickup_rider_fee)||0); }, 0);
       var delivEarned   = deliveryOrders.reduce(function(a,o){ return a+(Number(o.delivery_rider_fee)||0); }, 0);
       var totalEarned   = pickupEarned + delivEarned;
-      var fulfilled     = orders.filter(function(o){ return o.status==='Delivered'; }).length;
+      var fulfilled     = orders.filter(function(o){ return o.status==='Delivered to Customer'; }).length;
 
       document.getElementById('rd-orders').textContent    = orders.length;
       document.getElementById('rd-fulfilled').textContent = fulfilled;
@@ -1615,7 +1693,7 @@
 
       var rows = orders.map(function(o) {
         var date = o.created_at ? new Date(o.created_at).toLocaleDateString('en-GB') : '';
-        var sc   = o.status==='Delivered'?'var(--green)':o.status==='Cancelled'?'var(--red)':'var(--amber)';
+        var sc   = o.status==='Delivered to Customer'?'var(--green)':o.status==='Cancelled'?'var(--red)':'var(--amber)';
         var roleLabel = o._role==='both' ? 'Pickup + Delivery' : o._role==='pickup' ? 'Pickup' : 'Delivery';
         var myEarned = o._role==='both'
           ? (Number(o.pickup_rider_fee)||0) + (Number(o.delivery_rider_fee)||0)
