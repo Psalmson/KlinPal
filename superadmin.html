@@ -395,6 +395,23 @@
         <div class="stat-card"><div class="stat-label">Delivery Revenue</div><div class="stat-value" id="drill-delivery">&mdash;</div><div class="stat-sub">Net from delivery</div></div>
         <div class="stat-card"><div class="stat-label">Delivered</div><div class="stat-value green" id="drill-delivered">&mdash;</div></div>
       </div>
+
+      <!-- SETTLEMENT & BANK DETAILS -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+        <div style="background:var(--navy2);border:1px solid var(--navy3);border-radius:var(--radius);padding:20px 24px">
+          <div style="font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;font-weight:500;margin-bottom:8px">Unsettled Amount</div>
+          <div style="font-family:var(--font-head);font-size:28px;font-weight:800;color:var(--amber);letter-spacing:-1px;margin-bottom:4px" id="drill-unsettled">&mdash;</div>
+          <div style="font-size:11px;color:var(--gray);margin-bottom:16px" id="drill-unsettled-count">0 orders</div>
+          <button class="btn btn-teal btn-sm" onclick="markAsSettled()" id="settle-btn" style="padding:10px 20px;font-size:13px">Mark as Settled</button>
+        </div>
+        <div style="background:var(--navy2);border:1px solid var(--navy3);border-radius:var(--radius);padding:20px 24px">
+          <div style="font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;font-weight:500;margin-bottom:12px">Vendor Bank Details</div>
+          <div id="drill-bank-details">
+            <div style="font-size:13px;color:var(--gray)">No bank details provided</div>
+          </div>
+        </div>
+      </div>
+
       <div class="card">
         <div class="card-header" style="flex-wrap:wrap;gap:10px">
           <div class="card-title">All Orders</div>
@@ -1066,6 +1083,17 @@
     document.getElementById('drill-title').textContent = vendor.name+' \u2014 Orders';
     document.getElementById('drill-subtitle').textContent = '/'+vendor.slug;
     ['drill-total','drill-pending','drill-delivered','drill-revenue','drill-delivery','drill-service-fee','drill-service-fee-platform','drill-klinpal-total'].forEach(function(id){ document.getElementById(id).textContent='\u2014'; });
+    document.getElementById('drill-unsettled').textContent = '\u2014';
+    document.getElementById('drill-unsettled-count').textContent = '';
+    // Display bank details
+    var bankEl = document.getElementById('drill-bank-details');
+    if (vendor.bank_name && vendor.account_number) {
+      bankEl.innerHTML = '<div style="margin-bottom:8px"><div style="font-size:11px;color:var(--gray);margin-bottom:2px">Bank</div><div style="font-size:14px;font-weight:600;color:var(--white)">' + (vendor.bank_name||'') + '</div></div>'
+        + '<div style="margin-bottom:8px"><div style="font-size:11px;color:var(--gray);margin-bottom:2px">Account Number</div><div style="display:flex;align-items:center;gap:10px"><div style="font-size:16px;font-weight:700;color:var(--white);font-family:var(--font-mono);letter-spacing:1px" id="drill-acct-num">' + (vendor.account_number||'') + '</div><button onclick="copyDrillAcct()" style="background:var(--navy3);border:1px solid var(--gray2);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--gray);cursor:pointer;font-family:var(--font-body)" id="drill-copy-btn">Copy</button></div></div>'
+        + '<div><div style="font-size:11px;color:var(--gray);margin-bottom:2px">Account Name</div><div style="font-size:14px;font-weight:600;color:var(--white)">' + (vendor.account_name||'') + '</div></div>';
+    } else {
+      bankEl.innerHTML = '<div style="font-size:13px;color:var(--gray)">No bank details provided</div>';
+    }
     document.getElementById('drill-table').innerHTML='<div class="loading-state">Loading orders...</div>';
     var s=document.getElementById('drill-search'); if(s) s.value='';
     var p=document.getElementById('drill-filter-payment'); if(p) p.value='';
@@ -1098,6 +1126,47 @@
     return '&created_at=gte.'+encodeURIComponent(drillFilter.from+'T00:00:00')+'&created_at=lte.'+encodeURIComponent(drillFilter.to+'T23:59:59');
   }
 
+  function copyDrillAcct() {
+    var num = document.getElementById('drill-acct-num');
+    if (!num) return;
+    navigator.clipboard.writeText(num.textContent).then(function() {
+      var btn = document.getElementById('drill-copy-btn');
+      btn.textContent = 'Copied!';
+      setTimeout(function() { btn.textContent = 'Copy'; }, 2000);
+    }).catch(function() {});
+  }
+
+  function markAsSettled() {
+    if (!currentDrillVendor || !drillOrders.length) return;
+    var unsettled = drillOrders.filter(function(o) { return o.payment_status === 'Paid' && !o.settled; });
+    if (!unsettled.length) { showToast('No unsettled orders', true); return; }
+    var count = unsettled.length;
+    if (!confirm('Mark ' + count + ' order' + (count > 1 ? 's' : '') + ' as settled?')) return;
+    var btn = document.getElementById('settle-btn');
+    btn.disabled = true; btn.textContent = 'Settling...';
+    var ids = unsettled.map(function(o) { return o.id; });
+    sbFetch('orders?id=in.(' + ids.join(',') + ')', {
+      method: 'PATCH',
+      body: JSON.stringify({ settled: true })
+    })
+    .then(function(r) {
+      if (r.ok) {
+        unsettled.forEach(function(o) { o.settled = true; });
+        document.getElementById('drill-unsettled').textContent = '\u20A60';
+        document.getElementById('drill-unsettled-count').textContent = '0 orders';
+        btn.textContent = 'Mark as Settled';
+        showToast(count + ' order' + (count > 1 ? 's' : '') + ' settled \u2713');
+      } else {
+        showToast('Settlement failed', true);
+        btn.disabled = false; btn.textContent = 'Mark as Settled';
+      }
+    })
+    .catch(function() {
+      showToast('Could not settle orders', true);
+      btn.disabled = false; btn.textContent = 'Mark as Settled';
+    });
+  }
+
   function loadVendorOrders(vendor) {
     if (!vendor||!vendor.id) { showToast('No vendor selected',true); return; }
     document.getElementById('drill-table').innerHTML='<div class="loading-state">Loading orders...</div>';
@@ -1120,6 +1189,12 @@
       document.getElementById('drill-service-fee').textContent='\u20A6'+fee.toLocaleString();
       document.getElementById('drill-service-fee-platform').textContent='\u20A6'+plt.toLocaleString();
       document.getElementById('drill-klinpal-total').textContent='\u20A6'+(fee+plt).toLocaleString();
+      // Calculate unsettled amount (paid but not settled)
+      var unsettledOrders = orders.filter(function(o) { return o.payment_status === 'Paid' && !o.settled; });
+      var unsettledAmt = unsettledOrders.reduce(function(a, o) { return a + (Number(o.subtotal)||0) - (Number(o.platform_fee)||0); }, 0);
+      document.getElementById('drill-unsettled').textContent = '\u20A6' + unsettledAmt.toLocaleString();
+      document.getElementById('drill-unsettled-count').textContent = unsettledOrders.length + ' order' + (unsettledOrders.length !== 1 ? 's' : '');
+      document.getElementById('settle-btn').disabled = unsettledOrders.length === 0;
       if (!orders.length) { document.getElementById('drill-table').innerHTML='<div class="empty-state"><div style="font-size:14px;color:var(--gray)">No orders for this period</div></div>'; return; }
       renderDrillTable(orders);
     })
