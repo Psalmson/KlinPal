@@ -80,10 +80,29 @@
   .toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
   .toast.error{background:var(--red);color:white;}
 
+  /* ── RESPONSIVE: TABLET (768px) ── */
+  @media (max-width: 768px) {
+    #app { padding: 20px 16px; }
+    .app-header { flex-wrap: wrap; gap: 10px; }
+    .earnings-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .earnings-card { padding: 14px; }
+    .order-card { padding: 14px; }
+    .order-header { flex-direction: column; gap: 8px; align-items: flex-start; }
+    .action-btn { font-size: 12px; padding: 8px 14px; width: 100%; text-align: center; }
+  }
+
+  /* ── RESPONSIVE: MOBILE (480px) ── */
   @media(max-width:480px){
-    .login-card{padding:36px 24px;}
+    .login-card{padding:36px 24px; margin: 0 12px;}
     #app{padding:16px 12px;}
-    .earnings-card{grid-template-columns:1fr 1fr;}
+    .earnings-grid{grid-template-columns:1fr 1fr; gap: 8px;}
+    .earnings-card{padding: 12px;}
+    .earnings-card .ec-val{font-size: 18px;}
+    .order-card{padding: 12px;}
+    .app-logo{font-size: 18px;}
+    .tab-bar{gap: 0;}
+    .tab-btn{font-size: 12px; padding: 8px 12px;}
+    .section-title{font-size: 14px;}
   }
 </style>
 </head>
@@ -355,7 +374,9 @@
     var weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
     var t = 0, w = 0, total = 0;
     allOrders.forEach(function(o) {
-      var fee = Number(o.rider_fee) || 0;
+      var fee = 0;
+      if (o.pickup_driver_id === currentDriver.id)   fee += Number(o.pickup_rider_fee) || 0;
+      if (o.delivery_driver_id === currentDriver.id) fee += Number(o.delivery_rider_fee) || 0;
       total += fee;
       var d = new Date(o.created_at);
       if (d.toDateString() === today) t += fee;
@@ -367,14 +388,14 @@
   }
 
   function statusBadge(status) {
-    var cls = { 'Pending': 's-pending', 'On the Way': 's-onway', 'Picked Up': 's-pickedup', 'Delivered': 's-delivered' };
+    var cls = { 'Pending': 's-pending', 'Picked Up': 's-pickedup', 'Delivered to Vendor': 's-pickedup', 'Processing': 's-other', 'Ready': 's-other', 'Delivered to Customer': 's-delivered' };
     return '<span class="status-badge ' + (cls[status] || 's-other') + '">' + (status || 'Pending') + '</span>';
   }
 
   function renderOrders() {
     var wrap = document.getElementById('orders-wrap');
-    var active    = allOrders.filter(function(o) { return o.status !== 'Delivered' && o.status !== 'Cancelled'; });
-    var delivered = allOrders.filter(function(o) { return o.status === 'Delivered' || o.status === 'Cancelled'; });
+    var active    = allOrders.filter(function(o) { return o.status !== 'Delivered to Customer' && o.status !== 'Cancelled'; });
+    var delivered = allOrders.filter(function(o) { return o.status === 'Delivered to Customer' || o.status === 'Cancelled'; });
     var sorted    = active.concat(delivered);
 
     if (!sorted.length) {
@@ -384,19 +405,37 @@
 
     wrap.innerHTML = sorted.map(function(o) {
       var date     = o.created_at ? new Date(o.created_at).toLocaleDateString('en-GB') : '';
-      var earn     = Number(o.rider_fee) || 0;
-      var isDone   = o.status === 'Delivered' || o.status === 'Cancelled';
+      var isPickup   = o.pickup_driver_id === currentDriver.id;
+      var isDelivery = o.delivery_driver_id === currentDriver.id;
+      var earn     = 0;
+      if (isPickup)   earn += Number(o.pickup_rider_fee) || 0;
+      if (isDelivery) earn += Number(o.delivery_rider_fee) || 0;
+      var isDone   = o.status === 'Delivered to Customer' || o.status === 'Cancelled';
       var btns     = '';
+      var roleTag  = isPickup && isDelivery ? 'Pickup & Delivery' : isPickup ? 'Pickup' : 'Delivery';
 
       if (isDone) {
-        btns = '<div class="btn-action btn-done">' + (o.status === 'Delivered' ? '✓ Delivered' : 'Cancelled') + '</div>';
-      } else if (o.status === 'Picked Up') {
-        btns = '<button class="btn-action btn-primary" onclick="updateStatus(\'' + o.order_id + '\',\'Delivered\')">Mark as Delivered</button>';
-      } else if (o.status === 'On the Way') {
-        btns = '<button class="btn-action btn-primary" onclick="updateStatus(\'' + o.order_id + '\',\'Picked Up\')">Mark as Picked Up</button>'
-             + '<button class="btn-action btn-secondary" onclick="updateStatus(\'' + o.order_id + '\',\'Delivered\')">Skip to Delivered</button>';
-      } else {
-        btns = '<button class="btn-action btn-primary" onclick="updateStatus(\'' + o.order_id + '\',\'On the Way\')">On the Way</button>';
+        btns = '<div class="btn-action btn-done">' + (o.status === 'Delivered to Customer' ? '✓ Delivered to Customer' : 'Cancelled') + '</div>';
+      } else if (isPickup) {
+        // Pickup rider actions
+        if (o.status === 'Pending') {
+          btns = '<button class="btn-action btn-primary" onclick="updateStatus(\'' + o.order_id + '\',\'Picked Up\')">Picked Up from Customer</button>';
+        } else if (o.status === 'Picked Up') {
+          btns = '<button class="btn-action btn-primary" onclick="updateStatus(\'' + o.order_id + '\',\'Delivered to Vendor\')">Delivered to Vendor</button>';
+        } else {
+          btns = '<div class="btn-action btn-done">✓ ' + o.status + '</div>';
+        }
+      }
+
+      if (isDelivery) {
+        // Delivery rider actions
+        if (o.status === 'Ready') {
+          btns += '<button class="btn-action btn-primary" onclick="updateStatus(\'' + o.order_id + '\',\'Delivered to Customer\')">Delivered to Customer</button>';
+        } else if (o.status === 'Delivered to Customer') {
+          btns = '<div class="btn-action btn-done">✓ Delivered to Customer</div>';
+        } else if (!isPickup) {
+          btns = '<div class="btn-action btn-done" style="opacity:0.5">Awaiting — ' + o.status + '</div>';
+        }
       }
 
       return '<div class="order-card">'
@@ -404,6 +443,7 @@
         +   '<div><div class="order-id-tag">' + (o.order_id || '—') + '</div><div class="order-date">' + date + '</div></div>'
         +   statusBadge(o.status)
         + '</div>'
+        + '<div style="font-size:11px;color:var(--teal);margin-bottom:6px;font-weight:600">' + roleTag + '</div>'
         + '<div class="cust-name">' + (o.customer_name || '—') + '</div>'
         + '<div class="cust-phone">' + (o.phone || '') + '</div>'
         + '<div class="addr-box">' + (o.address || '—') + '</div>'
@@ -423,7 +463,7 @@
       body: JSON.stringify({ status: newStatus, last_updated_by: currentDriver.name }),
     })
     .then(function(r) {
-      if (r.ok) { showToast('Status updated \u2713'); if (newStatus === 'Delivered') updateEarnings(); }
+      if (r.ok) { showToast('Status updated \u2713'); if (newStatus === 'Delivered to Vendor' || newStatus === 'Delivered to Customer') updateEarnings(); }
       else showToast('Update failed', true);
     })
     .catch(function() { showToast('Could not update', true); });
