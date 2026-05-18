@@ -1286,9 +1286,14 @@
 
         +  '<div style="background:var(--navy2);border-radius:8px;padding:14px">'
         +    '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);margin-bottom:8px">Delivery Rider</div>'
-        +    '<select class="status-select" style="width:100%;margin-bottom:8px" onchange="assignDeliveryRider(this,\''+o.order_id+'\','+delivFee+')">'
-        +      delivOpts
-        +    '</select>'
+        +    (o.status === 'Ready'
+              ? '<select class="status-select" style="width:100%;margin-bottom:8px" onchange="assignDeliveryRider(this,\''+o.order_id+'\','+delivFee+')">'
+              +      delivOpts
+              +    '</select>'
+              : '<select class="status-select" style="width:100%;margin-bottom:8px;opacity:0.5" disabled>'
+              +      delivOpts
+              +    '</select>'
+              +    '<div style="font-size:10px;color:var(--amber);margin-bottom:4px">Available when order is Ready</div>')
         +    '<div style="font-size:11px;color:var(--gray)" id="deliv-comm-'+o.order_id+'">'
         +      (delivDrv ? 'Commission: \u20A6'+delivComm.toLocaleString()+' \u00B7 '+delivDrv.percentage+'% of \u20A6'+Math.round(halfFee).toLocaleString() : 'Commission: \u2014')
         +    '</div>'
@@ -1534,6 +1539,15 @@
     delivSel.innerHTML   = driverOpts;
     pickupSel.value  = o.pickup_driver_id  || '';
     delivSel.value   = o.delivery_driver_id || '';
+    // Disable delivery rider assignment until order is Ready
+    if (o.status !== 'Ready') {
+      delivSel.disabled = true;
+      delivSel.style.opacity = '0.5';
+      document.getElementById('odm-delivery-commission').textContent = 'Available when order is Ready';
+    } else {
+      delivSel.disabled = false;
+      delivSel.style.opacity = '1';
+    }
 
     odmUpdateCommissionDisplay(o);
     document.getElementById('order-detail-modal').classList.add('open');
