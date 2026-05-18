@@ -416,24 +416,31 @@
 
       if (isDone) {
         btns = '<div class="btn-action btn-done">' + (o.status === 'Delivered to Customer' ? '✓ Delivered to Customer' : 'Cancelled') + '</div>';
+      } else if (isPickup && isDelivery) {
+        // Dual role — show based on current phase
+        if (o.status === 'Pending') {
+          btns = '<button class="btn-action btn-primary" onclick="updateStatus(\'' + o.order_id + '\',\'Picked Up\')">Picked Up from Customer</button>';
+        } else if (o.status === 'Picked Up') {
+          btns = '<button class="btn-action btn-primary" onclick="updateStatus(\'' + o.order_id + '\',\'Delivered to Vendor\')">Delivered to Vendor</button>';
+        } else if (o.status === 'Delivered to Vendor' || o.status === 'Processing') {
+          btns = '<div class="btn-action btn-done" style="opacity:0.6">✓ Pickup complete — awaiting ' + o.status.toLowerCase() + '</div>';
+        } else if (o.status === 'Ready') {
+          btns = '<button class="btn-action btn-primary" onclick="updateStatus(\'' + o.order_id + '\',\'Delivered to Customer\')">Delivered to Customer</button>';
+        }
       } else if (isPickup) {
-        // Pickup rider actions
+        // Pickup rider only
         if (o.status === 'Pending') {
           btns = '<button class="btn-action btn-primary" onclick="updateStatus(\'' + o.order_id + '\',\'Picked Up\')">Picked Up from Customer</button>';
         } else if (o.status === 'Picked Up') {
           btns = '<button class="btn-action btn-primary" onclick="updateStatus(\'' + o.order_id + '\',\'Delivered to Vendor\')">Delivered to Vendor</button>';
         } else {
-          btns = '<div class="btn-action btn-done">✓ ' + o.status + '</div>';
+          btns = '<div class="btn-action btn-done">✓ Pickup complete</div>';
         }
-      }
-
-      if (isDelivery) {
-        // Delivery rider actions
+      } else if (isDelivery) {
+        // Delivery rider only
         if (o.status === 'Ready') {
-          btns += '<button class="btn-action btn-primary" onclick="updateStatus(\'' + o.order_id + '\',\'Delivered to Customer\')">Delivered to Customer</button>';
-        } else if (o.status === 'Delivered to Customer') {
-          btns = '<div class="btn-action btn-done">✓ Delivered to Customer</div>';
-        } else if (!isPickup) {
+          btns = '<button class="btn-action btn-primary" onclick="updateStatus(\'' + o.order_id + '\',\'Delivered to Customer\')">Delivered to Customer</button>';
+        } else {
           btns = '<div class="btn-action btn-done" style="opacity:0.5">Awaiting — ' + o.status + '</div>';
         }
       }
