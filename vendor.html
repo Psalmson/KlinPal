@@ -638,6 +638,21 @@
           <button class="save-btn" onclick="saveVendorTimeWindows()">&#x1F4BE; Save Windows</button>
         </div>
       </div>
+
+      <div class="card" style="max-width:560px">
+        <div class="card-header"><div class="card-title">Bank Details</div></div>
+        <div class="card-body">
+          <p style="font-size:13px;color:var(--gray);margin-bottom:16px;line-height:1.6">Your bank details for receiving payouts. Ensure these are accurate.</p>
+          <label class="field-label">Bank Name</label>
+          <input class="field-input" id="vendor-bank-name" type="text" placeholder="e.g. Fidelity Bank" style="max-width:360px">
+          <label class="field-label" style="margin-top:4px">Account Number</label>
+          <input class="field-input" id="vendor-account-number" type="text" placeholder="e.g. 0123456789" style="max-width:360px">
+          <label class="field-label" style="margin-top:4px">Account Name</label>
+          <input class="field-input" id="vendor-account-name" type="text" placeholder="e.g. Your Business Name" style="max-width:360px">
+          <button class="save-btn" onclick="saveBankDetails()" style="margin-top:12px">Save Bank Details</button>
+        </div>
+      </div>
+
     </div>
 
     <!-- PROMOTIONS -->
@@ -915,6 +930,11 @@
       document.getElementById('vendor-pickup-end').value     = (currentVendor.pickup_end     || '12:00').slice(0,5);
       document.getElementById('vendor-delivery-start').value = (currentVendor.delivery_start || '17:00').slice(0,5);
       document.getElementById('vendor-delivery-end').value   = (currentVendor.delivery_end   || '20:00').slice(0,5);
+
+      // Bank details
+      document.getElementById('vendor-bank-name').value      = currentVendor.bank_name      || '';
+      document.getElementById('vendor-account-number').value = currentVendor.account_number || '';
+      document.getElementById('vendor-account-name').value   = currentVendor.account_name   || '';
 
       // Fetch global platform fee then update revenue subtitle
       sbFetch('platform_settings?key=eq.platform_fee_pct&limit=1&select=value')
@@ -1624,6 +1644,27 @@
       } else { showToast('Save failed', true); }
     })
     .catch(function() { showToast('Could not save time windows', true); });
+  }
+
+  function saveBankDetails() {
+    if (isStaffSession) { showToast('Staff cannot update bank details', true); return; }
+    var bankName = document.getElementById('vendor-bank-name').value.trim();
+    var acctNum  = document.getElementById('vendor-account-number').value.trim();
+    var acctName = document.getElementById('vendor-account-name').value.trim();
+    if (!bankName || !acctNum || !acctName) { showToast('Please fill in all bank detail fields', true); return; }
+    sbFetch('vendors?id=eq.' + currentVendor.id, {
+      method: 'PATCH',
+      body: JSON.stringify({ bank_name: bankName, account_number: acctNum, account_name: acctName })
+    })
+    .then(function(r) {
+      if (r.ok) {
+        currentVendor.bank_name      = bankName;
+        currentVendor.account_number = acctNum;
+        currentVendor.account_name   = acctName;
+        showToast('Bank details saved \u2713');
+      } else { showToast('Save failed', true); }
+    })
+    .catch(function() { showToast('Could not save bank details', true); });
   }
 
   document.addEventListener('click', function(e) {
