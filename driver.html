@@ -84,25 +84,46 @@
   @media (max-width: 768px) {
     #app { padding: 20px 16px; }
     .app-header { flex-wrap: wrap; gap: 10px; }
-    .earnings-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-    .earnings-card { padding: 14px; }
+    .earnings-card { grid-template-columns: 1fr 1fr; gap: 10px; padding: 16px; }
     .order-card { padding: 14px; }
-    .order-header { flex-direction: column; gap: 8px; align-items: flex-start; }
-    .action-btn { font-size: 12px; padding: 8px 14px; width: 100%; text-align: center; }
+    .order-header, .order-card-top { flex-wrap: wrap; gap: 8px; }
+    .action-btn, .btn-action { font-size: 13px; padding: 10px 14px; width: 100%; text-align: center; }
+    .addr-box { font-size: 12px; word-break: break-word; }
+    .items-line { font-size: 12px; }
   }
 
   /* ── RESPONSIVE: MOBILE (480px) ── */
   @media(max-width:480px){
-    .login-card{padding:36px 24px; margin: 0 12px;}
-    #app{padding:16px 12px;}
-    .earnings-grid{grid-template-columns:1fr 1fr; gap: 8px;}
-    .earnings-card{padding: 12px;}
-    .earnings-card .ec-val{font-size: 18px;}
-    .order-card{padding: 12px;}
-    .app-logo{font-size: 18px;}
-    .tab-bar{gap: 0;}
-    .tab-btn{font-size: 12px; padding: 8px 12px;}
-    .section-title{font-size: 14px;}
+    .login-card { padding: 36px 24px; margin: 0 12px; }
+    #app { padding: 16px 12px; }
+    .earnings-card { grid-template-columns: 1fr 1fr; gap: 8px; padding: 14px; }
+    .ec-val { font-size: 18px !important; }
+    .ec-label { font-size: 10px; }
+    .order-card { padding: 12px; }
+    .app-logo { font-size: 18px; }
+    .tab-bar { gap: 0; }
+    .tab-btn { font-size: 12px; padding: 8px 12px; }
+    .section-title { font-size: 14px; }
+    .order-id-tag { font-size: 11px; }
+    .cust-name { font-size: 14px; }
+    .status-badge { font-size: 10px; padding: 3px 8px; }
+  }
+
+  /* ── RESPONSIVE: SMALL PHONE (360px) ── */
+  @media (max-width: 360px) {
+    .login-card { padding: 28px 16px; margin: 0 8px; }
+    #app { padding: 12px 10px; }
+    .earnings-card { padding: 12px; gap: 6px; }
+    .ec-val { font-size: 16px !important; }
+    .app-logo { font-size: 16px; }
+    .order-card { padding: 10px; }
+    .btn-action { font-size: 12px; padding: 10px 12px; }
+  }
+
+  /* Touch targets */
+  @media (pointer: coarse) {
+    .btn-action, .tab-btn, .refresh-btn { min-height: 44px; }
+    .logout-btn { min-height: 36px; padding: 8px; }
   }
 </style>
 </head>
