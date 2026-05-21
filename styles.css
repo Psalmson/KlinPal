@@ -521,10 +521,67 @@ body {
 ::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 4px; }
 
 /* ── RESPONSIVE ── */
+
+/* Small phones (320px) */
+@media (max-width: 359px) {
+  .screen-body { padding: 20px 14px 32px; gap: 16px; }
+  .screen-title { font-size: 22px; }
+  .hero { padding: 32px 16px 16px; }
+  .hero-title { font-size: 22px; }
+  .hero-sub { font-size: 13px; }
+  .service-row { gap: 8px; }
+  .service-card { padding: 10px 12px; gap: 8px; }
+  .service-name { font-size: 13px; }
+  .service-price { font-size: 11px; }
+  .qty-btn { width: 28px; height: 28px; font-size: 14px; }
+  .qty-input { width: 30px; font-size: 13px; }
+  .summary-row { padding: 12px 14px; font-size: 13px; }
+  .summary-row.total { font-size: 14px; }
+  .pay-total { font-size: 26px; }
+  .success-icon { width: 56px; height: 56px; font-size: 26px; }
+  .success-title { font-size: 22px; }
+  .btn-primary { padding: 14px; font-size: 15px; }
+  .field-input { padding: 12px 14px; font-size: 14px; }
+  .welcome-banner { padding: 12px 14px; }
+  .welcome-banner strong { font-size: 15px; }
+  .topbar { padding: 14px 16px; }
+  .confirm-address-card { padding: 16px 14px; }
+}
+
+/* Standard phones */
+@media (min-width: 360px) and (max-width: 519px) {
+  .screen-body { padding: 24px 18px 36px; }
+  .hero { padding: 36px 20px 18px; }
+}
+
+/* Tablets and up */
 @media (min-width: 520px) {
   .screen-body { padding: 36px 0 48px; }
   .bottom-cta  { padding: 28px 0 48px; }
   .hero        { padding: 60px 0 24px; }
+}
+
+/* Tablets */
+@media (min-width: 520px) and (max-width: 768px) {
+  .screen-body { max-width: 500px; }
+  .summary-row { padding: 16px 20px; }
+  .service-card { padding: 16px 18px; }
+}
+
+/* Large tablets and desktops */
+@media (min-width: 769px) {
+  .screen-body { max-width: 520px; }
+  .hero { padding: 80px 0 32px; }
+  .hero-title { font-size: 30px; }
+  .pay-total { font-size: 36px; }
+}
+
+/* Touch target improvement for all mobile */
+@media (pointer: coarse) {
+  .qty-btn { min-width: 36px; min-height: 36px; }
+  .addr-item { padding: 14px 16px; }
+  .back-btn { padding: 10px 0; min-height: 44px; }
+  .service-card { min-height: 52px; }
 }
 
 /* ── CONFIRM ADDRESS SCREEN ── */
