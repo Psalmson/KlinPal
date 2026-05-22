@@ -512,12 +512,6 @@
           <div class="stat-card"><div class="stat-label">Total Earned</div><div class="stat-value" id="rd-earned">&mdash;</div><div class="stat-sub">Rider's cut</div></div>
           <div class="stat-card"><div class="stat-label">Earnings %</div><div class="stat-value teal" id="rd-pct">&mdash;</div><div class="stat-sub">Of delivery fee</div></div>
         </div>
-        <div class="card" style="margin-bottom:16px">
-          <div class="card-header"><div class="card-title">Bank Details</div></div>
-          <div style="padding:20px" id="rider-bank-details">
-            <div style="font-size:13px;color:var(--gray)">No bank details provided</div>
-          </div>
-        </div>
         <div class="card">
           <div class="card-header"><div class="card-title">Order History</div></div>
           <div id="rider-drill-table"><div class="loading-state">Loading...</div></div>
@@ -1203,16 +1197,6 @@
     }).catch(function() {});
   }
 
-  function copyRiderAcct() {
-    var num = document.getElementById('rider-acct-num');
-    if (!num) return;
-    navigator.clipboard.writeText(num.textContent).then(function() {
-      var btn = document.getElementById('rider-copy-btn');
-      btn.textContent = 'Copied!';
-      setTimeout(function() { btn.textContent = 'Copy'; }, 2000);
-    }).catch(function() {});
-  }
-
   function markAsSettled() {
     if (!currentDrillVendor || !drillOrders.length) return;
     var unsettled = drillOrders.filter(function(o) { return o.payment_status === 'Paid' && !o.settled; });
@@ -1353,9 +1337,14 @@
 
         +  '<div style="background:var(--navy2);border-radius:8px;padding:14px">'
         +    '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);margin-bottom:8px">Pickup Rider</div>'
-        +    '<select class="status-select" style="width:100%;margin-bottom:8px" onchange="assignPickupRider(this,\''+o.order_id+'\','+delivFee+')">'
-        +      pickupOpts
-        +    '</select>'
+        +    (o.payment_status === 'Paid'
+              ? '<select class="status-select" style="width:100%;margin-bottom:8px" onchange="assignPickupRider(this,\''+o.order_id+'\','+delivFee+')">'
+              +      pickupOpts
+              +    '</select>'
+              : '<select class="status-select" style="width:100%;margin-bottom:8px;opacity:0.5" disabled>'
+              +      pickupOpts
+              +    '</select>'
+              +    '<div style="font-size:10px;color:var(--amber);margin-bottom:4px">Available when order is Paid</div>')
         +    '<div style="font-size:11px;color:var(--gray)" id="pickup-comm-'+o.order_id+'">'
         +      (pickupDrv ? 'Commission: \u20A6'+pickupComm.toLocaleString()+' \u00B7 '+pickupDrv.percentage+'% of \u20A6'+Math.round(halfFee).toLocaleString() : 'Commission: \u2014')
         +    '</div>'
@@ -1624,6 +1613,15 @@
     delivSel.innerHTML   = driverOpts;
     pickupSel.value  = o.pickup_driver_id  || '';
     delivSel.value   = o.delivery_driver_id || '';
+    // Disable pickup rider assignment until payment is Paid
+    if (o.payment_status !== 'Paid') {
+      pickupSel.disabled = true;
+      pickupSel.style.opacity = '0.5';
+      document.getElementById('odm-pickup-commission').textContent = 'Available when order is Paid';
+    } else {
+      pickupSel.disabled = false;
+      pickupSel.style.opacity = '1';
+    }
     // Disable delivery rider assignment until order is Ready
     if (o.status !== 'Ready') {
       delivSel.disabled = true;
@@ -1843,17 +1841,6 @@
     document.getElementById('rider-drill-sub').textContent=driver.phone+' \xB7 '+driver.percentage+'% of half delivery fee per assignment';
     document.getElementById('rd-pct').textContent=driver.percentage+'%';
     document.getElementById('rider-drill-table').innerHTML='<div class="loading-state">Loading...</div>';
-
-    // Bank details
-    var riderBankEl = document.getElementById('rider-bank-details');
-    if (driver.bank_name && driver.account_number) {
-      riderBankEl.innerHTML =
-        '<div style="margin-bottom:8px"><div style="font-size:11px;color:var(--gray);margin-bottom:2px">Bank</div><div style="font-size:14px;font-weight:600;color:var(--white)">' + (driver.bank_name || '') + '</div></div>'
-        + '<div style="margin-bottom:8px"><div style="font-size:11px;color:var(--gray);margin-bottom:2px">Account Number</div><div style="display:flex;align-items:center;gap:10px"><div style="font-size:16px;font-weight:700;color:var(--white);font-family:var(--font-mono);letter-spacing:1px" id="rider-acct-num">' + (driver.account_number || '') + '</div><button onclick="copyRiderAcct()" style="background:var(--navy3);border:1px solid var(--gray2);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--gray);cursor:pointer;font-family:var(--font-body)" id="rider-copy-btn">Copy</button></div></div>'
-        + '<div><div style="font-size:11px;color:var(--gray);margin-bottom:2px">Account Name</div><div style="font-size:14px;font-weight:600;color:var(--white)">' + (driver.account_name || '') + '</div></div>';
-    } else {
-      riderBankEl.innerHTML = '<div style="font-size:13px;color:var(--gray)">No bank details provided</div>';
-    }
 
     // Fetch all orders where this rider is pickup OR delivery
     Promise.all([
