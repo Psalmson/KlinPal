@@ -148,7 +148,31 @@
     .vendor-card { padding: 16px; }
     .field-input, .login-input { font-size: 14px; }
     .login-card { padding: 36px 24px; }
-    .modal { width: 95%; max-width: none; margin: 16px; padding: 20px; }
+    .modal { width: 95% !important; max-width: none !important; margin: 16px; padding: 20px; }
+    /* Revenue cards: stack to single column */
+    .main > .page > [style*="grid-template-columns: 1fr 1fr"],
+    .main > .page > [style*="grid-template-columns:1fr 1fr"],
+    [style*="grid-template-columns:1fr 1fr"] {
+      grid-template-columns: 1fr !important;
+    }
+    /* Revenue card internal: stack divider layout */
+    [style*="align-items:center"][style*="flex:1"] ~ [style*="width:1px"] {
+      display: none !important;
+    }
+    [style*="min-width:120px"] {
+      min-width: auto !important;
+      flex-direction: row !important;
+      gap: 20px !important;
+    }
+    /* Onboard form full width */
+    [style*="max-width:860px"] {
+      max-width: 100% !important;
+    }
+    /* Settings cards full width */
+    [style*="max-width:540px"],
+    [style*="max-width:560px"] {
+      max-width: 100% !important;
+    }
   }
 
   /* ── RESPONSIVE: MOBILE (480px) ── */
@@ -165,6 +189,43 @@
     .date-chip { padding: 4px 8px; font-size: 10px; }
     .vendor-card { padding: 12px; }
     .login-card { margin: 0 12px; padding: 28px 20px; }
+    /* Revenue card font scaling */
+    [style*="font-size:32px"] {
+      font-size: 24px !important;
+    }
+    [style*="font-size:18px"][style*="font-weight:700"] {
+      font-size: 15px !important;
+    }
+    /* Settlement grid stack */
+    [style*="grid-template-columns:1fr 1fr"][style*="margin-bottom:20px"] {
+      grid-template-columns: 1fr !important;
+    }
+    /* Rider assign row: stack pickup/delivery */
+    [style*="display:grid"][style*="1fr 1fr"][style*="border-radius:8px"] {
+      grid-template-columns: 1fr !important;
+    }
+  }
+
+  /* ── RESPONSIVE: SMALL PHONE (360px) ── */
+  @media (max-width: 360px) {
+    .main { padding: 10px; padding-top: 56px; }
+    .mobile-header { padding: 10px 12px; }
+    .mobile-header .mob-logo { font-size: 18px; }
+    .stats-grid { gap: 6px; }
+    .stats-card { padding: 10px; }
+    .stats-num { font-size: 18px; }
+    .stats-label { font-size: 9px; }
+    .page-title { font-size: 18px; }
+    .btn { font-size: 11px; padding: 7px 12px; }
+    .login-card { padding: 24px 16px; margin: 0 8px; }
+  }
+
+  /* Touch targets for mobile */
+  @media (pointer: coarse) {
+    .nav-item { min-height: 44px; }
+    .btn { min-height: 44px; }
+    .status-select { min-height: 36px; }
+    .date-chip { min-height: 36px; }
   }
 </style>
 </head>
