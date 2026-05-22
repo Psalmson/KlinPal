@@ -235,6 +235,7 @@
 
   var currentDriver   = null;
   var allOrders       = [];
+  var vendorCache     = {};
   var realtimeChannel = null;
 
   function sbFetch(path, opts) {
@@ -339,7 +340,7 @@
     stopRealtime();
     _token = null;
     sb.auth.signOut();
-    currentDriver = null; allOrders = [];
+    currentDriver = null; allOrders = []; vendorCache = {};
     document.getElementById('app').style.display = 'none';
     document.getElementById('login-screen').style.display = 'flex';
     document.getElementById('login-email').value = '';
@@ -418,6 +419,25 @@
       .then(function(r) { return r.json(); })
       .then(function(data) {
         allOrders = Array.isArray(data) ? data : [];
+        // Fetch vendor details for all unique vendor_ids
+        var vendorIds = [];
+        allOrders.forEach(function(o) {
+          if (o.vendor_id && !vendorCache[o.vendor_id] && vendorIds.indexOf(o.vendor_id) === -1) {
+            vendorIds.push(o.vendor_id);
+          }
+        });
+        if (vendorIds.length) {
+          var inClause = vendorIds.map(function(id) { return '"' + id + '"'; }).join(',');
+          return sbFetch('vendors?id=in.(' + vendorIds.join(',') + ')&select=id,name,phone,address')
+            .then(function(r) { return r.json(); })
+            .then(function(vendors) {
+              if (Array.isArray(vendors)) {
+                vendors.forEach(function(v) { vendorCache[v.id] = v; });
+              }
+            });
+        }
+      })
+      .then(function() {
         renderOrders();
         updateEarnings();
       })
@@ -499,20 +519,41 @@
         }
       }
 
+      var vendor = vendorCache[o.vendor_id] || null;
+
       return '<div class="order-card">'
         + '<div class="order-card-top">'
         +   '<div><div class="order-id-tag">' + (o.order_id || '—') + '</div><div class="order-date">' + date + '</div></div>'
         +   statusBadge(o.status)
         + '</div>'
         + '<div style="font-size:11px;color:var(--teal);margin-bottom:6px;font-weight:600">' + roleTag + '</div>'
+
+        + '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);margin-bottom:4px">Customer</div>'
         + '<div class="cust-name">' + (o.customer_name || '—') + '</div>'
-        + '<div class="cust-phone">' + (o.phone || '') + '</div>'
+        + '<div class="cust-phone" onclick="copyPhone(\'' + (o.phone || '') + '\',this)" style="cursor:pointer" title="Tap to copy">' + (o.phone || '') + ' <span style="font-size:10px;color:var(--teal)">[Copy]</span></div>'
         + '<div class="addr-box">' + (o.address || '—') + '</div>'
+
+        + (vendor
+          ? '<div style="border-top:1px solid var(--navy3);margin:10px 0 10px"></div>'
+          +   '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);margin-bottom:4px">Laundromat</div>'
+          +   '<div class="cust-name">' + vendor.name + '</div>'
+          +   (vendor.phone ? '<div class="cust-phone" onclick="copyPhone(\'' + vendor.phone + '\',this)" style="cursor:pointer" title="Tap to copy">' + vendor.phone + ' <span style="font-size:10px;color:var(--teal)">[Copy]</span></div>' : '')
+          +   (vendor.address ? '<div class="addr-box">' + vendor.address + '</div>' : '')
+          : '')
+
         + '<div class="items-line">' + (o.items || '—') + '</div>'
         + (earn > 0 ? '<div class="earn-line">Your commission: \u20A6' + earn.toLocaleString() + '</div>' : '')
         + '<div class="action-btns">' + btns + '</div>'
         + '</div>';
     }).join('');
+  }
+
+  function copyPhone(phone, el) {
+    if (!phone) return;
+    navigator.clipboard.writeText(phone).then(function() {
+      var span = el.querySelector('span');
+      if (span) { span.textContent = '[Copied!]'; setTimeout(function() { span.textContent = '[Copy]'; }, 2000); }
+    }).catch(function() {});
   }
 
   function updateStatus(orderId, newStatus) {
