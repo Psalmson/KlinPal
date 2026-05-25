@@ -730,7 +730,7 @@ function renderServices() {
   // Build tab bar
   var tabBar = '<div class="cat-tab-bar" id="cat-tab-bar">'
     + categories.map(function(cat, ci) {
-        return '<button class="cat-tab' + (ci === 0 ? ' active' : '') + '" onclick="scrollToCategory('' + cat.replace(/'/g, "\'") + '',this)">' + cat + '</button>';
+        return '<button class="cat-tab' + (ci === 0 ? ' active' : '') + '" onclick="scrollToCategory(' + ci + ',this)">' + cat + '</button>';
       }).join('')
     + '</div>';
 
@@ -773,14 +773,13 @@ function renderServices() {
   updateSubtotal();
 }
 
-function scrollToCategory(cat, btn) {
+function scrollToCategory(idx, btn) {
   // Update active tab
   document.querySelectorAll('.cat-tab').forEach(function(t) { t.classList.remove('active'); });
   btn.classList.add('active');
-  // Scroll to section
-  var sectionId = 'cat-' + cat.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
-  var el = document.getElementById(sectionId);
-  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // Scroll to section by index
+  var sections = document.querySelectorAll('.cat-section');
+  if (sections[idx]) sections[idx].scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function updateCheck(id, active) {
