@@ -454,24 +454,27 @@
       <div class="page-header">
         <div>
           <div class="page-title">Services & Pricing</div>
-          <div class="page-subtitle">Manage your service offerings and prices</div>
+          <div class="page-subtitle">Manage your service categories and items</div>
         </div>
       </div>
-      <div class="services-grid" id="services-editor"></div>
-      <div class="add-service-card">
-        <div class="add-service-title">+ Add New Service</div>
+
+      <!-- Category + service editor -->
+      <div id="services-editor"></div>
+
+      <!-- Add new category -->
+      <div class="add-service-card" style="margin-bottom:16px">
+        <div class="add-service-title">+ Add Category</div>
         <div class="field-row">
           <div>
-            <label class="field-label">Service Name</label>
-            <input class="field-input" id="new-service-name" placeholder="e.g. Curtain Wash">
+            <label class="field-label">Category Name</label>
+            <input class="field-input" id="new-cat-name" placeholder="e.g. Dry Cleaning">
           </div>
-          <div>
-            <label class="field-label">Price per item (₦)</label>
-            <input class="field-input" id="new-service-price" type="number" placeholder="e.g. 500">
+          <div style="display:flex;align-items:flex-end">
+            <button class="save-btn" style="margin-bottom:0" onclick="addCategory()">Add Category</button>
           </div>
         </div>
-        <button class="save-btn" onclick="addService()">Add Service</button>
       </div>
+
       <button class="save-btn" onclick="saveServices()">💾 Save All Changes</button>
     </div>
 
@@ -807,11 +810,17 @@
   var currentStaff     = null;
   var loginMode        = 'vendor';
   var realtimeChannel  = null;
-  var services      = [
-    { id: 'express', name: 'Express Wash', price: 300, active: true },
-    { id: 'fold',    name: 'Wash + Fold',  price: 300, active: true },
-    { id: 'iron',    name: 'Wash + Iron',  price: 300, active: true },
-    { id: 'dry',     name: 'Dry-clean',    price: 300, active: true },
+  // services = array of categories, each with nested services array
+  var services = [
+    {
+      id: 'cat_default', name: 'Laundry Services',
+      services: [
+        { id: 'express', name: 'Express Wash', price: 300, active: true },
+        { id: 'fold',    name: 'Wash + Fold',  price: 300, active: true },
+        { id: 'iron',    name: 'Wash + Iron',  price: 300, active: true },
+        { id: 'dry',     name: 'Dry-clean',    price: 300, active: true },
+      ]
+    }
   ];
 
   /* ── SUPABASE FETCH ── */
@@ -1428,38 +1437,84 @@
 
   /* ── SERVICES EDITOR ── */
   function renderServicesEditor() {
-    document.getElementById('services-editor').innerHTML = services.map(function(s, i) {
-      return '<div class="service-edit-card">'
-        + '<div class="service-edit-header">'
-        +   '<div class="service-edit-name">' + s.name + '</div>'
-        +   '<label class="toggle-switch"><input type="checkbox"' + (s.active ? ' checked' : '') + ' onchange="services[' + i + '].active=this.checked"><span class="toggle-slider"></span></label>'
+    var wrap = document.getElementById('services-editor');
+    if (!services.length) {
+      wrap.innerHTML = '<div style="color:var(--gray);font-size:13px;padding:16px 0">No categories yet. Add one below.</div>';
+      return;
+    }
+    wrap.innerHTML = services.map(function(cat, ci) {
+      var serviceRows = cat.services.map(function(s, si) {
+        return '<div style="display:grid;grid-template-columns:1fr 120px auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--navy3)">'
+          + '<div><input class="field-input" type="text" value="' + escVal(s.name) + '" placeholder="Service name" oninput="services[' + ci + '].services[' + si + '].name=this.value" style="margin:0"></div>'
+          + '<div><input class="field-input" type="number" value="' + s.price + '" placeholder="Price" oninput="services[' + ci + '].services[' + si + '].price=parseInt(this.value)||0" style="margin:0"></div>'
+          + '<div style="display:flex;align-items:center;gap:10px">'
+          +   '<label class="toggle-switch" title="Active"><input type="checkbox"' + (s.active ? ' checked' : '') + ' onchange="services[' + ci + '].services[' + si + '].active=this.checked"><span class="toggle-slider"></span></label>'
+          +   '<button class="delete-btn" style="padding:6px 10px;font-size:12px" onclick="deleteService(' + ci + ',' + si + ')">✕</button>'
+          + '</div>'
+          + '</div>';
+      }).join('');
+
+      return '<div style="background:var(--navy2);border:1px solid var(--navy3);border-radius:var(--radius);padding:20px;margin-bottom:16px">'
+        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">'
+        +   '<div style="display:flex;align-items:center;gap:10px">'
+        +     '<input class="field-input" type="text" value="' + escVal(cat.name) + '" oninput="services[' + ci + '].name=this.value" style="margin:0;font-family:var(--font-head);font-size:15px;font-weight:700;width:auto;flex:1">'
+        +   '</div>'
+        +   '<button class="delete-btn" style="font-size:12px;padding:4px 10px" onclick="deleteCategory(' + ci + ')">Remove Category</button>'
         + '</div>'
-        + '<label class="field-label">Service Name</label>'
-        + '<input class="field-input" type="text" value="' + s.name + '" oninput="services[' + i + '].name=this.value">'
-        + '<label class="field-label">Price per item (₦)</label>'
-        + '<input class="field-input" type="number" value="' + s.price + '" oninput="services[' + i + '].price=parseInt(this.value)||0">'
-        + '<button class="delete-btn" onclick="deleteService(' + i + ')">🗑 Remove</button>'
+        + '<div style="display:grid;grid-template-columns:1fr 120px auto;gap:10px;padding-bottom:6px;margin-bottom:2px">'
+        +   '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);font-weight:600">Service Name</div>'
+        +   '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);font-weight:600">Price (₦)</div>'
+        +   '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);font-weight:600">Active</div>'
+        + '</div>'
+        + serviceRows
+        + '<div style="margin-top:12px;display:flex;gap:8px">'
+        +   '<input class="field-input" type="text" id="new-svc-name-' + ci + '" placeholder="New service name" style="margin:0;flex:1">'
+        +   '<input class="field-input" type="number" id="new-svc-price-' + ci + '" placeholder="Price" style="margin:0;width:120px">'
+        +   '<button class="save-btn" style="margin:0;padding:10px 16px;font-size:13px" onclick="addServiceToCategory(' + ci + ')">+ Add</button>'
+        + '</div>'
         + '</div>';
     }).join('');
   }
 
-  function deleteService(idx) {
-    if (confirm('Remove "' + services[idx].name + '"?')) { services.splice(idx, 1); renderServicesEditor(); }
+  function escVal(str) {
+    return String(str || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
-  function addService() {
-    var name  = document.getElementById('new-service-name').value.trim();
-    var price = parseInt(document.getElementById('new-service-price').value) || 0;
+  function deleteCategory(ci) {
+    if (!confirm('Remove category "' + services[ci].name + '" and all its services?')) return;
+    services.splice(ci, 1);
+    renderServicesEditor();
+  }
+
+  function deleteService(ci, si) {
+    if (confirm('Remove "' + services[ci].services[si].name + '"?')) {
+      services[ci].services.splice(si, 1);
+      renderServicesEditor();
+    }
+  }
+
+  function addCategory() {
+    var name = document.getElementById('new-cat-name').value.trim();
+    if (!name) { showToast('Enter a category name', true); return; }
+    services.push({ id: 'cat_' + Date.now(), name: name, services: [] });
+    document.getElementById('new-cat-name').value = '';
+    renderServicesEditor();
+    showToast('Category added ✓');
+  }
+
+  function addServiceToCategory(ci) {
+    var nameEl  = document.getElementById('new-svc-name-' + ci);
+    var priceEl = document.getElementById('new-svc-price-' + ci);
+    var name    = nameEl ? nameEl.value.trim() : '';
+    var price   = priceEl ? (parseInt(priceEl.value) || 0) : 0;
     if (!name)  { showToast('Enter a service name', true); return; }
     if (!price) { showToast('Enter a valid price', true); return; }
-    services.push({ id: 'svc_' + Date.now(), name: name, price: price, active: true });
-    document.getElementById('new-service-name').value  = '';
-    document.getElementById('new-service-price').value = '';
+    services[ci].services.push({ id: 'svc_' + Date.now(), name: name, price: price, active: true });
     renderServicesEditor();
     showToast('Service added ✓');
   }
 
-  function saveServices() {
+    function saveServices() {
     sbFetch('vendors?id=eq.' + currentVendor.id, {
       method: 'PATCH',
       body: JSON.stringify({ services: services }),
@@ -1737,7 +1792,7 @@
           + '<td style="font-size:13px;color:var(--gray)">' + s.phone + '</td>'
           + '<td><span style="font-size:11px;background:rgba(181,223,202,0.12);color:var(--teal);padding:3px 8px;border-radius:4px">Orders Only</span></td>'
           + '<td><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"' + (s.active ? ' checked' : '') + ' onchange="toggleStaff(\'' + s.id + '\',this.checked)" style="width:16px;height:16px;accent-color:var(--teal)"><span style="font-size:13px;color:' + (s.active ? 'var(--green)' : 'var(--gray)') + '">' + (s.active ? 'Active' : 'Inactive') + '</span></label></td>'
-          + '<td><button class="delete-btn" onclick="removeStaff(\'' + s.id + '\',\'' + s.name + '\')">Remove</button></td>'
+          + '<td style="display:flex;gap:6px"><button class="delete-btn" onclick="removeStaff(\'' + s.id + '\',\'' + s.name + '\')">Remove</button><button class="delete-btn" style="background:rgba(255,179,71,0.1);color:var(--amber);border-color:rgba(255,179,71,0.2)" onclick="resetStaffPin(\'' + s.id + '\',\'' + s.name + '\',\'' + (s.email||'') + '\')">Reset PIN</button></td>'
           + '</tr>';
       }).join('') + '</tbody></table>';
   }
@@ -1776,6 +1831,36 @@
     sbFetch('vendor_staff?id=eq.' + id, { method: 'DELETE' })
       .then(function(r) { showToast(r.ok ? 'Staff removed ✓' : 'Could not remove', !r.ok); loadStaff(); })
       .catch(function() { showToast('Could not remove', true); });
+  }
+
+  function resetStaffPin(id, name, email) {
+    if (!email) { showToast(name + ' has no email registered', true); return; }
+    var newPin = prompt('Set new PIN for ' + name + ' (min 6 characters):');
+    if (!newPin) return;
+    if (newPin.length < 6) { showToast('PIN must be at least 6 characters', true); return; }
+
+    // 1. Reset auth password via Edge Function
+    fetch(SUPABASE_URL + '/functions/v1/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY },
+      body: JSON.stringify({ email: email, password: newPin })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(result) {
+      if (!result.success) { showToast(result.error || 'Could not reset auth password', true); return; }
+      // 2. Hash and update vendor_staff table
+      fetch(SUPABASE_URL + '/functions/v1/hash-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+        body: JSON.stringify({ password: newPin })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(hashResult) {
+        if (hashResult.hash) sbFetch('vendor_staff?id=eq.' + id, { method: 'PATCH', body: JSON.stringify({ pin: hashResult.hash }) });
+      });
+      showToast(name + '\'s PIN reset \u2713');
+    })
+    .catch(function() { showToast('Could not reset PIN', true); });
   }
   /* ── BRANDING ── */
   function loadBranding() {
