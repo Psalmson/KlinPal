@@ -714,30 +714,71 @@ function renderOrderScreen() {
   }
 }
 
+function getCategories() {
+  var cats = [];
+  SERVICES.forEach(function(s) {
+    var cat = s.category || 'Services';
+    if (cats.indexOf(cat) === -1) cats.push(cat);
+  });
+  return cats;
+}
+
 function renderServices() {
-  document.getElementById('services-list').innerHTML = SERVICES.map(function(s, i) {
-    var checked   = s.qty > 0;
-    var checkIcon = checked
-      ? '<svg width="12" height="10" viewBox="0 0 12 10" fill="none"><path d="M1 5L4.5 8.5L11 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
-      : '';
-    return (
-      '<div class="service-row">'
-      + '<div class="service-card ' + (checked ? 'has-items' : '') + '" id="card-' + s.id + '">'
-      +   '<div class="service-check ' + (checked ? 'checked' : '') + '" id="check-' + s.id + '">' + checkIcon + '</div>'
-      +   '<div class="service-info">'
-      +     '<div class="service-name">' + s.name + '</div>'
-      +     '<div class="service-price">' + s.price.toLocaleString() + '/item</div>'
-      +   '</div>'
-      + '</div>'
-      + '<div class="qty-ctrl">'
-      +   '<button class="qty-btn" onclick="changeQty(' + i + ',-1)">&#8722;</button>'
-      +   '<input class="qty-input" id="qty-' + s.id + '" type="number" min="0" value="' + s.qty + '" oninput="setQty(' + i + ',this)">'
-      +   '<button class="qty-btn" onclick="changeQty(' + i + ',1)">+</button>'
-      + '</div>'
-      + '</div>'
-    );
+  var categories = getCategories();
+  var container  = document.getElementById('services-list');
+
+  // Tab bar
+  var tabBar = '';
+  if (categories.length > 1) {
+    tabBar = '<div class="cat-tab-bar" id="cat-tab-bar">'
+      + categories.map(function(cat, ci) {
+          return '<button class="cat-tab' + (ci === 0 ? ' active' : '') + '" onclick="scrollToCategory(' + ci + ',this)">' + cat + '</button>';
+        }).join('')
+      + '</div>';
+  }
+
+  // Grouped sections
+  var sections = categories.map(function(cat) {
+    var catServices = SERVICES.map(function(s, i) { return { s: s, i: i }; })
+      .filter(function(o) { return (o.s.category || 'Services') === cat; });
+
+    var rows = catServices.map(function(o) {
+      var s = o.s, i = o.i;
+      var checked   = s.qty > 0;
+      var checkIcon = checked
+        ? '<svg width="12" height="10" viewBox="0 0 12 10" fill="none"><path d="M1 5L4.5 8.5L11 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+        : '';
+      return (
+        '<div class="service-row">'
+        + '<div class="service-card ' + (checked ? 'has-items' : '') + '" id="card-' + s.id + '">'
+        +   '<div class="service-check ' + (checked ? 'checked' : '') + '" id="check-' + s.id + '">' + checkIcon + '</div>'
+        +   '<div class="service-info">'
+        +     '<div class="service-name">' + s.name + '</div>'
+        +     '<div class="service-price">' + s.price.toLocaleString() + '/item</div>'
+        +   '</div>'
+        + '</div>'
+        + '<div class="qty-ctrl">'
+        +   '<button class="qty-btn" onclick="changeQty(' + i + ',-1)">&#8722;</button>'
+        +   '<input class="qty-input" id="qty-' + s.id + '" type="number" min="0" value="' + s.qty + '" oninput="setQty(' + i + ',this)">'
+        +   '<button class="qty-btn" onclick="changeQty(' + i + ',1)">+</button>'
+        + '</div>'
+        + '</div>'
+      );
+    }).join('');
+
+    var header = categories.length > 1 ? '<div class="cat-header">' + cat + '</div>' : '';
+    return '<div class="cat-section">' + header + rows + '</div>';
   }).join('');
+
+  container.innerHTML = tabBar + sections;
   updateSubtotal();
+}
+
+function scrollToCategory(idx, btn) {
+  document.querySelectorAll('.cat-tab').forEach(function(t) { t.classList.remove('active'); });
+  btn.classList.add('active');
+  var sects = document.querySelectorAll('.cat-section');
+  if (sects[idx]) sects[idx].scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function updateCheck(id, active) {
@@ -818,15 +859,26 @@ function renderSummary() {
       : '\u20A6' + VENDOR.discount_value.toLocaleString() + ' off applied';
   }
 
-  document.getElementById('summary-items').innerHTML =
-    items.map(function(s) {
-      return (
-        '<div class="summary-row">'
+  // Group selected items by category
+  var catOrder = [];
+  var catMap   = {};
+  items.forEach(function(s) {
+    var cat = s.category || 'Services';
+    if (!catMap[cat]) { catMap[cat] = []; catOrder.push(cat); }
+    catMap[cat].push(s);
+  });
+  var groupedRows = catOrder.map(function(cat) {
+    var showHeader = catOrder.length > 1;
+    var hdr = showHeader ? '<div style="font-size:11px;font-weight:600;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.8px;margin:12px 0 6px">' + cat + '</div>' : '';
+    var catRows = catMap[cat].map(function(s) {
+      return '<div class="summary-row">'
         + '<span>' + s.name + ' <small style="color:var(--gray-500)">\xD7' + s.qty + '</small></span>'
         + '<span>\u20A6' + (s.price * s.qty).toLocaleString() + '</span>'
-        + '</div>'
-      );
-    }).join('')
+        + '</div>';
+    }).join('');
+    return hdr + catRows;
+  }).join('');
+  document.getElementById('summary-items').innerHTML = groupedRows
     + (discount > 0
       ? '<div class="summary-row" style="color:var(--teal)">'
         + '<span>\uD83C\uDF89 Promo: ' + promoLabel + '</span>'
@@ -1061,11 +1113,22 @@ function bootstrapVendor() {
     var brandEls = document.querySelectorAll('.vendor-name-placeholder');
     brandEls.forEach(function(el) { el.textContent = VENDOR.name; });
 
-    // Load active services
+    // Load active services — flatten nested category structure
     if (vendor.services && vendor.services.length) {
-      SERVICES = vendor.services
-        .filter(function(s) { return s.active; })
-        .map(function(s) { return { id: s.id, name: s.name, price: s.price, qty: 0 }; });
+      var flat = [];
+      vendor.services.forEach(function(cat) {
+        // Support both new nested format and legacy flat format
+        if (cat.services && Array.isArray(cat.services)) {
+          // New nested format: { id, name, services: [...] }
+          cat.services.filter(function(s) { return s.active; }).forEach(function(s) {
+            flat.push({ id: s.id, name: s.name, price: s.price, qty: 0, category: cat.name });
+          });
+        } else if (cat.active !== false) {
+          // Legacy flat format: { id, name, price, active }
+          flat.push({ id: cat.id, name: cat.name, price: cat.price, qty: 0, category: '' });
+        }
+      });
+      if (flat.length) SERVICES = flat;
     }
     go('s-landing');
   })
