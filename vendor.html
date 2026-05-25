@@ -462,13 +462,20 @@
         <div class="add-service-title">+ Add New Service</div>
         <div class="field-row">
           <div>
+            <label class="field-label">Category</label>
+            <input class="field-input" id="new-service-category" placeholder="e.g. Dry Cleaning">
+          </div>
+          <div>
             <label class="field-label">Service Name</label>
             <input class="field-input" id="new-service-name" placeholder="e.g. Curtain Wash">
           </div>
+        </div>
+        <div class="field-row">
           <div>
             <label class="field-label">Price per item (₦)</label>
             <input class="field-input" id="new-service-price" type="number" placeholder="e.g. 500">
           </div>
+          <div></div>
         </div>
         <button class="save-btn" onclick="addService()">Add Service</button>
       </div>
@@ -1428,18 +1435,32 @@
 
   /* ── SERVICES EDITOR ── */
   function renderServicesEditor() {
-    document.getElementById('services-editor').innerHTML = services.map(function(s, i) {
-      return '<div class="service-edit-card">'
-        + '<div class="service-edit-header">'
-        +   '<div class="service-edit-name">' + s.name + '</div>'
-        +   '<label class="toggle-switch"><input type="checkbox"' + (s.active ? ' checked' : '') + ' onchange="services[' + i + '].active=this.checked"><span class="toggle-slider"></span></label>'
-        + '</div>'
-        + '<label class="field-label">Service Name</label>'
-        + '<input class="field-input" type="text" value="' + s.name + '" oninput="services[' + i + '].name=this.value">'
-        + '<label class="field-label">Price per item (₦)</label>'
-        + '<input class="field-input" type="number" value="' + s.price + '" oninput="services[' + i + '].price=parseInt(this.value)||0">'
-        + '<button class="delete-btn" onclick="deleteService(' + i + ')">🗑 Remove</button>'
-        + '</div>';
+    // Group services by category for display
+    var catOrder = [];
+    var catMap   = {};
+    services.forEach(function(s, i) {
+      var cat = s.category || 'Uncategorised';
+      if (!catMap[cat]) { catMap[cat] = []; catOrder.push(cat); }
+      catMap[cat].push({ s: s, i: i });
+    });
+    document.getElementById('services-editor').innerHTML = catOrder.map(function(cat) {
+      return '<div style="grid-column:1/-1;font-size:13px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:0.8px;margin-top:8px;margin-bottom:4px;border-bottom:1px solid var(--navy3);padding-bottom:6px">' + cat + '</div>'
+        + catMap[cat].map(function(o) {
+          var s = o.s, i = o.i;
+          return '<div class="service-edit-card">'
+            + '<div class="service-edit-header">'
+            +   '<div class="service-edit-name">' + s.name + '</div>'
+            +   '<label class="toggle-switch"><input type="checkbox"' + (s.active ? ' checked' : '') + ' onchange="services[' + i + '].active=this.checked"><span class="toggle-slider"></span></label>'
+            + '</div>'
+            + '<label class="field-label">Category</label>'
+            + '<input class="field-input" type="text" value="' + (s.category||'') + '" placeholder="e.g. Dry Cleaning" oninput="services[' + i + '].category=this.value" style="margin-bottom:8px">'
+            + '<label class="field-label">Service Name</label>'
+            + '<input class="field-input" type="text" value="' + s.name + '" oninput="services[' + i + '].name=this.value">'
+            + '<label class="field-label">Price per item (₦)</label>'
+            + '<input class="field-input" type="number" value="' + s.price + '" oninput="services[' + i + '].price=parseInt(this.value)||0">'
+            + '<button class="delete-btn" onclick="deleteService(' + i + ')">🗑 Remove</button>'
+            + '</div>';
+        }).join('');
     }).join('');
   }
 
@@ -1448,13 +1469,16 @@
   }
 
   function addService() {
-    var name  = document.getElementById('new-service-name').value.trim();
-    var price = parseInt(document.getElementById('new-service-price').value) || 0;
-    if (!name)  { showToast('Enter a service name', true); return; }
-    if (!price) { showToast('Enter a valid price', true); return; }
-    services.push({ id: 'svc_' + Date.now(), name: name, price: price, active: true });
-    document.getElementById('new-service-name').value  = '';
-    document.getElementById('new-service-price').value = '';
+    var category = document.getElementById('new-service-category').value.trim();
+    var name     = document.getElementById('new-service-name').value.trim();
+    var price    = parseInt(document.getElementById('new-service-price').value) || 0;
+    if (!category){ showToast('Enter a category', true); return; }
+    if (!name)    { showToast('Enter a service name', true); return; }
+    if (!price)   { showToast('Enter a valid price', true); return; }
+    services.push({ id: 'svc_' + Date.now(), name: name, price: price, active: true, category: category });
+    document.getElementById('new-service-category').value = '';
+    document.getElementById('new-service-name').value     = '';
+    document.getElementById('new-service-price').value    = '';
     renderServicesEditor();
     showToast('Service added ✓');
   }
