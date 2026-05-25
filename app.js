@@ -714,30 +714,73 @@ function renderOrderScreen() {
   }
 }
 
+function getCategories() {
+  var cats = [];
+  SERVICES.forEach(function(s) {
+    var cat = s.category || 'Services';
+    if (cats.indexOf(cat) === -1) cats.push(cat);
+  });
+  return cats;
+}
+
 function renderServices() {
-  document.getElementById('services-list').innerHTML = SERVICES.map(function(s, i) {
-    var checked   = s.qty > 0;
-    var checkIcon = checked
-      ? '<svg width="12" height="10" viewBox="0 0 12 10" fill="none"><path d="M1 5L4.5 8.5L11 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
-      : '';
-    return (
-      '<div class="service-row">'
-      + '<div class="service-card ' + (checked ? 'has-items' : '') + '" id="card-' + s.id + '">'
-      +   '<div class="service-check ' + (checked ? 'checked' : '') + '" id="check-' + s.id + '">' + checkIcon + '</div>'
-      +   '<div class="service-info">'
-      +     '<div class="service-name">' + s.name + '</div>'
-      +     '<div class="service-price">' + s.price.toLocaleString() + '/item</div>'
-      +   '</div>'
-      + '</div>'
-      + '<div class="qty-ctrl">'
-      +   '<button class="qty-btn" onclick="changeQty(' + i + ',-1)">&#8722;</button>'
-      +   '<input class="qty-input" id="qty-' + s.id + '" type="number" min="0" value="' + s.qty + '" oninput="setQty(' + i + ',this)">'
-      +   '<button class="qty-btn" onclick="changeQty(' + i + ',1)">+</button>'
-      + '</div>'
-      + '</div>'
-    );
+  var categories = getCategories();
+  var container  = document.getElementById('services-list');
+
+  // Build tab bar
+  var tabBar = '<div class="cat-tab-bar" id="cat-tab-bar">'
+    + categories.map(function(cat, ci) {
+        return '<button class="cat-tab' + (ci === 0 ? ' active' : '') + '" onclick="scrollToCategory('' + cat.replace(/'/g, "\'") + '',this)">' + cat + '</button>';
+      }).join('')
+    + '</div>';
+
+  // Build grouped sections
+  var sections = categories.map(function(cat) {
+    var catServices = SERVICES.map(function(s, i) { return { s: s, i: i }; })
+      .filter(function(o) { return (o.s.category || 'Services') === cat; });
+
+    var rows = catServices.map(function(o) {
+      var s = o.s, i = o.i;
+      var checked   = s.qty > 0;
+      var checkIcon = checked
+        ? '<svg width="12" height="10" viewBox="0 0 12 10" fill="none"><path d="M1 5L4.5 8.5L11 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+        : '';
+      return (
+        '<div class="service-row">'
+        + '<div class="service-card ' + (checked ? 'has-items' : '') + '" id="card-' + s.id + '">'
+        +   '<div class="service-check ' + (checked ? 'checked' : '') + '" id="check-' + s.id + '">' + checkIcon + '</div>'
+        +   '<div class="service-info">'
+        +     '<div class="service-name">' + s.name + '</div>'
+        +     '<div class="service-price">' + s.price.toLocaleString() + '/item</div>'
+        +   '</div>'
+        + '</div>'
+        + '<div class="qty-ctrl">'
+        +   '<button class="qty-btn" onclick="changeQty(' + i + ',-1)">&#8722;</button>'
+        +   '<input class="qty-input" id="qty-' + s.id + '" type="number" min="0" value="' + s.qty + '" oninput="setQty(' + i + ',this)">'
+        +   '<button class="qty-btn" onclick="changeQty(' + i + ',1)">+</button>'
+        + '</div>'
+        + '</div>'
+      );
+    }).join('');
+
+    return '<div class="cat-section" id="cat-' + cat.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '') + '">'
+      + '<div class="cat-header">' + cat + '</div>'
+      + rows
+      + '</div>';
   }).join('');
+
+  container.innerHTML = tabBar + sections;
   updateSubtotal();
+}
+
+function scrollToCategory(cat, btn) {
+  // Update active tab
+  document.querySelectorAll('.cat-tab').forEach(function(t) { t.classList.remove('active'); });
+  btn.classList.add('active');
+  // Scroll to section
+  var sectionId = 'cat-' + cat.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
+  var el = document.getElementById(sectionId);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function updateCheck(id, active) {
@@ -818,15 +861,25 @@ function renderSummary() {
       : '\u20A6' + VENDOR.discount_value.toLocaleString() + ' off applied';
   }
 
-  document.getElementById('summary-items').innerHTML =
-    items.map(function(s) {
-      return (
-        '<div class="summary-row">'
+  // Group selected items by category
+  var catOrder = [];
+  var catMap   = {};
+  items.forEach(function(s) {
+    var cat = s.category || 'Services';
+    if (!catMap[cat]) { catMap[cat] = []; catOrder.push(cat); }
+    catMap[cat].push(s);
+  });
+  var groupedRows = catOrder.map(function(cat) {
+    var catRows = catMap[cat].map(function(s) {
+      return '<div class="summary-row">'
         + '<span>' + s.name + ' <small style="color:var(--gray-500)">\xD7' + s.qty + '</small></span>'
         + '<span>\u20A6' + (s.price * s.qty).toLocaleString() + '</span>'
-        + '</div>'
-      );
-    }).join('')
+        + '</div>';
+    }).join('');
+    return '<div style="font-size:11px;font-weight:600;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.8px;margin:12px 0 6px">' + cat + '</div>'
+      + catRows;
+  }).join('');
+  document.getElementById('summary-items').innerHTML = groupedRows
     + (discount > 0
       ? '<div class="summary-row" style="color:var(--teal)">'
         + '<span>\uD83C\uDF89 Promo: ' + promoLabel + '</span>'
@@ -1065,7 +1118,7 @@ function bootstrapVendor() {
     if (vendor.services && vendor.services.length) {
       SERVICES = vendor.services
         .filter(function(s) { return s.active; })
-        .map(function(s) { return { id: s.id, name: s.name, price: s.price, qty: 0 }; });
+        .map(function(s) { return { id: s.id, name: s.name, price: s.price, qty: 0, category: s.category || '' }; });
     }
     go('s-landing');
   })
