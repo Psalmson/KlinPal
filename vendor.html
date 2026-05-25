@@ -1737,7 +1737,7 @@
           + '<td style="font-size:13px;color:var(--gray)">' + s.phone + '</td>'
           + '<td><span style="font-size:11px;background:rgba(181,223,202,0.12);color:var(--teal);padding:3px 8px;border-radius:4px">Orders Only</span></td>'
           + '<td><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox"' + (s.active ? ' checked' : '') + ' onchange="toggleStaff(\'' + s.id + '\',this.checked)" style="width:16px;height:16px;accent-color:var(--teal)"><span style="font-size:13px;color:' + (s.active ? 'var(--green)' : 'var(--gray)') + '">' + (s.active ? 'Active' : 'Inactive') + '</span></label></td>'
-          + '<td><button class="delete-btn" onclick="removeStaff(\'' + s.id + '\',\'' + s.name + '\')">Remove</button></td>'
+          + '<td style="display:flex;gap:6px"><button class="delete-btn" onclick="removeStaff(\'' + s.id + '\',\'' + s.name + '\')">Remove</button><button class="delete-btn" style="background:rgba(255,179,71,0.1);color:var(--amber);border-color:rgba(255,179,71,0.2)" onclick="resetStaffPin(\'' + s.id + '\',\'' + s.name + '\',\'' + (s.email||'') + '\')">Reset PIN</button></td>'
           + '</tr>';
       }).join('') + '</tbody></table>';
   }
@@ -1776,6 +1776,36 @@
     sbFetch('vendor_staff?id=eq.' + id, { method: 'DELETE' })
       .then(function(r) { showToast(r.ok ? 'Staff removed ✓' : 'Could not remove', !r.ok); loadStaff(); })
       .catch(function() { showToast('Could not remove', true); });
+  }
+
+  function resetStaffPin(id, name, email) {
+    if (!email) { showToast(name + ' has no email registered', true); return; }
+    var newPin = prompt('Set new PIN for ' + name + ' (min 6 characters):');
+    if (!newPin) return;
+    if (newPin.length < 6) { showToast('PIN must be at least 6 characters', true); return; }
+
+    // 1. Reset auth password via Edge Function
+    fetch(SUPABASE_URL + '/functions/v1/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY },
+      body: JSON.stringify({ email: email, password: newPin })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(result) {
+      if (!result.success) { showToast(result.error || 'Could not reset auth password', true); return; }
+      // 2. Hash and update vendor_staff table
+      fetch(SUPABASE_URL + '/functions/v1/hash-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+        body: JSON.stringify({ password: newPin })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(hashResult) {
+        if (hashResult.hash) sbFetch('vendor_staff?id=eq.' + id, { method: 'PATCH', body: JSON.stringify({ pin: hashResult.hash }) });
+      });
+      showToast(name + '\'s PIN reset \u2713');
+    })
+    .catch(function() { showToast('Could not reset PIN', true); });
   }
   /* ── BRANDING ── */
   function loadBranding() {
