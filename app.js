@@ -727,14 +727,17 @@ function renderServices() {
   var categories = getCategories();
   var container  = document.getElementById('services-list');
 
-  // Build tab bar
-  var tabBar = '<div class="cat-tab-bar" id="cat-tab-bar">'
-    + categories.map(function(cat, ci) {
-        return '<button class="cat-tab' + (ci === 0 ? ' active' : '') + '" onclick="scrollToCategory(' + ci + ',this)">' + cat + '</button>';
-      }).join('')
-    + '</div>';
+  // Tab bar
+  var tabBar = '';
+  if (categories.length > 1) {
+    tabBar = '<div class="cat-tab-bar" id="cat-tab-bar">'
+      + categories.map(function(cat, ci) {
+          return '<button class="cat-tab' + (ci === 0 ? ' active' : '') + '" onclick="scrollToCategory(' + ci + ',this)">' + cat + '</button>';
+        }).join('')
+      + '</div>';
+  }
 
-  // Build grouped sections
+  // Grouped sections
   var sections = categories.map(function(cat) {
     var catServices = SERVICES.map(function(s, i) { return { s: s, i: i }; })
       .filter(function(o) { return (o.s.category || 'Services') === cat; });
@@ -763,10 +766,8 @@ function renderServices() {
       );
     }).join('');
 
-    return '<div class="cat-section" id="cat-' + cat.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '') + '">'
-      + '<div class="cat-header">' + cat + '</div>'
-      + rows
-      + '</div>';
+    var header = categories.length > 1 ? '<div class="cat-header">' + cat + '</div>' : '';
+    return '<div class="cat-section">' + header + rows + '</div>';
   }).join('');
 
   container.innerHTML = tabBar + sections;
@@ -774,12 +775,10 @@ function renderServices() {
 }
 
 function scrollToCategory(idx, btn) {
-  // Update active tab
   document.querySelectorAll('.cat-tab').forEach(function(t) { t.classList.remove('active'); });
   btn.classList.add('active');
-  // Scroll to section by index
-  var sections = document.querySelectorAll('.cat-section');
-  if (sections[idx]) sections[idx].scrollIntoView({ behavior: 'smooth', block: 'start' });
+  var sects = document.querySelectorAll('.cat-section');
+  if (sects[idx]) sects[idx].scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function updateCheck(id, active) {
@@ -869,14 +868,15 @@ function renderSummary() {
     catMap[cat].push(s);
   });
   var groupedRows = catOrder.map(function(cat) {
+    var showHeader = catOrder.length > 1;
+    var hdr = showHeader ? '<div style="font-size:11px;font-weight:600;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.8px;margin:12px 0 6px">' + cat + '</div>' : '';
     var catRows = catMap[cat].map(function(s) {
       return '<div class="summary-row">'
         + '<span>' + s.name + ' <small style="color:var(--gray-500)">\xD7' + s.qty + '</small></span>'
         + '<span>\u20A6' + (s.price * s.qty).toLocaleString() + '</span>'
         + '</div>';
     }).join('');
-    return '<div style="font-size:11px;font-weight:600;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.8px;margin:12px 0 6px">' + cat + '</div>'
-      + catRows;
+    return hdr + catRows;
   }).join('');
   document.getElementById('summary-items').innerHTML = groupedRows
     + (discount > 0
@@ -1113,11 +1113,22 @@ function bootstrapVendor() {
     var brandEls = document.querySelectorAll('.vendor-name-placeholder');
     brandEls.forEach(function(el) { el.textContent = VENDOR.name; });
 
-    // Load active services
+    // Load active services — flatten nested category structure
     if (vendor.services && vendor.services.length) {
-      SERVICES = vendor.services
-        .filter(function(s) { return s.active; })
-        .map(function(s) { return { id: s.id, name: s.name, price: s.price, qty: 0, category: s.category || '' }; });
+      var flat = [];
+      vendor.services.forEach(function(cat) {
+        // Support both new nested format and legacy flat format
+        if (cat.services && Array.isArray(cat.services)) {
+          // New nested format: { id, name, services: [...] }
+          cat.services.filter(function(s) { return s.active; }).forEach(function(s) {
+            flat.push({ id: s.id, name: s.name, price: s.price, qty: 0, category: cat.name });
+          });
+        } else if (cat.active !== false) {
+          // Legacy flat format: { id, name, price, active }
+          flat.push({ id: cat.id, name: cat.name, price: cat.price, qty: 0, category: '' });
+        }
+      });
+      if (flat.length) SERVICES = flat;
     }
     go('s-landing');
   })
