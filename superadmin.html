@@ -818,6 +818,19 @@
   var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, storageKey: 'klinpal-superadmin-auth' }
   });
+  var STATUS_LABELS = {
+    'Pending':               'Order received, awaiting pickup',
+    'Picked Up':             'Order picked, on the way to laundromat',
+    'Delivered to Vendor':   'Delivered to Vendor',
+    'Processing':            'Items are being processed/cleaned',
+    'Ready':                 'Ready for delivery',
+    'Out for Delivery':      'Items collected, on the way to customer',
+    'Delivered to Customer': 'Delivered to Customer',
+    'Disputed':              'Disputed — under review',
+    'Cancelled':             'Cancelled',
+  };
+  function statusLabel(s) { return STATUS_LABELS[s] || s || 'Unknown'; }
+
   var _sessionToken = null;
   var GOOGLE_MAPS_KEY = 'AIzaSyA4mpTBCqmyZpCZFtP-_oVvjs_8AhNoSa0';
 
@@ -1495,6 +1508,17 @@
           +'Delivery address: '+(o ? o.address : '\u2014')+'\n'
           +'Items: '+(o ? o.items : '\u2014')+'\n'
           +'Your commission: \u20A6'+delivComm.toLocaleString()
+        );
+      }
+      // Notify vendor group when delivery rider assigned
+      if (currentDrillVendor && currentDrillVendor.telegram_chat_id && delivDrv) {
+        sendTelegram(currentDrillVendor.telegram_chat_id,
+          '\uD83D\uDEF5 Delivery Rider Assigned\n\n'
+          +'Order ID: '+orderId+'\n'
+          +'Customer: '+(o ? o.customer_name : '\u2014')+'\n\n'
+          +'Rider: '+delivDrv.name+'\n'
+          +'Phone: '+(delivDrv.phone || '\u2014')+'\n\n'
+          +'\uD83D\uDCCD Rider is on the way to collect the order'
         );
       }
     })
