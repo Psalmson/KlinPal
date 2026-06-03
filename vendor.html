@@ -810,6 +810,19 @@
   var currentStaff     = null;
   var loginMode        = 'vendor';
   var realtimeChannel  = null;
+  var STATUS_LABELS = {
+    'Pending':               'Order received, awaiting pickup',
+    'Picked Up':             'Order picked, on the way to laundromat',
+    'Delivered to Vendor':   'Delivered to Vendor',
+    'Processing':            'Items are being processed/cleaned',
+    'Ready':                 'Ready for delivery',
+    'Out for Delivery':      'Items collected, on the way to customer',
+    'Delivered to Customer': 'Delivered to Customer',
+    'Disputed':              'Disputed — under review',
+    'Cancelled':             'Cancelled',
+  };
+  function statusLabel(s) { return STATUS_LABELS[s] || s || 'Unknown'; }
+
   // services = array of categories, each with nested services array
   var services = [
     {
@@ -1265,8 +1278,8 @@
         + '<td><div style="font-family:var(--font-mono)">₦' + (Number(o.subtotal) || 0).toLocaleString() + '</div>'
         +     (isStaffSession ? '' : '<div style="font-size:11px;color:var(--red)">-₦' + (Number(o.platform_fee) || 0).toLocaleString() + ' platform fee</div>') + '</td>'
         + '<td><span style="font-size:12px;color:' + ((o.payment_status==='Paid') ? 'var(--green)' : (o.payment_status==='Not Paid') ? 'var(--red)' : 'var(--amber)') + '">' + (o.payment_status || 'Pending') + '</span></td>'
-        + '<td><select class="status-select" onchange="updateStatus(\'' + o.order_id + '\',this.value)">'
-        +   statuses.map(function(s) { var dis = (s !== 'Processing' && s !== 'Ready') ? ' disabled' : ''; return '<option value="' + s + '"' + (o.status === s ? ' selected' : '') + dis + '>' + s + '</option>'; }).join('')
+        + '<td><select class="status-select" data-order-id="' + o.order_id + '" onchange="updateStatus(\'' + o.order_id + '\',this.value)">'
+        +   statuses.map(function(s) { var dis = (s !== 'Processing' && s !== 'Ready') ? ' disabled' : ''; return '<option value="' + s + '"' + (o.status === s ? ' selected' : '') + dis + '>' + statusLabel(s) + '</option>'; }).join('')
         + '</select>'
         + (o.last_updated_by ? '<div style="font-size:10px;color:var(--gray);margin-top:4px">by ' + o.last_updated_by + '</div>' : '')
         + '</td>'
@@ -1278,7 +1291,24 @@
       + '<tbody>' + rows + '</tbody></table>';
   }
 
+  var _pendingReadyOrderId = null;
+
   function updateStatus(orderId, newStatus) {
+    if (newStatus === 'Ready') {
+      openDispatchModal(orderId);
+      var selEls = document.querySelectorAll('select.status-select');
+      selEls.forEach(function(sel) {
+        if (sel.getAttribute('data-order-id') === orderId) {
+          var order = allOrders.find(function(o) { return o.order_id === orderId; });
+          if (order) sel.value = order.status;
+        }
+      });
+      return;
+    }
+    doUpdateStatus(orderId, newStatus);
+  }
+
+  function doUpdateStatus(orderId, newStatus) {
     var order = allOrders.find(function(o) { return o.order_id === orderId; });
     if (order) { order.status = newStatus; updateStats(); }
     var updatedBy = isStaffSession ? currentStaff.name : (currentVendor ? currentVendor.name : '');
@@ -1286,8 +1316,121 @@
       method: 'PATCH',
       body: JSON.stringify({ status: newStatus, last_updated_by: updatedBy }),
     })
-    .then(function(r) { showToast(r.ok ? 'Status updated ✓' : 'Update failed', !r.ok); })
+    .then(function(r) {
+      if (r.ok) {
+        showToast('Status updated ✓');
+        if (newStatus === 'Ready') {
+          var o = allOrders.find(function(x) { return x.order_id === orderId; });
+          sendReadyNotification(o);
+        }
+      } else {
+        showToast('Update failed', true);
+      }
+    })
     .catch(function() { showToast('Could not update status', true); });
+  }
+
+  function openDispatchModal(orderId) {
+    _pendingReadyOrderId = orderId;
+    var order = allOrders.find(function(o) { return o.order_id === orderId; });
+    var wrap  = document.getElementById('dispatch-counts-wrap');
+    wrap.innerHTML = '';
+    var cats = {};
+    if (order && order.vendor_receipt_confirmation) {
+      var vrc = typeof order.vendor_receipt_confirmation === 'string' ? JSON.parse(order.vendor_receipt_confirmation) : order.vendor_receipt_confirmation;
+      if (vrc && vrc.counts) cats = vrc.counts;
+    } else if (order && order.items_json) {
+      var ij = typeof order.items_json === 'string' ? JSON.parse(order.items_json) : order.items_json;
+      Object.keys(ij).forEach(function(cat) { cats[cat] = ij[cat].reduce(function(a,s){ return a+s.qty; },0); });
+    } else {
+      cats = { 'Items': null };
+    }
+    Object.keys(cats).forEach(function(cat) {
+      var refCount = cats[cat];
+      var row = document.createElement('div');
+      row.style.cssText = 'display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;margin-bottom:12px';
+      row.innerHTML = '<div>'
+        + '<div style="font-size:13px;font-weight:600;color:var(--white)">' + cat + '</div>'
+        + (refCount !== null ? '<div style="font-size:11px;color:var(--gray)">Received: ' + refCount + ' items</div>' : '')
+        + '</div>'
+        + '<input type="number" min="0" placeholder="Count" data-cat="' + cat + '" data-ref="' + (refCount||0) + '" style="width:80px;background:var(--navy3);border:1px solid var(--gray2);border-radius:8px;padding:8px;color:var(--white);font-family:var(--font-body);font-size:15px;text-align:center;outline:none" oninput="checkDispatchMismatch()">';
+      wrap.appendChild(row);
+    });
+    document.getElementById('dispatch-mismatch').style.display = 'none';
+    document.getElementById('dispatch-override-comment').value = '';
+    document.getElementById('dispatch-modal').style.display = 'flex';
+  }
+
+  function closeDispatchModal() {
+    document.getElementById('dispatch-modal').style.display = 'none';
+    _pendingReadyOrderId = null;
+  }
+
+  function checkDispatchMismatch() {
+    var inputs = document.querySelectorAll('#dispatch-counts-wrap input[type=number]');
+    var mismatch = false;
+    inputs.forEach(function(inp) {
+      var entered = parseInt(inp.value) || 0;
+      var ref = parseInt(inp.getAttribute('data-ref')) || 0;
+      if (ref > 0 && entered !== ref) mismatch = true;
+    });
+    document.getElementById('dispatch-mismatch').style.display = mismatch ? 'block' : 'none';
+    return mismatch;
+  }
+
+  function submitDispatchConfirmation() {
+    var inputs = document.querySelectorAll('#dispatch-counts-wrap input[type=number]');
+    var counts = {}; var allFilled = true;
+    inputs.forEach(function(inp) { if (!inp.value.trim()) allFilled = false; counts[inp.getAttribute('data-cat')] = parseInt(inp.value)||0; });
+    if (!allFilled) { showToast('Please enter count for all categories', true); return; }
+    var mismatch = checkDispatchMismatch();
+    if (mismatch) {
+      var comment = document.getElementById('dispatch-override-comment').value.trim();
+      if (!comment) { showToast('Please add a comment explaining the discrepancy', true); return; }
+    }
+    var confirmedBy = isStaffSession ? currentStaff.name : (currentVendor ? currentVendor.name : '');
+    var confirmation = { confirmed_by: confirmedBy, confirmed_at: new Date().toISOString(), counts: counts, match: !mismatch, override: mismatch, comment: mismatch ? document.getElementById('dispatch-override-comment').value.trim() : '' };
+    sbFetch('orders?order_id=eq.' + _pendingReadyOrderId, { method: 'PATCH', body: JSON.stringify({ vendor_dispatch_confirmation: confirmation }) })
+    .then(function(r) {
+      if (!r.ok) { showToast('Could not save confirmation', true); return; }
+      closeDispatchModal();
+      doUpdateStatus(_pendingReadyOrderId, 'Ready');
+    })
+    .catch(function() { showToast('Could not save confirmation', true); });
+  }
+
+  function sendReadyNotification(order) {
+    if (!order) return;
+    var superadminChatId = '-5041093515';
+    var vendorChatId = currentVendor ? currentVendor.telegram_chat_id : null;
+    var itemsText = formatItemsForTelegram(order.items_json || order.items);
+    var vendorName = currentVendor ? currentVendor.name : '—';
+    var msgSuper = '✅ Ready for Delivery — Klinpal\n\nOrder ID: ' + order.order_id + '\nVendor: ' + vendorName + '\nCustomer: ' + (order.customer_name||'—') + '\nPhone: ' + (order.phone||'—') + '\nAddress: ' + (order.address||'—') + '\n\n?? Items Ready:\n' + itemsText + '\n\n?? Action required: Assign delivery rider';
+    var msgVendor = '✅ Order Ready for Delivery\n\nOrder ID: ' + order.order_id + '\nCustomer: ' + (order.customer_name||'—') + '\nPhone: ' + (order.phone||'—') + '\n\n?? Items Ready:\n' + itemsText + '\n\n⏳ Awaiting rider assignment';
+    sendTelegramMsg(superadminChatId, msgSuper);
+    if (vendorChatId) sendTelegramMsg(vendorChatId, msgVendor);
+  }
+
+  function formatItemsForTelegram(itemsJson) {
+    if (!itemsJson) return '—';
+    var data = typeof itemsJson === 'string' ? (function(){ try { return JSON.parse(itemsJson); } catch(e) { return null; } })() : itemsJson;
+    if (!data || typeof data !== 'object' || Array.isArray(data)) return String(itemsJson);
+    var lines = [];
+    Object.keys(data).forEach(function(cat) {
+      lines.push('┌─ ' + cat);
+      var svcs = data[cat];
+      if (Array.isArray(svcs)) {
+        svcs.forEach(function(s, i) {
+          var prefix = i === svcs.length-1 ? '└── ' : '├── ';
+          lines.push('   ' + prefix + s.name + ' × ' + s.qty + (s.price ? ' — ₦' + (s.price*s.qty).toLocaleString() : ''));
+        });
+      }
+    });
+    return lines.join('\n');
+  }
+
+  function sendTelegramMsg(chatId, text) {
+    fetch('https://api.telegram.org/bot8021952716:AAFg_CsHXdp3SGl6guMiPTqHKs9cPvpv_7o/sendMessage', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ chat_id: chatId, text: text }) }).catch(function() {});
   }
 
   function applyFilters() {
@@ -1943,5 +2086,24 @@
     setTimeout(function() { t.classList.remove('show'); }, 3000);
   }
 </script>
+
+<!-- VENDOR DISPATCH CONFIRMATION MODAL -->
+<div id="dispatch-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:600;align-items:center;justify-content:center;overflow-y:auto;padding:16px">
+  <div style="background:var(--navy2);border:1px solid var(--navy3);border-radius:16px;padding:28px;width:100%;max-width:440px;margin:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div style="font-family:var(--font-head);font-size:17px;font-weight:800">Confirm Order Ready</div>
+      <button onclick="closeDispatchModal()" style="background:none;border:none;color:var(--gray);cursor:pointer;font-size:22px;line-height:1;padding:0 4px">&times;</button>
+    </div>
+    <p style="font-size:13px;color:var(--gray);margin-bottom:16px;line-height:1.5">Enter the count of finished items per category. This will be verified by the rider at collection.</p>
+    <div id="dispatch-counts-wrap" style="margin-bottom:16px"></div>
+    <div id="dispatch-mismatch" style="display:none;background:rgba(255,87,87,0.1);border:1px solid rgba(255,87,87,0.3);border-radius:8px;padding:12px;margin-bottom:14px">
+      <div style="font-size:12px;color:var(--red);font-weight:600;margin-bottom:8px">&#9888; Count mismatch detected</div>
+      <div style="font-size:12px;color:var(--gray);margin-bottom:8px">Counts differ from what was received. Add a comment to proceed.</div>
+      <textarea id="dispatch-override-comment" placeholder="Explain the discrepancy..." style="width:100%;background:var(--navy3);border:1px solid var(--gray2);border-radius:8px;padding:10px;color:var(--white);font-family:var(--font-body);font-size:13px;resize:vertical;min-height:72px;outline:none"></textarea>
+    </div>
+    <button onclick="submitDispatchConfirmation()" style="width:100%;background:var(--teal);color:var(--navy);border:none;border-radius:8px;padding:13px;font-family:var(--font-head);font-size:14px;font-weight:700;cursor:pointer">Confirm Ready for Delivery</button>
+  </div>
+</div>
+
 </body>
 </html>
