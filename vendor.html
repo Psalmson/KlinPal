@@ -46,12 +46,12 @@
 
   /* LAYOUT */
   #app { display: none; }
-  .sidebar { width: var(--sidebar); min-height: 100vh; background: var(--navy2); border-right: 1px solid var(--navy3); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
+  .sidebar { width: var(--sidebar); background: var(--navy2); border-right: 1px solid var(--navy3); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; overflow-y: auto; }
   .sidebar-logo { padding: 28px 24px 16px; font-family: var(--font-head); font-size: 22px; font-weight: 800; color: var(--teal); border-bottom: 1px solid var(--navy3); }
   .sidebar-vendor { padding: 14px 24px; border-bottom: 1px solid var(--navy3); }
   .sidebar-name { font-size: 13px; font-weight: 600; color: var(--white); }
   .sidebar-slug { font-family: var(--font-mono); font-size: 11px; color: var(--teal); margin-top: 2px; }
-  .sidebar-nav  { flex: 1; padding: 12px; display: flex; flex-direction: column; gap: 4px; }
+  .sidebar-nav  { flex: 1; padding: 12px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
   .sidebar-foot { padding: 12px; border-top: 1px solid var(--navy3); }
   .nav-item     { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; cursor: pointer; color: var(--gray); font-size: 14px; font-weight: 500; border: none; background: none; width: 100%; text-align: left; font-family: var(--font-body); transition: all 0.15s; }
   .nav-item:hover  { background: var(--navy3); color: var(--white); }
