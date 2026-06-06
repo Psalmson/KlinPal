@@ -87,7 +87,10 @@
 
 <div class="topbar">
   <div class="topbar-logo">klin<span>pal</span></div>
-  <div style="font-size:12px;color:var(--gray-500)" id="topbar-vendor"></div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <img id="topbar-vendor-logo" src="" alt="" style="display:none;height:28px;width:auto;object-fit:contain;border-radius:4px">
+    <div style="font-size:12px;color:var(--gray-500)" id="topbar-vendor"></div>
+  </div>
 </div>
 
 <div class="wrap">
@@ -154,13 +157,19 @@
 
   // Bootstrap vendor
   if (vendorSlug) {
-    sbFetch('vendors?slug=eq.' + encodeURIComponent(vendorSlug) + '&active=eq.true&limit=1&select=id,name,slug')
+    sbFetch('vendors?slug=eq.' + encodeURIComponent(vendorSlug) + '&active=eq.true&limit=1&select=id,name,slug,logo_url')
     .then(function(r){ return r.json(); })
     .then(function(data) {
       if (data && data.length) {
         VENDOR = data[0];
         document.getElementById('topbar-vendor').textContent = VENDOR.name;
         document.title = 'Track — ' + VENDOR.name;
+        if (VENDOR.logo_url) {
+          var logoEl = document.getElementById('topbar-vendor-logo');
+          logoEl.src = VENDOR.logo_url;
+          logoEl.alt = VENDOR.name;
+          logoEl.style.display = 'inline-block';
+        }
       }
     }).catch(function(){});
   }
