@@ -86,11 +86,11 @@
 <body>
 
 <div class="topbar">
-  <div class="topbar-logo">klin<span>pal</span></div>
   <div style="display:flex;align-items:center;gap:8px">
-    <img id="topbar-vendor-logo" src="" alt="" style="display:none;height:28px;width:auto;object-fit:contain;border-radius:4px">
-    <div style="font-size:12px;color:var(--gray-500)" id="topbar-vendor"></div>
+    <img id="topbar-vendor-logo" src="" alt="" style="display:none;height:32px;width:auto;object-fit:contain;border-radius:4px">
+    <span id="topbar-vendor-name" style="font-family:'Inria Serif',serif;font-size:16px;font-weight:700;color:#0d1b2a"></span>
   </div>
+  <div style="font-size:12px;color:var(--gray-500)" id="topbar-vendor"></div>
 </div>
 
 <div class="wrap">
@@ -164,11 +164,14 @@
         VENDOR = data[0];
         document.getElementById('topbar-vendor').textContent = VENDOR.name;
         document.title = 'Track — ' + VENDOR.name;
+        var logoEl   = document.getElementById('topbar-vendor-logo');
+        var nameEl   = document.getElementById('topbar-vendor-name');
         if (VENDOR.logo_url) {
-          var logoEl = document.getElementById('topbar-vendor-logo');
           logoEl.src = VENDOR.logo_url;
           logoEl.alt = VENDOR.name;
           logoEl.style.display = 'inline-block';
+        } else {
+          nameEl.textContent = VENDOR.name;
         }
       }
     }).catch(function(){});
