@@ -1437,8 +1437,20 @@
     var vendorChatId = currentVendor ? currentVendor.telegram_chat_id : null;
     var itemsText = formatItemsForTelegram(order.items_json || order.items);
     var vendorName = currentVendor ? currentVendor.name : '—';
-    var msgSuper = '✅ Ready for Delivery — Klinpal\n\nOrder ID: ' + order.order_id + '\nVendor: ' + vendorName + '\nCustomer: ' + (order.customer_name||'—') + '\nPhone: ' + (order.phone||'—') + '\nAddress: ' + (order.address||'—') + '\n\n?? Items Ready:\n' + itemsText + '\n\n?? Action required: Assign delivery rider';
-    var msgVendor = '✅ Order Ready for Delivery\n\nOrder ID: ' + order.order_id + '\nCustomer: ' + (order.customer_name||'—') + '\nPhone: ' + (order.phone||'—') + '\n\n?? Items Ready:\n' + itemsText + '\n\n⏳ Awaiting rider assignment';
+    var msgSuper = '✅ *Ready for Delivery — Klinpal*\n\n'
+      + '*Order ID:* ' + order.order_id + '\n'
+      + '*Vendor:* ' + vendorName + '\n'
+      + '*Customer:* ' + (order.customer_name||'—') + '\n'
+      + '*Phone:* ' + (order.phone||'—') + '\n\n'
+      + '*?? Address*\n' + (order.address||'—') + '\n\n'
+      + '*?? Items Ready:*\n' + itemsText + '\n\n'
+      + '?? *Action required: Assign delivery rider*';
+    var msgVendor = '✅ *Order Ready for Delivery*\n\n'
+      + '*Order ID:* ' + order.order_id + '\n'
+      + '*Customer:* ' + (order.customer_name||'—') + '\n'
+      + '*Phone:* ' + (order.phone||'—') + '\n\n'
+      + '*?? Items Ready:*\n' + itemsText + '\n\n'
+      + '⏳ Awaiting rider assignment';
     sendTelegramMsg(superadminChatId, msgSuper);
     if (vendorChatId) sendTelegramMsg(vendorChatId, msgVendor);
   }
@@ -1462,7 +1474,7 @@
   }
 
   function sendTelegramMsg(chatId, text) {
-    fetch('https://api.telegram.org/bot8021952716:AAFg_CsHXdp3SGl6guMiPTqHKs9cPvpv_7o/sendMessage', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ chat_id: chatId, text: text }) }).catch(function() {});
+    fetch('https://api.telegram.org/bot8021952716:AAFg_CsHXdp3SGl6guMiPTqHKs9cPvpv_7o/sendMessage', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ chat_id: chatId, text: text, parse_mode: 'Markdown' }) }).catch(function() {});
   }
 
   function applyFilters() {
