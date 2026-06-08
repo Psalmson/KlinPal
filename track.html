@@ -371,11 +371,12 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           chat_id: SUPERADMIN_CHAT,
-          text: '\u26A0\uFE0F Disputed Delivery \u2014 Klinpal\n\n'
-            + 'Order ID: ' + orderId + '\n'
-            + 'Customer Phone: ' + customerPhone + '\n'
-            + 'Vendor: ' + (VENDOR ? VENDOR.name : '\u2014') + '\n\n'
-            + 'Issue: ' + comment
+          text: '\u26A0\uFE0F *Disputed Delivery \u2014 Klinpal*\n\n'
+            + '*Order ID:* ' + orderId + '\n'
+            + '*Customer Phone:* ' + customerPhone + '\n'
+            + '*Vendor:* ' + (VENDOR ? VENDOR.name : '\u2014') + '\n\n'
+            + '*Issue:*\n' + comment,
+          parse_mode: 'Markdown'
         })
       }).catch(function(){});
       renderOrders();
