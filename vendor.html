@@ -810,6 +810,38 @@
   var currentStaff     = null;
   var loginMode        = 'vendor';
   var realtimeChannel  = null;
+
+  function formatItemsCompact(itemsJson, itemsFlat) {
+    if (!itemsJson) return itemsFlat || '—';
+    var data = typeof itemsJson === 'string'
+      ? (function(){ try{return JSON.parse(itemsJson);}catch(e){return null;} })()
+      : itemsJson;
+    if (!data || typeof data !== 'object' || Array.isArray(data)) return itemsFlat || '—';
+    return Object.keys(data).map(function(cat) {
+      var svcs = data[cat].map(function(s){ return s.name + ' ×' + s.qty; }).join(', ');
+      return cat + ': ' + svcs;
+    }).join(' | ');
+  }
+
+  function formatItemsGroupedHtml(itemsJson, itemsFlat) {
+    if (!itemsJson) return '<span style="color:var(--gray)">' + (itemsFlat||'—') + '</span>';
+    var data = typeof itemsJson === 'string'
+      ? (function(){ try{return JSON.parse(itemsJson);}catch(e){return null;} })()
+      : itemsJson;
+    if (!data || typeof data !== 'object' || Array.isArray(data)) return '<span style="color:var(--gray)">' + (itemsFlat||'—') + '</span>';
+    var html = '';
+    Object.keys(data).forEach(function(cat) {
+      html += '<div style="font-size:11px;font-weight:700;color:var(--gray2);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:3px;margin-top:8px">' + cat + '</div>';
+      data[cat].forEach(function(s) {
+        html += '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--white)">'
+          + '<span>' + s.name + ' ×' + s.qty + '</span>'
+          + (s.price ? '<span style="color:var(--gray)">₦' + (s.price*s.qty).toLocaleString() + '</span>' : '')
+          + '</div>';
+      });
+    });
+    return html;
+  }
+
   var STATUS_LABELS = {
     'Pending':               'Order received, awaiting pickup',
     'Picked Up':             'Order picked, on the way to laundromat',
@@ -1274,7 +1306,7 @@
         + '<td><div style="font-weight:600;cursor:pointer;color:var(--sky)" onclick="showCustomer(\'' + o.order_id + '\')">' + (o.customer_name || '—') + ' ↗</div>'
         +     '<div style="font-size:12px;color:var(--gray)">' + (o.phone || '') + '</div>'
         +     '<div style="font-size:11px;color:var(--gray);max-width:180px;margin-top:2px">' + (o.address || '') + '</div></td>'
-        + '<td style="font-size:12px;color:var(--gray);max-width:160px">' + (o.items || '—') + '</td>'
+        + '<td style="font-size:12px;color:var(--gray);max-width:180px">' + formatItemsCompact(o.items_json, o.items) + '</td>'
         + '<td><div style="font-family:var(--font-mono)">₦' + (Number(o.subtotal) || 0).toLocaleString() + '</div>'
         +     (isStaffSession ? '' : '<div style="font-size:11px;color:var(--red)">-₦' + (Number(o.platform_fee) || 0).toLocaleString() + ' platform fee</div>') + '</td>'
         + '<td><span style="font-size:12px;color:' + ((o.payment_status==='Paid') ? 'var(--green)' : (o.payment_status==='Not Paid') ? 'var(--red)' : 'var(--amber)') + '">' + (o.payment_status || 'Pending') + '</span></td>'
@@ -1453,7 +1485,7 @@
     document.getElementById('md-name').textContent    = o.customer_name || '—';
     document.getElementById('md-phone').textContent   = o.phone || '—';
     document.getElementById('md-address').textContent = o.address || '—';
-    document.getElementById('md-items').textContent   = o.items || '—';
+    document.getElementById('md-items').innerHTML = formatItemsGroupedHtml(o.items_json, o.items);
     document.getElementById('md-total').textContent   = '₦' + (Number(o.subtotal) || 0).toLocaleString();
     document.getElementById('customer-modal').classList.add('open');
   }
