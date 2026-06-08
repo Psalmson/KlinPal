@@ -434,10 +434,10 @@ body {
 .summary-cat-label {
   display: flex;
   align-items: center;
-  padding: 10px 18px 6px;
+  padding: 12px 18px 8px;
   font-size: 10px;
   font-weight: 700;
-  color: var(--teal-dark);
+  color: var(--gray-700);
   text-transform: uppercase;
   letter-spacing: 1px;
   background: var(--gray-50);
