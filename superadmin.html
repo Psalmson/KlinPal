@@ -831,6 +831,58 @@
   };
   function statusLabel(s) { return STATUS_LABELS[s] || s || 'Unknown'; }
 
+
+  function formatItemsForTelegram(itemsJson, itemsFlat) {
+    if (!itemsJson) return itemsFlat || '—';
+    var data = typeof itemsJson === 'string'
+      ? (function(){ try{return JSON.parse(itemsJson);}catch(e){return null;} })()
+      : itemsJson;
+    if (!data || typeof data !== 'object' || Array.isArray(data)) return itemsFlat || '—';
+    var lines = [];
+    Object.keys(data).forEach(function(cat) {
+      lines.push('┌─ ' + cat);
+      var svcs = data[cat];
+      if (Array.isArray(svcs)) {
+        svcs.forEach(function(s, i) {
+          var prefix = i === svcs.length-1 ? '└── ' : '├── ';
+          lines.push('   ' + prefix + s.name + ' × ' + s.qty + (s.price ? ' — ₦' + (s.price*s.qty).toLocaleString() : ''));
+        });
+      }
+    });
+    return lines.join('\n');
+  }
+
+  function formatItemsCompact(itemsJson, itemsFlat) {
+    if (!itemsJson) return itemsFlat || '—';
+    var data = typeof itemsJson === 'string'
+      ? (function(){ try{return JSON.parse(itemsJson);}catch(e){return null;} })()
+      : itemsJson;
+    if (!data || typeof data !== 'object' || Array.isArray(data)) return itemsFlat || '—';
+    return Object.keys(data).map(function(cat) {
+      var svcs = data[cat].map(function(s){ return s.name + ' ×' + s.qty; }).join(', ');
+      return cat + ': ' + svcs;
+    }).join(' | ');
+  }
+
+  function formatItemsGroupedHtml(itemsJson, itemsFlat) {
+    if (!itemsJson) return '<span style="color:var(--gray)">' + (itemsFlat||'—') + '</span>';
+    var data = typeof itemsJson === 'string'
+      ? (function(){ try{return JSON.parse(itemsJson);}catch(e){return null;} })()
+      : itemsJson;
+    if (!data || typeof data !== 'object' || Array.isArray(data)) return '<span style="color:var(--gray)">' + (itemsFlat||'—') + '</span>';
+    var html = '';
+    Object.keys(data).forEach(function(cat) {
+      html += '<div style="font-size:11px;font-weight:700;color:var(--gray2);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:3px;margin-top:8px">' + cat + '</div>';
+      data[cat].forEach(function(s) {
+        html += '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--white)">'
+          + '<span>' + s.name + ' ×' + s.qty + '</span>'
+          + (s.price ? '<span style="color:var(--gray)">₦' + (s.price*s.qty).toLocaleString() + '</span>' : '')
+          + '</div>';
+      });
+    });
+    return html;
+  }
+
   var _sessionToken = null;
   var GOOGLE_MAPS_KEY = 'AIzaSyA4mpTBCqmyZpCZFtP-_oVvjs_8AhNoSa0';
 
@@ -1352,7 +1404,7 @@
       var mainRow = '<tr>'
         +'<td><div class="mono">'+(o.order_id||'\u2014')+'</div><div style="font-size:11px;color:var(--gray);margin-top:3px">'+date+'</div></td>'
         +'<td><div style="font-weight:600">'+(o.customer_name||'\u2014')+'</div><div style="font-size:12px;color:var(--gray)">'+(o.phone||'')+'</div><div style="font-size:11px;color:var(--gray);max-width:180px;margin-top:2px">'+(o.address||'')+'</div></td>'
-        +'<td style="font-size:12px;color:var(--gray);max-width:160px">'+(o.items||'\u2014')+'</td>'
+        +'<td style="font-size:12px;color:var(--gray);max-width:180px">'+formatItemsCompact(o.items_json,o.items)+'</td>'
         +'<td><span class="mono">\u20A6'+(Number(o.subtotal)||0).toLocaleString()+'</span>'
         +'<div style="font-size:11px;color:var(--gray);margin-top:3px">+\u20A6'+delivFee.toLocaleString()+' pickup & delivery</div>'
         +'<div style="font-size:11px;color:var(--gray)">+\u20A6'+(Number(o.service_fee)||0).toLocaleString()+' service fee</div>'
@@ -1462,7 +1514,7 @@
           +'Drop off at: '+vendorName+'\n'
           +'Vendor address: '+vendorAddr+'\n'
           +'Vendor phone: '+vendorPhone+'\n'
-          +'Items: '+(o ? o.items : '\u2014')+'\n'
+          +'Items: '+(o ? formatItemsForTelegram(o.items_json, o.items) : '\u2014')+'\n'
           +'Your commission: \u20A6'+pickupComm.toLocaleString()
         );
       }
@@ -1506,7 +1558,7 @@
           +'Vendor address: '+vendorAddr+'\n'
           +'Vendor phone: '+vendorPhone+'\n'
           +'Delivery address: '+(o ? o.address : '\u2014')+'\n'
-          +'Items: '+(o ? o.items : '\u2014')+'\n'
+          +'Items: '+(o ? formatItemsForTelegram(o.items_json, o.items) : '\u2014')+'\n'
           +'Your commission: \u20A6'+delivComm.toLocaleString()
         );
       }
@@ -1653,7 +1705,7 @@
     document.getElementById('odm-name').textContent       = o.customer_name || '\u2014';
     document.getElementById('odm-phone').textContent      = o.phone || '';
     document.getElementById('odm-address').textContent    = o.address || '';
-    document.getElementById('odm-items').textContent      = o.items || '\u2014';
+    document.getElementById('odm-items').innerHTML = formatItemsGroupedHtml(o.items_json, o.items);
     document.getElementById('odm-subtotal').textContent   = '\u20A6' + (Number(o.subtotal)||0).toLocaleString();
     document.getElementById('odm-delivery-fee').textContent = '\u20A6' + (Number(o.delivery_fee)||0).toLocaleString();
     document.getElementById('odm-service-fee').textContent  = '\u20A6' + (Number(o.service_fee)||0).toLocaleString();
@@ -1998,7 +2050,7 @@
         return '<tr>'
           +'<td><div class="mono" style="color:var(--teal)">'+(o.order_id||'—')+'</div><div style="font-size:11px;color:var(--gray)">'+date+'</div></td>'
           +'<td><div style="font-weight:600">'+(o.customer_name||'—')+'</div><div style="font-size:11px;color:var(--gray);max-width:160px">'+(o.address||'')+'</div></td>'
-          +'<td style="font-size:12px;color:var(--gray)">'+(o.items||'—')+'</td>'
+          +'<td style="font-size:12px;color:var(--gray);max-width:160px">'+formatItemsCompact(o.items_json,o.items)+'</td>'
           +'<td><div style="font-size:11px;color:var(--teal);font-weight:600;margin-bottom:4px">'+roleLabel+'</div>'
           +'<div style="font-family:var(--font-mono)">₦'+myEarned.toLocaleString()+'</div>'
           +settledLabel+'</td>'
