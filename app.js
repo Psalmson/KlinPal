@@ -783,7 +783,7 @@ function renderServices() {
       );
     }).join('');
 
-    var header = categories.length > 1 ? '<div class="cat-header">' + cat + '</div>' : '';
+    var header = '<div class="cat-header">' + cat + '</div>';
     return '<div class="cat-section">' + header + rows + '</div>';
   }).join('');
 
@@ -885,15 +885,14 @@ function renderSummary() {
     catMap[cat].push(s);
   });
   var groupedRows = catOrder.map(function(cat) {
-    var showHeader = catOrder.length > 1;
-    var hdr = showHeader ? '<div style="font-size:11px;font-weight:600;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.8px;margin:12px 0 6px">' + cat + '</div>' : '';
+    var hdr = '<div class="summary-cat-label">' + cat + '</div>';
     var catRows = catMap[cat].map(function(s) {
       return '<div class="summary-row">'
         + '<span>' + s.name + ' <small style="color:var(--gray-500)">\xD7' + s.qty + '</small></span>'
         + '<span>\u20A6' + (s.price * s.qty).toLocaleString() + '</span>'
         + '</div>';
     }).join('');
-    return hdr + catRows;
+    return '<div class="summary-cat-section">' + hdr + catRows + '</div>';
   }).join('');
   document.getElementById('summary-items').innerHTML = groupedRows
     + (discount > 0
@@ -906,6 +905,7 @@ function renderSummary() {
         + '<span style="text-decoration:line-through;color:var(--gray-500)">\u20A6' + rawSub.toLocaleString() + '</span>'
         + '</div>'
       : '')
+    + '<div class="summary-totals-divider"></div>'
     + '<div class="summary-row sub-row">'
     +   '<span>Subtotal</span>'
     +   '<span>\u20A6' + sub.toLocaleString() + '</span>'
