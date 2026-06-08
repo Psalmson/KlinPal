@@ -1506,16 +1506,16 @@
         var vendorName = currentDrillVendor ? (currentDrillVendor.name || '\u2014') : '\u2014';
         var vendorPhone = currentDrillVendor ? (currentDrillVendor.phone || '\u2014') : '\u2014';
         sendTelegram(pickupDrv.telegram_chat_id,
-          '\uD83D\uDEF5 Pickup Assignment\n\n'
-          +'Order ID: '+orderId+'\n'
-          +'Customer: '+(o ? o.customer_name : '\u2014')+'\n'
-          +'Phone: '+(o ? o.phone : '\u2014')+'\n'
-          +'Pickup address: '+(o ? o.address : '\u2014')+'\n'
-          +'Drop off at: '+vendorName+'\n'
-          +'Vendor address: '+vendorAddr+'\n'
-          +'Vendor phone: '+vendorPhone+'\n'
-          +'Items: '+(o ? formatItemsForTelegram(o.items_json, o.items) : '\u2014')+'\n'
-          +'Your commission: \u20A6'+pickupComm.toLocaleString()
+          '\uD83D\uDEF5 *Pickup Assignment*\n\n'
+          +'*Order ID:* '+orderId+'\n'
+          +'*Customer:* '+(o ? o.customer_name : '\u2014')+'\n'
+          +'*Phone:* '+(o ? o.phone : '\u2014')+'\n\n'
+          +'*\uD83D\uDCCD Pickup Address*\n'+(o ? o.address : '\u2014')+'\n\n'
+          +'*\uD83C\uDFEA Drop off at:* '+vendorName+'\n'
+          +'*Vendor Address:* '+vendorAddr+'\n'
+          +'*Vendor Phone:* '+vendorPhone+'\n\n'
+          +'*\uD83D\uDCE6 Items:*\n'+(o ? formatItemsForTelegram(o.items_json, o.items) : '\u2014')+'\n\n'
+          +'*\uD83D\uDCB0 Your commission: \u20A6'+pickupComm.toLocaleString()+'*'
         );
       }
     })
@@ -1550,26 +1550,26 @@
         var vendorName = currentDrillVendor ? (currentDrillVendor.name || '\u2014') : '\u2014';
         var vendorPhone = currentDrillVendor ? (currentDrillVendor.phone || '\u2014') : '\u2014';
         sendTelegram(delivDrv.telegram_chat_id,
-          '\uD83D\uDEF5 Delivery Assignment\n\n'
-          +'Order ID: '+orderId+'\n'
-          +'Customer: '+(o ? o.customer_name : '\u2014')+'\n'
-          +'Phone: '+(o ? o.phone : '\u2014')+'\n'
-          +'Collect from: '+vendorName+'\n'
-          +'Vendor address: '+vendorAddr+'\n'
-          +'Vendor phone: '+vendorPhone+'\n'
-          +'Delivery address: '+(o ? o.address : '\u2014')+'\n'
-          +'Items: '+(o ? formatItemsForTelegram(o.items_json, o.items) : '\u2014')+'\n'
-          +'Your commission: \u20A6'+delivComm.toLocaleString()
+          '\uD83D\uDEF5 *Delivery Assignment*\n\n'
+          +'*Order ID:* '+orderId+'\n'
+          +'*Customer:* '+(o ? o.customer_name : '\u2014')+'\n'
+          +'*Phone:* '+(o ? o.phone : '\u2014')+'\n\n'
+          +'*\uD83C\uDFEA Collect from:* '+vendorName+'\n'
+          +'*Vendor Address:* '+vendorAddr+'\n'
+          +'*Vendor Phone:* '+vendorPhone+'\n\n'
+          +'*\uD83D\uDCCD Delivery Address*\n'+(o ? o.address : '\u2014')+'\n\n'
+          +'*\uD83D\uDCE6 Items:*\n'+(o ? formatItemsForTelegram(o.items_json, o.items) : '\u2014')+'\n\n'
+          +'*\uD83D\uDCB0 Your commission: \u20A6'+delivComm.toLocaleString()+'*'
         );
       }
       // Notify vendor group when delivery rider assigned
       if (currentDrillVendor && currentDrillVendor.telegram_chat_id && delivDrv) {
         sendTelegram(currentDrillVendor.telegram_chat_id,
-          '\uD83D\uDEF5 Delivery Rider Assigned\n\n'
-          +'Order ID: '+orderId+'\n'
-          +'Customer: '+(o ? o.customer_name : '\u2014')+'\n\n'
-          +'Rider: '+delivDrv.name+'\n'
-          +'Phone: '+(delivDrv.phone || '\u2014')+'\n\n'
+          '\uD83D\uDEF5 *Delivery Rider Assigned*\n\n'
+          +'*Order ID:* '+orderId+'\n'
+          +'*Customer:* '+(o ? o.customer_name : '\u2014')+'\n\n'
+          +'*Rider:* '+delivDrv.name+'\n'
+          +'*Phone:* '+(delivDrv.phone || '\u2014')+'\n\n'
           +'\uD83D\uDCCD Rider is on the way to collect the order'
         );
       }
@@ -1800,16 +1800,16 @@
         var vendorName = currentDrillVendor ? (currentDrillVendor.name || '\u2014') : '\u2014';
         var vendorPhone = currentDrillVendor ? (currentDrillVendor.phone || '\u2014') : '\u2014';
         sendTelegram(pickupDrv.telegram_chat_id,
-          '\uD83D\uDEF5 Pickup Assignment\n\n'
-          + 'Order ID: ' + odmOrderId + '\n'
-          + 'Customer: ' + (o ? o.customer_name : '\u2014') + '\n'
-          + 'Phone: '    + (o ? o.phone : '\u2014') + '\n'
-          + 'Pickup address: ' + (o ? o.address : '\u2014') + '\n'
-          + 'Drop off at: ' + vendorName + '\n'
-          + 'Vendor address: ' + vendorAddr + '\n'
-          + 'Vendor phone: ' + vendorPhone + '\n'
-          + 'Items: '    + (o ? o.items : '\u2014') + '\n'
-          + 'Your commission: \u20A6' + pickupFee.toLocaleString()
+          '\uD83D\uDEF5 *Pickup Assignment*\n\n'
+          + '*Order ID:* ' + odmOrderId + '\n'
+          + '*Customer:* ' + (o ? o.customer_name : '\u2014') + '\n'
+          + '*Phone:* '    + (o ? o.phone : '\u2014') + '\n\n'
+          + '*\uD83D\uDCCD Pickup Address*\n' + (o ? o.address : '\u2014') + '\n\n'
+          + '*\uD83C\uDFEA Drop off at:* ' + vendorName + '\n'
+          + '*Vendor Address:* ' + vendorAddr + '\n'
+          + '*Vendor Phone:* ' + vendorPhone + '\n\n'
+          + '*\uD83D\uDCE6 Items:*\n' + (o ? formatItemsForTelegram(o.items_json, o.items) : '\u2014') + '\n\n'
+          + '*\uD83D\uDCB0 Your commission: \u20A6' + pickupFee.toLocaleString() + '*'
         );
       }
     })
@@ -1843,16 +1843,16 @@
         var vendorName = currentDrillVendor ? (currentDrillVendor.name || '\u2014') : '\u2014';
         var vendorPhone = currentDrillVendor ? (currentDrillVendor.phone || '\u2014') : '\u2014';
         sendTelegram(delivDrv.telegram_chat_id,
-          '\uD83D\uDEF5 Delivery Assignment\n\n'
-          + 'Order ID: ' + odmOrderId + '\n'
-          + 'Customer: ' + (o ? o.customer_name : '\u2014') + '\n'
-          + 'Phone: '    + (o ? o.phone : '\u2014') + '\n'
-          + 'Collect from: ' + vendorName + '\n'
-          + 'Vendor address: ' + vendorAddr + '\n'
-          + 'Vendor phone: ' + vendorPhone + '\n'
-          + 'Delivery address: ' + (o ? o.address : '\u2014') + '\n'
-          + 'Items: '    + (o ? o.items : '\u2014') + '\n'
-          + 'Your commission: \u20A6' + delivFeeR.toLocaleString()
+          '\uD83D\uDEF5 *Delivery Assignment*\n\n'
+          + '*Order ID:* ' + odmOrderId + '\n'
+          + '*Customer:* ' + (o ? o.customer_name : '\u2014') + '\n'
+          + '*Phone:* '    + (o ? o.phone : '\u2014') + '\n\n'
+          + '*\uD83C\uDFEA Collect from:* ' + vendorName + '\n'
+          + '*Vendor Address:* ' + vendorAddr + '\n'
+          + '*Vendor Phone:* ' + vendorPhone + '\n\n'
+          + '*\uD83D\uDCCD Delivery Address*\n' + (o ? o.address : '\u2014') + '\n\n'
+          + '*\uD83D\uDCE6 Items:*\n' + (o ? formatItemsForTelegram(o.items_json, o.items) : '\u2014') + '\n\n'
+          + '*\uD83D\uDCB0 Your commission: \u20A6' + delivFeeR.toLocaleString() + '*'
         );
       }
     })
@@ -1888,7 +1888,7 @@
 
 
   function sendTelegram(chatId, text) {
-    fetch('https://api.telegram.org/bot8021952716:AAFg_CsHXdp3SGl6guMiPTqHKs9cPvpv_7o/sendMessage', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ chat_id:chatId, text:text }) }).catch(function(){});
+    fetch('https://api.telegram.org/bot8021952716:AAFg_CsHXdp3SGl6guMiPTqHKs9cPvpv_7o/sendMessage', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ chat_id:chatId, text:text, parse_mode:'Markdown' }) }).catch(function(){});
   }
 
   function openAddRiderModal() { ['rider-name','rider-phone','rider-percentage','rider-telegram'].forEach(function(id){ document.getElementById(id).value=''; }); document.getElementById('add-rider-modal').classList.add('open'); }
