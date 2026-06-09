@@ -625,25 +625,7 @@
       if (filter === 'pending' && state !== 'pending') return false;
       if (filter === 'notpaid' && state !== 'notpaid') return false;
       if (filter === 'paid'    && state !== 'paid')    return false;
-      if (dateQ !== 'all') {
-        var d = new Date(o.created_at);
-        var now = new Date();
-        if (dateQ === 'today') {
-          if (d.toDateString() !== now.toDateString()) return false;
-        } else if (dateQ === 'yesterday') {
-          var yesterday = new Date(now); yesterday.setDate(yesterday.getDate()-1);
-          if (d.toDateString() !== yesterday.toDateString()) return false;
-        } else if (dateQ === 'week') {
-          var weekAgo = new Date(now - 7*24*60*60*1000);
-          if (d < weekAgo) return false;
-        } else if (dateQ === 'range') {
-          var from = document.getElementById('drv-filter-from') ? document.getElementById('drv-filter-from').value : '';
-          var to   = document.getElementById('drv-filter-to')   ? document.getElementById('drv-filter-to').value   : '';
-          if (from && d < new Date(from)) return false;
-          if (to   && d > new Date(new Date(to).getTime()+86400000)) return false;
-        }
-      }
-      return true;
+      return orderMatchesDateFilter(o);
     });
 
     if (!filtered.length) {
