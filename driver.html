@@ -618,8 +618,7 @@
 
   function renderOrders() {
     var wrap = document.getElementById('orders-wrap');
-    var filter = currentPillFilter || 'all';
-    var dateQ  = currentDateFilter || 'all';
+    var filter = activeFilter || 'all';
 
     var filtered = allOrders.filter(function(o) {
       var state = getRiderFeeState(o);
