@@ -642,7 +642,7 @@
       var stateColor = state === 'paid' ? 'var(--green)' : state === 'notpaid' ? 'var(--red)' : 'var(--amber)';
       var date       = o.created_at ? new Date(o.created_at).toLocaleDateString('en-GB') : '';
 
-      return '<div class="order-card" onclick="openOrderModal(\"' + o.order_id + '\")" style="cursor:pointer">'
+      return '<div class="order-card" onclick="openOrderModal(\'' + o.order_id + '\')" style="cursor:pointer">'
         + '<div class="order-card-top">'
         +   '<div><div class="order-id-tag">' + (o.order_id||'\u2014') + '</div><div class="order-date">' + date + '</div></div>'
         +   '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'
@@ -708,13 +708,13 @@
 
       + '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);margin-bottom:6px">Customer</div>'
       + '<div style="font-size:14px;font-weight:600;margin-bottom:3px">' + (o.customer_name||'\u2014') + '</div>'
-      + (o.phone ? '<div class="cust-phone" onclick="copyPhone(\"' + o.phone + '\",this)" style="cursor:pointer;margin-bottom:4px">' + o.phone + ' <span style="font-size:10px;color:var(--teal)">[Copy]</span></div>' : '')
+      + (o.phone ? '<div class="cust-phone" onclick="copyPhone(\'' + o.phone + '\',this)" style="cursor:pointer;margin-bottom:4px">' + o.phone + ' <span style="font-size:10px;color:var(--teal)">[Copy]</span></div>' : '')
       + '<div class="addr-box" style="margin-bottom:14px">' + (o.address||'\u2014') + '</div>'
 
       + (vendor ? '<div style="border-top:1px solid var(--navy3);padding-top:14px;margin-bottom:14px">'
         + '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);margin-bottom:6px">Laundromat</div>'
         + '<div style="font-size:14px;font-weight:600;margin-bottom:3px">' + vendor.name + '</div>'
-        + (vendor.phone ? '<div class="cust-phone" onclick="copyPhone(\"' + vendor.phone + '\",this)" style="cursor:pointer;margin-bottom:4px">' + vendor.phone + ' <span style="font-size:10px;color:var(--teal)">[Copy]</span></div>' : '')
+        + (vendor.phone ? '<div class="cust-phone" onclick="copyPhone(\'' + vendor.phone + '\',this)" style="cursor:pointer;margin-bottom:4px">' + vendor.phone + ' <span style="font-size:10px;color:var(--teal)">[Copy]</span></div>' : '')
         + (vendor.address ? '<div class="addr-box">' + vendor.address + '</div>' : '')
         + '</div>' : '')
 
