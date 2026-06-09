@@ -67,7 +67,10 @@
   .refresh-btn:hover{color:var(--white);}
 
   /* ── ORDER CARDS ── */
-  .order-card{background:var(--navy2);border:1px solid var(--navy3);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;}
+  .order-card{background:var(--navy2);border:1px solid var(--navy3);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;padding:14px 16px;cursor:pointer;}
+  .order-card:hover{background:rgba(255,255,255,0.02);}
+  .order-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px;}
+  .order-date{font-size:11px;color:var(--gray);margin-top:2px;}
   .order-card-collapsed{padding:14px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;}
   .order-card-collapsed:hover{background:rgba(255,255,255,0.02);}
   .order-card-left{flex:1;min-width:0;}
@@ -642,7 +645,7 @@
       var stateColor = state === 'paid' ? 'var(--green)' : state === 'notpaid' ? 'var(--red)' : 'var(--amber)';
       var date       = o.created_at ? new Date(o.created_at).toLocaleDateString('en-GB') : '';
 
-      return '<div class="order-card" onclick="openOrderModal(\'' + o.order_id + '\')" style="cursor:pointer">'
+      return '<div class="order-card" onclick="openOrderModal(\'' + o.order_id + '\')">'
         + '<div class="order-card-top">'
         +   '<div><div class="order-id-tag">' + (o.order_id||'\u2014') + '</div><div class="order-date">' + date + '</div></div>'
         +   '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'
