@@ -743,7 +743,9 @@
           <option value="Delivered to Vendor">Delivered to Vendor</option>
           <option value="Processing">Processing</option>
           <option value="Ready">Ready</option>
+          <option value="Out for Delivery">Out for Delivery</option>
           <option value="Delivered to Customer">Delivered to Customer</option>
+          <option value="Disputed">Disputed</option>
           <option value="Cancelled">Cancelled</option>
         </select>
       </div>
@@ -781,6 +783,15 @@
           <span style="color:var(--teal)">Klinpal delivery revenue</span><span style="color:var(--teal)" id="odm-klinpal-revenue">&mdash;</span>
         </div>
       </div>
+    </div>
+
+    <!-- Handoff Audit -->
+    <div id="odm-audit-wrap" style="border-top:1px solid var(--navy3);padding-top:16px;margin-top:16px;display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:12px" onclick="odmToggleAudit()">
+        <div style="font-size:13px;font-weight:700" id="odm-audit-title">Handoff Audit</div>
+        <span style="font-size:16px;color:var(--gray)" id="odm-audit-chevron">&#8250;</span>
+      </div>
+      <div id="odm-audit-body" style="display:none"></div>
     </div>
   </div>
 </div>
@@ -1383,7 +1394,7 @@
 
   function renderDrillTable(orders) {
     var payStatuses = ['Pending','Paid','Not Paid'];
-    var statuses    = ['Pending','Picked Up','Delivered to Vendor','Processing','Ready','Delivered to Customer','Cancelled'];
+    var statuses    = ['Pending','Picked Up','Delivered to Vendor','Processing','Ready','Out for Delivery','Delivered to Customer','Disputed','Cancelled'];
     var driverOpts  = '<option value="">Unassigned</option>' + allDrivers.filter(function(d){ return d.active; }).map(function(d){
       return '<option value="'+d.id+'">'+d.name+' ('+d.percentage+'%)</option>';
     }).join('');
@@ -1743,12 +1754,116 @@
     }
 
     odmUpdateCommissionDisplay(o);
+    odmRenderAudit(o);
     document.getElementById('order-detail-modal').classList.add('open');
   }
 
   function closeOrderDetailModal() {
     document.getElementById('order-detail-modal').classList.remove('open');
     odmOrderId = null;
+  }
+
+  function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function odmToggleAudit() {
+    var body    = document.getElementById('odm-audit-body');
+    var chevron = document.getElementById('odm-audit-chevron');
+    var open    = body.style.display === 'block';
+    body.style.display    = open ? 'none' : 'block';
+    chevron.style.transform = open ? '' : 'rotate(90deg)';
+  }
+
+  function odmRenderAudit(o) {
+    var wrap    = document.getElementById('odm-audit-wrap');
+    var body    = document.getElementById('odm-audit-body');
+    var chevron = document.getElementById('odm-audit-chevron');
+
+    var steps = [
+      { key: 'pickup_confirmation',          label: 'Handoff 1 — Pickup from Customer',     data: o.pickup_confirmation },
+      { key: 'vendor_receipt_confirmation',  label: 'Handoff 2 — Receipt at Vendor',        data: o.vendor_receipt_confirmation },
+      { key: 'vendor_dispatch_confirmation', label: 'Handoff 3 — Dispatch from Vendor',     data: o.vendor_dispatch_confirmation },
+      { key: 'rider_collection_confirmation',label: 'Handoff 4 — Collection by Rider',      data: o.rider_collection_confirmation },
+      { key: 'customer_receipt_confirmation',label: 'Handoff 5 — Receipt by Customer',      data: o.customer_receipt_confirmation },
+    ];
+
+    var hasAny = steps.some(function(s) { return s.data; });
+    if (!hasAny) { wrap.style.display = 'none'; return; }
+
+    wrap.style.display = 'block';
+    var isDisputed = o.status === 'Disputed';
+
+    if (isDisputed) {
+      body.style.display      = 'block';
+      chevron.style.transform = 'rotate(90deg)';
+    } else {
+      body.style.display      = 'none';
+      chevron.style.transform = '';
+    }
+
+    // Disputed banner
+    var disputeHtml = '';
+    if (isDisputed && o.customer_receipt_confirmation) {
+      var crc = typeof o.customer_receipt_confirmation === 'string' ? JSON.parse(o.customer_receipt_confirmation) : o.customer_receipt_confirmation;
+      if (crc && crc.comment) {
+        disputeHtml = '<div style="background:rgba(255,87,87,0.1);border:1px solid rgba(255,87,87,0.3);border-radius:8px;padding:12px;margin-bottom:14px">'
+          + '<div style="font-size:11px;font-weight:700;color:var(--red);margin-bottom:4px">&#9888; Customer Dispute</div>'
+          + '<div style="font-size:12px;color:var(--white);line-height:1.5">' + escHtml(crc.comment) + '</div>'
+          + '</div>';
+      }
+    }
+
+    var stepsHtml = steps.map(function(step) {
+      var conf = step.data;
+      if (conf && typeof conf === 'string') { try { conf = JSON.parse(conf); } catch(e) { conf = null; } }
+
+      if (!conf) {
+        return '<div style="display:flex;gap:12px;margin-bottom:12px;opacity:0.4">'
+          + '<div style="flex-shrink:0;width:6px;height:6px;border-radius:50%;background:var(--gray);margin-top:5px"></div>'
+          + '<div style="font-size:12px;color:var(--gray)">' + step.label + '</div>'
+          + '</div>';
+      }
+
+      var match      = conf.match !== false;
+      var dotColor   = match ? 'var(--green)' : 'var(--red)';
+      var matchBadge = match
+        ? '<span style="font-size:10px;font-weight:700;color:var(--green)">&#10003; Match</span>'
+        : '<span style="font-size:10px;font-weight:700;color:var(--red)">&#9888; Mismatch</span>';
+
+      var when = conf.confirmed_at ? new Date(conf.confirmed_at).toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) : '';
+      var who  = conf.confirmed_by || '';
+
+      var countsHtml = '';
+      if (conf.counts && typeof conf.counts === 'object') {
+        countsHtml = '<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px">'
+          + Object.keys(conf.counts).map(function(cat) {
+              return '<span style="background:var(--navy2);border-radius:4px;padding:2px 8px;font-size:11px;color:var(--white)">'
+                + escHtml(cat) + ' &times;' + conf.counts[cat] + '</span>';
+            }).join('')
+          + '</div>';
+      }
+
+      var commentHtml = '';
+      if (conf.override && conf.comment) {
+        commentHtml = '<div style="margin-top:6px;font-size:11px;color:var(--amber);font-style:italic">"' + escHtml(conf.comment) + '"</div>';
+      }
+
+      return '<div style="display:flex;gap:12px;margin-bottom:14px">'
+        + '<div style="flex-shrink:0;width:6px;height:6px;border-radius:50%;background:' + dotColor + ';margin-top:5px"></div>'
+        + '<div style="flex:1;min-width:0">'
+        +   '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">'
+        +     '<div style="font-size:12px;font-weight:600;color:var(--white)">' + step.label + '</div>'
+        +     matchBadge
+        +   '</div>'
+        +   '<div style="font-size:11px;color:var(--gray);margin-top:2px">' + escHtml(who) + (when ? ' &middot; ' + when : '') + '</div>'
+        +   countsHtml
+        +   commentHtml
+        + '</div>'
+        + '</div>';
+    }).join('');
+
+    body.innerHTML = disputeHtml + stepsHtml;
   }
 
   function odmUpdateCommissionDisplay(o) {
