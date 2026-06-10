@@ -681,9 +681,8 @@
           var svcs = data[cat];
           if (Array.isArray(svcs)) {
             svcs.forEach(function(s) {
-              itemsHtml += '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--white);padding:3px 0">'
-                + '<span>' + s.name + ' \xD7 ' + s.qty + '</span>'
-                + (s.price ? '<span style="color:var(--gray)">\u20A6' + (s.price*s.qty).toLocaleString() + '</span>' : '')
+              itemsHtml += '<div style="font-size:12px;color:var(--white);padding:3px 0">'
+                + s.name + ' \xD7 ' + s.qty
                 + '</div>';
             });
           }
