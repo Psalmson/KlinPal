@@ -788,7 +788,7 @@
     <!-- Handoff Audit -->
     <div id="odm-audit-wrap" style="border-top:1px solid var(--navy3);padding-top:16px;margin-top:16px;display:none">
       <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:12px" onclick="odmToggleAudit()">
-        <div style="font-size:13px;font-weight:700" id="odm-audit-title">Handoff Audit</div>
+        <div style="font-size:13px;font-weight:700">Handoff Audit</div>
         <span style="font-size:16px;color:var(--gray)" id="odm-audit-chevron">&#8250;</span>
       </div>
       <div id="odm-audit-body" style="display:none"></div>
@@ -1413,7 +1413,7 @@
       var klinpal     = delivFee - pickupComm - delivComm;
 
       var mainRow = '<tr>'
-        +'<td><div class="mono">'+(o.order_id||'\u2014')+'</div><div style="font-size:11px;color:var(--gray);margin-top:3px">'+date+'</div></td>'
+        +'<td><div class="mono" onclick="openOrderDetailModal(\''+o.order_id+'\')" style="cursor:pointer;color:var(--teal);text-decoration:underline;text-underline-offset:3px">'+(o.order_id||'\u2014')+'</div><div style="font-size:11px;color:var(--gray);margin-top:3px">'+date+'</div></td>'
         +'<td><div style="font-weight:600">'+(o.customer_name||'\u2014')+'</div><div style="font-size:12px;color:var(--gray)">'+(o.phone||'')+'</div><div style="font-size:11px;color:var(--gray);max-width:180px;margin-top:2px">'+(o.address||'')+'</div></td>'
         +'<td style="font-size:12px;color:var(--gray);max-width:180px">'+formatItemsCompact(o.items_json,o.items)+'</td>'
         +'<td><span class="mono">\u20A6'+(Number(o.subtotal)||0).toLocaleString()+'</span>'
@@ -1771,7 +1771,7 @@
     var body    = document.getElementById('odm-audit-body');
     var chevron = document.getElementById('odm-audit-chevron');
     var open    = body.style.display === 'block';
-    body.style.display    = open ? 'none' : 'block';
+    body.style.display      = open ? 'none' : 'block';
     chevron.style.transform = open ? '' : 'rotate(90deg)';
   }
 
@@ -1781,11 +1781,11 @@
     var chevron = document.getElementById('odm-audit-chevron');
 
     var steps = [
-      { key: 'pickup_confirmation',          label: 'Handoff 1 — Pickup from Customer',     data: o.pickup_confirmation },
-      { key: 'vendor_receipt_confirmation',  label: 'Handoff 2 — Receipt at Vendor',        data: o.vendor_receipt_confirmation },
-      { key: 'vendor_dispatch_confirmation', label: 'Handoff 3 — Dispatch from Vendor',     data: o.vendor_dispatch_confirmation },
-      { key: 'rider_collection_confirmation',label: 'Handoff 4 — Collection by Rider',      data: o.rider_collection_confirmation },
-      { key: 'customer_receipt_confirmation',label: 'Handoff 5 — Receipt by Customer',      data: o.customer_receipt_confirmation },
+      { label: 'Handoff 1 \u2014 Pickup from Customer',  data: o.pickup_confirmation },
+      { label: 'Handoff 2 \u2014 Receipt at Vendor',     data: o.vendor_receipt_confirmation },
+      { label: 'Handoff 3 \u2014 Dispatch from Vendor',  data: o.vendor_dispatch_confirmation },
+      { label: 'Handoff 4 \u2014 Collection by Rider',   data: o.rider_collection_confirmation },
+      { label: 'Handoff 5 \u2014 Receipt by Customer',   data: o.customer_receipt_confirmation },
     ];
 
     var hasAny = steps.some(function(s) { return s.data; });
@@ -1802,7 +1802,6 @@
       chevron.style.transform = '';
     }
 
-    // Disputed banner
     var disputeHtml = '';
     if (isDisputed && o.customer_receipt_confirmation) {
       var crc = typeof o.customer_receipt_confirmation === 'string' ? JSON.parse(o.customer_receipt_confirmation) : o.customer_receipt_confirmation;
@@ -1830,7 +1829,6 @@
       var matchBadge = match
         ? '<span style="font-size:10px;font-weight:700;color:var(--green)">&#10003; Match</span>'
         : '<span style="font-size:10px;font-weight:700;color:var(--red)">&#9888; Mismatch</span>';
-
       var when = conf.confirmed_at ? new Date(conf.confirmed_at).toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) : '';
       var who  = conf.confirmed_by || '';
 
@@ -1839,7 +1837,7 @@
         countsHtml = '<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px">'
           + Object.keys(conf.counts).map(function(cat) {
               return '<span style="background:var(--navy2);border-radius:4px;padding:2px 8px;font-size:11px;color:var(--white)">'
-                + escHtml(cat) + ' &times;' + conf.counts[cat] + '</span>';
+                + escHtml(cat) + ' \u00D7' + conf.counts[cat] + '</span>';
             }).join('')
           + '</div>';
       }
@@ -1856,7 +1854,7 @@
         +     '<div style="font-size:12px;font-weight:600;color:var(--white)">' + step.label + '</div>'
         +     matchBadge
         +   '</div>'
-        +   '<div style="font-size:11px;color:var(--gray);margin-top:2px">' + escHtml(who) + (when ? ' &middot; ' + when : '') + '</div>'
+        +   '<div style="font-size:11px;color:var(--gray);margin-top:2px">' + escHtml(who) + (when ? ' \u00B7 ' + when : '') + '</div>'
         +   countsHtml
         +   commentHtml
         + '</div>'
