@@ -9,4 +9,5 @@
 var KLINPAL_ENV = {
   SUPABASE_URL: 'https://mlgdqxqzpzfzndjhywqf.supabase.co',
   SUPABASE_KEY: 'sb_publishable_TS5uGf7KzLKxeQw8bxDKYw_HwBNNBeA',
+  SUPERADMIN_CHAT_ID: '-5041093515',
 };
