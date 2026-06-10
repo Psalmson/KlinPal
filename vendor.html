@@ -776,6 +776,14 @@
     <div class="modal-field"><div class="modal-field-label">Address</div><div class="modal-field-value" id="md-address">—</div></div>
     <div class="modal-field"><div class="modal-field-label">Items Ordered</div><div class="modal-field-value" id="md-items">—</div></div>
     <div class="modal-field"><div class="modal-field-label">Order Total</div><div class="modal-field-value" id="md-total">—</div></div>
+    <!-- Handoff Audit (vendor scope: handoffs 2 & 3 only) -->
+    <div id="md-audit-wrap" style="border-top:1px solid var(--navy3);padding-top:14px;margin-top:14px;display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:10px" onclick="mdToggleAudit()">
+        <div style="font-size:13px;font-weight:700">Handoff Audit</div>
+        <span style="font-size:16px;color:var(--gray)" id="md-audit-chevron">&#8250;</span>
+      </div>
+      <div id="md-audit-body" style="display:none"></div>
+    </div>
     <button class="modal-close" onclick="closeModal()">Close</button>
   </div>
 </div>
@@ -1499,9 +1507,97 @@
     document.getElementById('md-address').textContent = o.address || '—';
     document.getElementById('md-items').innerHTML = formatItemsGroupedHtml(o.items_json, o.items);
     document.getElementById('md-total').textContent   = '₦' + (Number(o.subtotal) || 0).toLocaleString();
+    mdRenderAudit(o);
     document.getElementById('customer-modal').classList.add('open');
   }
   function closeModal() { document.getElementById('customer-modal').classList.remove('open'); }
+
+  function mdToggleAudit() {
+    var body    = document.getElementById('md-audit-body');
+    var chevron = document.getElementById('md-audit-chevron');
+    var open    = body.style.display === 'block';
+    body.style.display      = open ? 'none' : 'block';
+    chevron.style.transform = open ? '' : 'rotate(90deg)';
+  }
+
+  function mdEscHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function mdRenderAudit(o) {
+    var wrap = document.getElementById('md-audit-wrap');
+    var body = document.getElementById('md-audit-body');
+    var chevron = document.getElementById('md-audit-chevron');
+
+    var steps = [
+      { label: 'Handoff 2 — Receipt at Vendor',    data: o.vendor_receipt_confirmation },
+      { label: 'Handoff 3 — Dispatch from Vendor', data: o.vendor_dispatch_confirmation },
+    ];
+
+    var hasAny = steps.some(function(s) { return s.data; });
+    if (!hasAny) { wrap.style.display = 'none'; return; }
+
+    wrap.style.display = 'block';
+    var isDisputed = o.status === 'Disputed';
+
+    if (isDisputed) {
+      body.style.display      = 'block';
+      chevron.style.transform = 'rotate(90deg)';
+    } else {
+      body.style.display      = 'none';
+      chevron.style.transform = '';
+    }
+
+    var stepsHtml = steps.map(function(step) {
+      var conf = step.data;
+      if (conf && typeof conf === 'string') { try { conf = JSON.parse(conf); } catch(e) { conf = null; } }
+
+      if (!conf) {
+        return '<div style="display:flex;gap:12px;margin-bottom:12px;opacity:0.4">'
+          + '<div style="flex-shrink:0;width:6px;height:6px;border-radius:50%;background:var(--gray);margin-top:5px"></div>'
+          + '<div style="font-size:12px;color:var(--gray)">' + step.label + '</div>'
+          + '</div>';
+      }
+
+      var match      = conf.match !== false;
+      var dotColor   = match ? 'var(--green)' : 'var(--red)';
+      var matchBadge = match
+        ? '<span style="font-size:10px;font-weight:700;color:var(--green)">&#10003; Match</span>'
+        : '<span style="font-size:10px;font-weight:700;color:var(--red)">&#9888; Mismatch</span>';
+      var when = conf.confirmed_at ? new Date(conf.confirmed_at).toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) : '';
+      var who  = conf.confirmed_by || '';
+
+      var countsHtml = '';
+      if (conf.counts && typeof conf.counts === 'object') {
+        countsHtml = '<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px">'
+          + Object.keys(conf.counts).map(function(cat) {
+              return '<span style="background:var(--navy3);border-radius:4px;padding:2px 8px;font-size:11px;color:var(--white)">'
+                + mdEscHtml(cat) + ' &times;' + conf.counts[cat] + '</span>';
+            }).join('')
+          + '</div>';
+      }
+
+      var commentHtml = '';
+      if (conf.override && conf.comment) {
+        commentHtml = '<div style="margin-top:6px;font-size:11px;color:var(--amber);font-style:italic">"' + mdEscHtml(conf.comment) + '"</div>';
+      }
+
+      return '<div style="display:flex;gap:12px;margin-bottom:14px">'
+        + '<div style="flex-shrink:0;width:6px;height:6px;border-radius:50%;background:' + dotColor + ';margin-top:5px"></div>'
+        + '<div style="flex:1;min-width:0">'
+        +   '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">'
+        +     '<div style="font-size:12px;font-weight:600;color:var(--white)">' + step.label + '</div>'
+        +     matchBadge
+        +   '</div>'
+        +   '<div style="font-size:11px;color:var(--gray);margin-top:2px">' + mdEscHtml(who) + (when ? ' &middot; ' + when : '') + '</div>'
+        +   countsHtml
+        +   commentHtml
+        + '</div>'
+        + '</div>';
+    }).join('');
+
+    body.innerHTML = stepsHtml;
+  }
 
   /* ── REVENUE DATE FILTER ── */
   var revFilter = { type: 'all', from: null, to: null };
