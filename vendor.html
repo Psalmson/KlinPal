@@ -1428,13 +1428,14 @@
       var comment = document.getElementById('dispatch-override-comment').value.trim();
       if (!comment) { showToast('Please add a comment explaining the discrepancy', true); return; }
     }
+    var orderId = _pendingReadyOrderId; // capture before closeDispatchModal nulls it
     var confirmedBy = isStaffSession ? currentStaff.name : (currentVendor ? currentVendor.name : '');
     var confirmation = { confirmed_by: confirmedBy, confirmed_at: new Date().toISOString(), counts: counts, match: !mismatch, override: mismatch, comment: mismatch ? document.getElementById('dispatch-override-comment').value.trim() : '' };
-    sbFetch('orders?order_id=eq.' + _pendingReadyOrderId, { method: 'PATCH', body: JSON.stringify({ vendor_dispatch_confirmation: confirmation }) })
+    sbFetch('orders?order_id=eq.' + orderId, { method: 'PATCH', body: JSON.stringify({ vendor_dispatch_confirmation: confirmation }) })
     .then(function(r) {
       if (!r.ok) { showToast('Could not save confirmation', true); return; }
       closeDispatchModal();
-      doUpdateStatus(_pendingReadyOrderId, 'Ready');
+      doUpdateStatus(orderId, 'Ready');
     })
     .catch(function() { showToast('Could not save confirmation', true); });
   }
@@ -1525,13 +1526,13 @@
   }
 
   function mdRenderAudit(o) {
-    var wrap = document.getElementById('md-audit-wrap');
-    var body = document.getElementById('md-audit-body');
+    var wrap    = document.getElementById('md-audit-wrap');
+    var body    = document.getElementById('md-audit-body');
     var chevron = document.getElementById('md-audit-chevron');
 
     var steps = [
-      { label: 'Handoff 2 — Receipt at Vendor',    data: o.vendor_receipt_confirmation },
-      { label: 'Handoff 3 — Dispatch from Vendor', data: o.vendor_dispatch_confirmation },
+      { label: 'Handoff 2 \u2014 Receipt at Vendor',    data: o.vendor_receipt_confirmation },
+      { label: 'Handoff 3 \u2014 Dispatch from Vendor', data: o.vendor_dispatch_confirmation },
     ];
 
     var hasAny = steps.some(function(s) { return s.data; });
@@ -1572,7 +1573,7 @@
         countsHtml = '<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px">'
           + Object.keys(conf.counts).map(function(cat) {
               return '<span style="background:var(--navy3);border-radius:4px;padding:2px 8px;font-size:11px;color:var(--white)">'
-                + mdEscHtml(cat) + ' &times;' + conf.counts[cat] + '</span>';
+                + mdEscHtml(cat) + ' \u00D7' + conf.counts[cat] + '</span>';
             }).join('')
           + '</div>';
       }
@@ -1589,7 +1590,7 @@
         +     '<div style="font-size:12px;font-weight:600;color:var(--white)">' + step.label + '</div>'
         +     matchBadge
         +   '</div>'
-        +   '<div style="font-size:11px;color:var(--gray);margin-top:2px">' + mdEscHtml(who) + (when ? ' &middot; ' + when : '') + '</div>'
+        +   '<div style="font-size:11px;color:var(--gray);margin-top:2px">' + mdEscHtml(who) + (when ? ' \u00B7 ' + when : '') + '</div>'
         +   countsHtml
         +   commentHtml
         + '</div>'
