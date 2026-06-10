@@ -856,7 +856,7 @@
       if (Array.isArray(svcs)) {
         svcs.forEach(function(s, i) {
           var prefix = i === svcs.length-1 ? '└── ' : '├── ';
-          lines.push('   ' + prefix + s.name + ' × ' + s.qty + (s.price ? ' — ₦' + (s.price*s.qty).toLocaleString() : ''));
+          lines.push('   ' + prefix + s.name + ' \u00D7 ' + s.qty);
         });
       }
     });
