@@ -311,7 +311,8 @@
         <div style="background:var(--navy2);border:1px solid var(--navy3);border-radius:var(--radius);padding:20px 24px">
           <div style="font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;font-weight:500">Laundromat Revenue</div>
           <div style="font-family:var(--font-head);font-size:32px;font-weight:800;color:var(--white);letter-spacing:-1px;margin:6px 0 4px" id="stat-revenue">&mdash;</div>
-          <div style="font-size:11px;color:var(--gray)">Vendor earnings</div>
+          <div style="font-size:11px;color:var(--gray)">Vendor net earnings</div>
+          <div style="font-size:11px;color:var(--red);margin-top:2px" id="stat-revenue-deduction"></div>
         </div>
       </div>
       <div class="stats-grid" style="margin-bottom:28px">
@@ -1184,7 +1185,8 @@
       var totPlt = orders.reduce(function(a,o){ return a+(Number(o.platform_fee)||0); },0);
       var totPen = orders.filter(function(o){ return o.status==='Pending'; }).length;
       document.getElementById('stat-orders').textContent        = orders.length;
-      document.getElementById('stat-revenue').textContent       = '\u20A6'+totSvc.toLocaleString();
+      document.getElementById('stat-revenue').textContent          = '\u20A6'+(totSvc-totPlt).toLocaleString();
+      document.getElementById('stat-revenue-deduction').textContent = '-\u20A6'+totPlt.toLocaleString()+' platform fee';
       document.getElementById('stat-delivery').textContent      = '\u20A6'+totDel.toLocaleString();
       document.getElementById('stat-service-fee').textContent   = '\u20A6'+totFee.toLocaleString();
       document.getElementById('stat-platform-fee').textContent  = '\u20A6'+totPlt.toLocaleString();
