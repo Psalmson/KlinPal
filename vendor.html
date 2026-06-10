@@ -1306,7 +1306,8 @@
       wrap.innerHTML = '<div class="empty-state"><div style="font-size:40px;margin-bottom:12px">📭</div><div style="font-size:14px">' + (allOrders.length ? 'No matching orders' : 'No orders yet') + '</div></div>';
       return;
     }
-    var statuses = ['Pending','Picked Up','Delivered to Vendor','Processing','Ready','Delivered to Customer','Cancelled'];
+    var statuses = ['Pending','Picked Up','Delivered to Vendor','Processing','Ready','Out for Delivery','Delivered to Customer','Disputed','Cancelled'];
+    var vendorSettable = ['Processing','Ready'];
     var rows = list.map(function(o, i) {
       var date = o.created_at ? new Date(o.created_at).toLocaleDateString('en-GB') : '';
       return '<tr>'
@@ -1319,7 +1320,7 @@
         +     (isStaffSession ? '' : '<div style="font-size:11px;color:var(--red)">-₦' + (Number(o.platform_fee) || 0).toLocaleString() + ' platform fee</div>') + '</td>'
         + '<td><span style="font-size:12px;color:' + ((o.payment_status==='Paid') ? 'var(--green)' : (o.payment_status==='Not Paid') ? 'var(--red)' : 'var(--amber)') + '">' + (o.payment_status || 'Pending') + '</span></td>'
         + '<td><select class="status-select" data-order-id="' + o.order_id + '" onchange="updateStatus(\'' + o.order_id + '\',this.value)">'
-        +   statuses.map(function(s) { var dis = (s !== 'Processing' && s !== 'Ready') ? ' disabled' : ''; return '<option value="' + s + '"' + (o.status === s ? ' selected' : '') + dis + '>' + statusLabel(s) + '</option>'; }).join('')
+        +   statuses.map(function(s) { var dis = vendorSettable.indexOf(s) === -1 ? ' disabled' : ''; return '<option value="' + s + '"' + (o.status === s ? ' selected' : '') + dis + '>' + statusLabel(s) + '</option>'; }).join('')
         + '</select>'
         + (o.last_updated_by ? '<div style="font-size:10px;color:var(--gray);margin-top:4px">by ' + o.last_updated_by + '</div>' : '')
         + '</td>'
