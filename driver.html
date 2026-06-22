@@ -67,7 +67,10 @@
   .refresh-btn:hover{color:var(--white);}
 
   /* ── ORDER CARDS ── */
-  .order-card{background:var(--navy2);border:1px solid var(--navy3);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;}
+  .order-card{background:var(--navy2);border:1px solid var(--navy3);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;padding:14px 16px;cursor:pointer;}
+  .order-card:hover{background:rgba(255,255,255,0.02);}
+  .order-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px;}
+  .order-date{font-size:11px;color:var(--gray);margin-top:2px;}
   .order-card-collapsed{padding:14px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;}
   .order-card-collapsed:hover{background:rgba(255,255,255,0.02);}
   .order-card-left{flex:1;min-width:0;}
@@ -269,6 +272,19 @@
       if (key.startsWith('klinpal-')) localStorage.removeItem(key);
     });
   }
+
+  var STATUS_LABELS = {
+    'Pending':               'Order received, awaiting pickup',
+    'Picked Up':             'Order picked, on the way to laundromat',
+    'Delivered to Vendor':   'Delivered to Vendor',
+    'Processing':            'Items are being processed/cleaned',
+    'Ready':                 'Ready for delivery',
+    'Out for Delivery':      'Items collected, on the way to customer',
+    'Delivered to Customer': 'Delivered to Customer',
+    'Disputed':              'Disputed — under review',
+    'Cancelled':             'Cancelled',
+  };
+  function statusLabel(s) { return STATUS_LABELS[s] || s || 'Unknown'; }
 
   var currentDriver   = null;
   var allOrders       = [];
@@ -601,154 +617,339 @@
   }
 
   /* ── RENDER ORDERS ── */
+  var _activeOrderModal = null;
+
   function renderOrders() {
     var wrap = document.getElementById('orders-wrap');
+    var filter = activeFilter || 'all';
 
-    // Apply fee state filter
     var filtered = allOrders.filter(function(o) {
-      if (activeFilter !== 'all' && getRiderFeeState(o) !== activeFilter) return false;
-      if (!orderMatchesDateFilter(o)) return false;
-      return true;
+      var state = getRiderFeeState(o);
+      if (filter === 'pending' && state !== 'pending') return false;
+      if (filter === 'notpaid' && state !== 'notpaid') return false;
+      if (filter === 'paid'    && state !== 'paid')    return false;
+      return orderMatchesDateFilter(o);
     });
-
-    // Sort: pending first, then by date desc
-    filtered.sort(function(a, b) {
-      var aState = getRiderFeeState(a), bState = getRiderFeeState(b);
-      var order = { pending: 0, notpaid: 1, paid: 2 };
-      if (order[aState] !== order[bState]) return order[aState] - order[bState];
-      return new Date(b.created_at) - new Date(a.created_at);
-    });
-
-    // Update title
-    var titles = { all: 'All Orders', pending: 'Pending', notpaid: 'Not Paid', paid: 'Paid' };
-    document.getElementById('orders-title').textContent = titles[activeFilter] || 'All Orders';
 
     if (!filtered.length) {
-      wrap.innerHTML = '<div class="empty-state">No orders in this view.</div>';
+      wrap.innerHTML = '<div class="empty-state">No orders found.</div>';
       return;
     }
 
     wrap.innerHTML = filtered.map(function(o) {
-      return renderOrderCard(o);
+      var isPickup   = o.pickup_driver_id   === currentDriver.id;
+      var isDelivery = o.delivery_driver_id === currentDriver.id;
+      var roleTag    = isPickup && isDelivery ? 'Pickup & Delivery' : isPickup ? 'Pickup' : 'Delivery';
+      var stLabel    = statusLabel(o.status);
+      var state      = getRiderFeeState(o);
+      var stateColor = state === 'paid' ? 'var(--green)' : state === 'notpaid' ? 'var(--red)' : 'var(--amber)';
+      var date       = o.created_at ? new Date(o.created_at).toLocaleDateString('en-GB') : '';
+
+      return '<div class="order-card" onclick="openOrderModal(\'' + o.order_id + '\')">'
+        + '<div class="order-card-top">'
+        +   '<div><div class="order-id-tag">' + (o.order_id||'\u2014') + '</div><div class="order-date">' + date + '</div></div>'
+        +   '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">'
+        +     '<span style="font-size:11px;color:var(--teal);font-weight:600">' + roleTag + '</span>'
+        +   '</div>'
+        + '</div>'
+        + '<div style="font-size:13px;font-weight:500;color:var(--white);margin-bottom:4px">' + stLabel + '</div>'
+        + '<div style="font-size:11px;color:' + stateColor + '">' + (state==='paid'?'Commission paid':state==='notpaid'?'Commission unpaid':'In progress') + '</div>'
+        + '</div>';
     }).join('');
   }
 
-  function renderOrderCard(o) {
-    var date       = o.created_at ? new Date(o.created_at).toLocaleDateString('en-GB') : '';
+  function openOrderModal(orderId) {
+    var o = allOrders.find(function(x) { return x.order_id === orderId; });
+    if (!o) return;
+    _activeOrderModal = orderId;
     var isPickup   = o.pickup_driver_id   === currentDriver.id;
     var isDelivery = o.delivery_driver_id === currentDriver.id;
     var roleTag    = isPickup && isDelivery ? 'Pickup & Delivery' : isPickup ? 'Pickup' : 'Delivery';
-    var earn       = getRiderEarn(o);
-    var feeState   = getRiderFeeState(o);
+    var earn       = 0;
+    if (isPickup)   earn += Number(o.pickup_rider_fee)   || 0;
+    if (isDelivery) earn += Number(o.delivery_rider_fee) || 0;
     var vendor     = vendorCache[o.vendor_id] || null;
-    var isExpanded = expandedCards[o.order_id];
 
-    // Status badge
-    var statusCls  = { 'Pending': 's-pending', 'Picked Up': 's-pickedup', 'Delivered to Vendor': 's-pickedup', 'Delivered to Customer': 's-delivered' };
-    var statusBadge = '<span class="status-badge ' + (statusCls[o.status] || 's-other') + '">' + (o.status || 'Pending') + '</span>';
-
-    // Fee badge
-    var feeCls   = { pending: 'fee-pending', notpaid: 'fee-notpaid', paid: 'fee-paid' };
-    var feeLabel = { pending: 'Pending', notpaid: 'Not Paid', paid: 'Paid' };
-    var feeBadge = '<span class="fee-badge ' + feeCls[feeState] + '">' + feeLabel[feeState] + '</span>';
-
-    // Action buttons
-    var isDone = o.status === 'Delivered to Customer' || o.status === 'Cancelled';
-    var btns   = '';
-    if (isDone) {
-      btns = '<div class="btn-action btn-done">' + (o.status === 'Delivered to Customer' ? '✓ Delivered to Customer' : 'Cancelled') + '</div>';
-    } else if (isPickup && isDelivery) {
-      if (o.status === 'Pending') {
-        btns = '<button class="btn-action btn-primary" onclick="updateStatus(\'' + o.order_id + '\',\'Picked Up\')">Picked Up from Customer</button>';
-      } else if (o.status === 'Picked Up') {
-        btns = '<button class="btn-action btn-primary" onclick="updateStatus(\'' + o.order_id + '\',\'Delivered to Vendor\')">Delivered to Vendor</button>';
-      } else if (o.status === 'Delivered to Vendor' || o.status === 'Processing') {
-        btns = '<div class="btn-action btn-done" style="opacity:0.6">✓ Pickup complete — awaiting ' + o.status.toLowerCase() + '</div>';
-      } else if (o.status === 'Ready') {
-        btns = '<button class="btn-action btn-primary" onclick="updateStatus(\'' + o.order_id + '\',\'Delivered to Customer\')">Delivered to Customer</button>';
-      }
-    } else if (isPickup) {
-      if (o.status === 'Pending') {
-        btns = '<button class="btn-action btn-primary" onclick="updateStatus(\'' + o.order_id + '\',\'Picked Up\')">Picked Up from Customer</button>';
-      } else if (o.status === 'Picked Up') {
-        btns = '<button class="btn-action btn-primary" onclick="updateStatus(\'' + o.order_id + '\',\'Delivered to Vendor\')">Delivered to Vendor</button>';
+    // Format items by category
+    var itemsHtml = '';
+    var ij = o.items_json;
+    if (ij) {
+      var data = typeof ij === 'string' ? (function(){ try{return JSON.parse(ij);}catch(e){return null;} })() : ij;
+      if (data && typeof data === 'object') {
+        Object.keys(data).forEach(function(cat) {
+          itemsHtml += '<div style="font-size:12px;font-weight:700;color:var(--teal);margin:8px 0 4px">' + cat + '</div>';
+          var svcs = data[cat];
+          if (Array.isArray(svcs)) {
+            svcs.forEach(function(s) {
+              itemsHtml += '<div style="font-size:12px;color:var(--white);padding:3px 0">'
+                + s.name + ' \xD7 ' + s.qty
+                + '</div>';
+            });
+          }
+        });
       } else {
-        btns = '<div class="btn-action btn-done">✓ Pickup complete</div>';
+        itemsHtml = '<div style="font-size:12px;color:var(--gray)">' + (o.items||'\u2014') + '</div>';
       }
-    } else if (isDelivery) {
-      if (o.status === 'Ready') {
-        btns = '<button class="btn-action btn-primary" onclick="updateStatus(\'' + o.order_id + '\',\'Delivered to Customer\')">Delivered to Customer</button>';
-      } else {
-        btns = '<div class="btn-action btn-done" style="opacity:0.5">Awaiting — ' + o.status + '</div>';
-      }
+    } else {
+      itemsHtml = '<div style="font-size:12px;color:var(--gray)">' + (o.items||'\u2014') + '</div>';
     }
 
-    // Collapsed row
-    var collapsed = '<div class="order-card-collapsed" onclick="toggleCard(\'' + o.order_id + '\')">'
-      + '<div class="order-card-left">'
-      +   '<div class="order-id-tag">' + (o.order_id || '—') + '</div>'
-      +   '<div class="order-card-meta">' + roleTag + ' · ' + date + '</div>'
-      +   (vendor ? '<div class="order-card-meta">' + vendor.name + '</div>' : '')
+    // Action button
+    var actionBtn = buildActionBtn(o, isPickup, isDelivery);
+
+    var payColor = o.payment_status==='Paid' ? 'var(--green)' : o.payment_status==='Not Paid' ? 'var(--red)' : 'var(--amber)';
+
+    document.getElementById('order-modal-body').innerHTML =
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">'
+      + '<div><div class="order-id-tag" style="font-size:13px">' + (o.order_id||'\u2014') + '</div>'
+      + '<div style="font-size:11px;color:var(--gray);margin-top:2px">' + (o.created_at ? new Date(o.created_at).toLocaleDateString('en-GB') : '') + ' \xB7 ' + roleTag + '</div></div>'
+      + '<button onclick="closeOrderModal()" style="background:none;border:none;color:var(--gray);cursor:pointer;font-size:22px;line-height:1;padding:0 4px">&times;</button>'
       + '</div>'
-      + '<div class="order-card-right">'
-      +   statusBadge
-      +   feeBadge
-      +   (earn > 0 ? '<div style="font-size:11px;color:var(--teal);font-weight:600">\u20A6' + earn.toLocaleString() + '</div>' : '')
+
+      + '<div style="background:var(--navy3);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:13px;font-weight:500;color:var(--white)">' + statusLabel(o.status) + '</div>'
+
+      + '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);margin-bottom:6px">Customer</div>'
+      + '<div style="font-size:14px;font-weight:600;margin-bottom:3px">' + (o.customer_name||'\u2014') + '</div>'
+      + (o.phone ? '<div class="cust-phone" onclick="copyPhone(\'' + o.phone + '\',this)" style="cursor:pointer;margin-bottom:4px">' + o.phone + ' <span style="font-size:10px;color:var(--teal)">[Copy]</span></div>' : '')
+      + '<div class="addr-box" style="margin-bottom:14px">' + (o.address||'\u2014') + '</div>'
+
+      + (vendor ? '<div style="border-top:1px solid var(--navy3);padding-top:14px;margin-bottom:14px">'
+        + '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);margin-bottom:6px">Laundromat</div>'
+        + '<div style="font-size:14px;font-weight:600;margin-bottom:3px">' + vendor.name + '</div>'
+        + (vendor.phone ? '<div class="cust-phone" onclick="copyPhone(\'' + vendor.phone + '\',this)" style="cursor:pointer;margin-bottom:4px">' + vendor.phone + ' <span style="font-size:10px;color:var(--teal)">[Copy]</span></div>' : '')
+        + (vendor.address ? '<div class="addr-box">' + vendor.address + '</div>' : '')
+        + '</div>' : '')
+
+      + '<div style="border-top:1px solid var(--navy3);padding-top:14px;margin-bottom:14px">'
+      + '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);margin-bottom:8px">Order</div>'
+      + itemsHtml
       + '</div>'
-      + '</div>';
 
-    // Expanded body
-    var expanded = '<div class="order-expand-body' + (isExpanded ? ' open' : '') + '" id="expand-' + o.order_id + '">'
+      + '<div style="border-top:1px solid var(--navy3);padding-top:14px;margin-bottom:16px">'
+      + '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);margin-bottom:6px">Payment</div>'
+      + '<div style="font-size:13px;color:' + payColor + ';font-weight:600;margin-bottom:4px">' + (o.payment_status||'Pending') + '</div>'
+      + (earn > 0 ? '<div style="font-size:12px;color:var(--teal)">Your commission: \u20A6' + earn.toLocaleString() + '</div>' : '')
+      + '</div>'
 
-      + '<div class="order-section-label">Customer</div>'
-      + '<div class="cust-name">' + (o.customer_name || '—') + '</div>'
-      + (o.phone ? '<div class="cust-phone" onclick="copyPhone(\'' + o.phone + '\',this)" style="cursor:pointer" title="Tap to copy">' + o.phone + ' <span style="font-size:10px;color:var(--teal)">[Copy]</span></div>' : '')
-      + '<div class="addr-box">' + (o.address || '—') + '</div>'
+      + '<div id="order-modal-action">' + actionBtn + '</div>';
 
-      + (vendor
-        ? '<hr class="divider">'
-        +   '<div class="order-section-label">Laundromat</div>'
-        +   '<div class="cust-name">' + vendor.name + '</div>'
-        +   (vendor.phone ? '<div class="cust-phone" onclick="copyPhone(\'' + vendor.phone + '\',this)" style="cursor:pointer" title="Tap to copy">' + vendor.phone + ' <span style="font-size:10px;color:var(--teal)">[Copy]</span></div>' : '')
-        +   (vendor.address ? '<div class="addr-box">' + vendor.address + '</div>' : '')
-        : '')
-
-      + '<hr class="divider">'
-      + '<div class="items-line">' + (o.items || '—') + '</div>'
-      + (earn > 0 ? '<div class="earn-line">Your commission: \u20A6' + earn.toLocaleString() + ' · ' + feeLabel[feeState] + '</div>' : '')
-      + '<div class="action-btns">' + btns + '</div>'
-      + '</div>';
-
-    return '<div class="order-card" id="card-' + o.order_id + '">' + collapsed + expanded + '</div>';
+    document.getElementById('order-modal').style.display = 'flex';
   }
 
-  function toggleCard(orderId) {
-    expandedCards[orderId] = !expandedCards[orderId];
-    var body = document.getElementById('expand-' + orderId);
-    if (body) body.classList.toggle('open', !!expandedCards[orderId]);
+  function closeOrderModal() {
+    document.getElementById('order-modal').style.display = 'none';
+    _activeOrderModal = null;
   }
 
-  /* ── UPDATE STATUS ── */
+  function buildActionBtn(o, isPickup, isDelivery) {
+    var isDone = o.status === 'Delivered to Customer' || o.status === 'Cancelled' || o.status === 'Disputed';
+    if (isDone) return '<div class="btn-action btn-done">\u2713 ' + statusLabel(o.status) + '</div>';
+
+    if (isPickup && isDelivery) {
+      if (o.status === 'Pending')    return '<button class="btn-action btn-primary" onclick="openPickupConfirm()">Confirm Pickup from Customer</button>';
+      if (o.status === 'Picked Up')  return '<button class="btn-action btn-primary" onclick="confirmDropoff()">Confirm Drop-off at Laundromat</button>';
+      if (o.status === 'Delivered to Vendor' || o.status === 'Processing') return '<div class="btn-action btn-done" style="opacity:0.6">\u2713 Pickup complete \u2014 awaiting processing</div>';
+      if (o.status === 'Ready')      return '<button class="btn-action btn-primary" onclick="openCollectionConfirm()">Confirm Collection from Laundromat</button>';
+      if (o.status === 'Out for Delivery') return '<button class="btn-action btn-primary" onclick="confirmDelivery()">Confirm Delivered to Customer</button>';
+    } else if (isPickup) {
+      if (o.status === 'Pending')   return '<button class="btn-action btn-primary" onclick="openPickupConfirm()">Confirm Pickup from Customer</button>';
+      if (o.status === 'Picked Up') return '<button class="btn-action btn-primary" onclick="confirmDropoff()">Confirm Drop-off at Laundromat</button>';
+      return '<div class="btn-action btn-done">\u2713 Pickup complete</div>';
+    } else if (isDelivery) {
+      if (o.status === 'Ready')           return '<button class="btn-action btn-primary" onclick="openCollectionConfirm()">Confirm Collection from Laundromat</button>';
+      if (o.status === 'Out for Delivery') return '<button class="btn-action btn-primary" onclick="confirmDelivery()">Confirm Delivered to Customer</button>';
+      return '<div class="btn-action btn-done" style="opacity:0.5">Awaiting \u2014 ' + statusLabel(o.status) + '</div>';
+    }
+    return '';
+  }
+
+  /* ── HANDOFF CONFIRMATION FLOWS ── */
+
+  function getOrderCats(o) {
+    if (o.items_json) {
+      var data = typeof o.items_json === 'string' ? (function(){ try{return JSON.parse(o.items_json);}catch(e){return null;} })() : o.items_json;
+      if (data) return Object.keys(data).map(function(cat) {
+        return { cat: cat, qty: data[cat].reduce(function(a,s){ return a+s.qty; },0) };
+      });
+    }
+    return [{ cat: 'Items', qty: null }];
+  }
+
+  function buildCountModal(title, subtitle, refCounts, onSubmit) {
+    var html = '<div style="font-family:var(--font-head);font-size:17px;font-weight:800;margin-bottom:8px">' + title + '</div>'
+      + '<div style="font-size:12px;color:var(--gray);margin-bottom:16px;line-height:1.5">' + subtitle + '</div>';
+    refCounts.forEach(function(rc) {
+      html += '<div style="display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;margin-bottom:12px">'
+        + '<div><div style="font-size:13px;font-weight:600;color:var(--white)">' + rc.cat + '</div>'
+        + (rc.qty !== null ? '<div style="font-size:11px;color:var(--gray)">Expected: ' + rc.qty + ' items</div>' : '')
+        + '</div>'
+        + '<input type="number" min="0" placeholder="Count" data-cat="' + rc.cat + '" data-ref="' + (rc.qty||0) + '" style="width:80px;background:var(--navy3);border:1px solid var(--gray2);border-radius:8px;padding:8px;color:var(--white);font-family:var(--font-body);font-size:15px;text-align:center;outline:none" oninput="checkConfirmMismatch()">'
+        + '</div>';
+    });
+    html += '<div id="confirm-mismatch" style="display:none;background:rgba(255,87,87,0.1);border:1px solid rgba(255,87,87,0.3);border-radius:8px;padding:12px;margin-bottom:12px">'
+      + '<div style="font-size:12px;color:var(--red);font-weight:600;margin-bottom:6px">&#9888; Count mismatch</div>'
+      + '<div style="font-size:12px;color:var(--gray);margin-bottom:8px">Counts differ from expected. Add a comment to proceed.</div>'
+      + '<textarea id="confirm-override-comment" placeholder="Explain..." style="width:100%;background:var(--navy3);border:1px solid var(--gray2);border-radius:8px;padding:8px;color:var(--white);font-family:var(--font-body);font-size:12px;resize:vertical;min-height:60px;outline:none"></textarea>'
+      + '</div>';
+    html += '<button class="btn-action btn-primary" id="confirm-submit-btn" onclick="' + onSubmit + '">Confirm</button>';
+    return html;
+  }
+
+  function checkConfirmMismatch() {
+    var inputs = document.querySelectorAll('#confirm-modal-body input[type=number]');
+    var mismatch = false;
+    inputs.forEach(function(inp) {
+      var entered = parseInt(inp.value)||0;
+      var ref = parseInt(inp.getAttribute('data-ref'))||0;
+      if (ref>0 && entered!==ref) mismatch=true;
+    });
+    var el = document.getElementById('confirm-mismatch');
+    if (el) el.style.display = mismatch ? 'block' : 'none';
+    return mismatch;
+  }
+
+  function getConfirmCounts() {
+    var inputs = document.querySelectorAll('#confirm-modal-body input[type=number]');
+    var counts = {}; var allFilled = true;
+    inputs.forEach(function(inp) { if (!inp.value.trim()) allFilled = false; counts[inp.getAttribute('data-cat')] = parseInt(inp.value)||0; });
+    return allFilled ? counts : null;
+  }
+
+  function openConfirmModal(html) {
+    document.getElementById('confirm-modal-body').innerHTML = html;
+    document.getElementById('confirm-modal').style.display = 'flex';
+  }
+
+  function closeConfirmModal() {
+    document.getElementById('confirm-modal').style.display = 'none';
+  }
+
+  // HANDOFF 1: Pickup from customer
+  function openPickupConfirm() {
+    var o = allOrders.find(function(x){ return x.order_id === _activeOrderModal; });
+    if (!o) return;
+    var cats = getOrderCats(o);
+    openConfirmModal(buildCountModal(
+      'Confirm Pickup',
+      'Enter the number of items you are collecting from the customer per category.',
+      cats, 'submitPickupConfirm()'
+    ));
+  }
+
+  function submitPickupConfirm() {
+    var counts = getConfirmCounts();
+    if (!counts) { showToast('Please enter count for all categories', true); return; }
+    var mismatch = checkConfirmMismatch();
+    if (mismatch) {
+      var comment = document.getElementById('confirm-override-comment').value.trim();
+      if (!comment) { showToast('Please add a comment explaining the discrepancy', true); return; }
+    }
+    var o = allOrders.find(function(x){ return x.order_id === _activeOrderModal; });
+    var confirmation = { confirmed_by: currentDriver.name, confirmed_at: new Date().toISOString(), counts: counts, match: !mismatch, override: mismatch, comment: mismatch ? document.getElementById('confirm-override-comment').value.trim() : '' };
+    sbFetch('orders?order_id=eq.' + _activeOrderModal, { method: 'PATCH', body: JSON.stringify({ pickup_confirmation: confirmation, status: 'Picked Up', last_updated_by: currentDriver.name }) })
+    .then(function(r) {
+      if (!r.ok) { showToast('Could not save confirmation', true); return; }
+      if (o) o.status = 'Picked Up';
+      closeConfirmModal();
+      closeOrderModal();
+      showToast('Pickup confirmed \u2713');
+      loadOrders();
+    })
+    .catch(function(){ showToast('Could not save', true); });
+  }
+
+  // HANDOFF 2: Drop-off at laundromat (simple tap)
+  function confirmDropoff() {
+    sbFetch('orders?order_id=eq.' + _activeOrderModal, { method: 'PATCH', body: JSON.stringify({ status: 'Delivered to Vendor', last_updated_by: currentDriver.name }) })
+    .then(function(r) {
+      if (!r.ok) { showToast('Could not update', true); return; }
+      var o = allOrders.find(function(x){ return x.order_id === _activeOrderModal; });
+      if (o) o.status = 'Delivered to Vendor';
+      closeOrderModal();
+      showToast('Drop-off confirmed \u2713');
+      loadOrders();
+    })
+    .catch(function(){ showToast('Could not update', true); });
+  }
+
+  // HANDOFF 3: Collection from laundromat
+  function openCollectionConfirm() {
+    var o = allOrders.find(function(x){ return x.order_id === _activeOrderModal; });
+    if (!o) return;
+    // Use vendor_dispatch_confirmation counts as reference
+    var refCounts = [];
+    if (o.vendor_dispatch_confirmation) {
+      var vdc = typeof o.vendor_dispatch_confirmation === 'string' ? JSON.parse(o.vendor_dispatch_confirmation) : o.vendor_dispatch_confirmation;
+      if (vdc && vdc.counts) {
+        Object.keys(vdc.counts).forEach(function(cat) { refCounts.push({ cat: cat, qty: vdc.counts[cat] }); });
+      }
+    }
+    if (!refCounts.length) refCounts = getOrderCats(o);
+    openConfirmModal(buildCountModal(
+      'Confirm Collection',
+      'Enter the number of finished items you are collecting from the laundromat.',
+      refCounts, 'submitCollectionConfirm()'
+    ));
+  }
+
+  function submitCollectionConfirm() {
+    var counts = getConfirmCounts();
+    if (!counts) { showToast('Please enter count for all categories', true); return; }
+    var mismatch = checkConfirmMismatch();
+    if (mismatch) {
+      var comment = document.getElementById('confirm-override-comment').value.trim();
+      if (!comment) { showToast('Please add a comment', true); return; }
+    }
+    var o = allOrders.find(function(x){ return x.order_id === _activeOrderModal; });
+    var confirmation = { confirmed_by: currentDriver.name, confirmed_at: new Date().toISOString(), counts: counts, match: !mismatch, override: mismatch, comment: mismatch ? document.getElementById('confirm-override-comment').value.trim() : '' };
+    sbFetch('orders?order_id=eq.' + _activeOrderModal, { method: 'PATCH', body: JSON.stringify({ rider_collection_confirmation: confirmation, status: 'Out for Delivery', last_updated_by: currentDriver.name }) })
+    .then(function(r) {
+      if (!r.ok) { showToast('Could not save confirmation', true); return; }
+      if (o) o.status = 'Out for Delivery';
+      closeConfirmModal();
+      closeOrderModal();
+      showToast('Collection confirmed \u2713');
+      loadOrders();
+    })
+    .catch(function(){ showToast('Could not save', true); });
+  }
+
+  // HANDOFF 4: Delivery to customer (simple tap + show track URL)
+  function confirmDelivery() {
+    sbFetch('orders?order_id=eq.' + _activeOrderModal, { method: 'PATCH', body: JSON.stringify({ status: 'Out for Delivery', last_updated_by: currentDriver.name }) })
+    .then(function(r) {
+      if (!r.ok) { showToast('Could not update', true); return; }
+      var o = allOrders.find(function(x){ return x.order_id === _activeOrderModal; });
+      // Show track URL for customer to confirm
+      var vendor = o ? vendorCache[o.vendor_id] : null;
+      var slug   = vendor ? vendor.slug : '';
+      var trackUrl = window.location.origin + '/track?vendor=' + slug;
+      document.getElementById('order-modal-action').innerHTML =
+        '<div style="background:var(--navy3);border-radius:8px;padding:14px;text-align:center">'
+        + '<div style="font-size:12px;color:var(--gray);margin-bottom:8px">Ask customer to confirm receipt at:</div>'
+        + '<div style="font-family:var(--font-mono);font-size:13px;color:var(--teal);word-break:break-all;margin-bottom:10px">' + trackUrl + '</div>'
+        + '<button onclick="navigator.clipboard.writeText(\"' + trackUrl + '\")" style="background:var(--navy2);border:1px solid var(--gray2);border-radius:6px;padding:6px 14px;font-size:12px;color:var(--gray);cursor:pointer;font-family:var(--font-body)">Copy Link</button>'
+        + '</div>';
+      loadOrders();
+    })
+    .catch(function(){ showToast('Could not update', true); });
+  }
+
   function updateStatus(orderId, newStatus) {
     var order = allOrders.find(function(o) { return o.order_id === orderId; });
     if (order) { order.status = newStatus; }
-    updatePills();
     renderOrders();
-    // Re-expand after re-render
-    expandedCards[orderId] = true;
-    var body = document.getElementById('expand-' + orderId);
-    if (body) body.classList.add('open');
-
     sbFetch('orders?order_id=eq.' + orderId, {
       method: 'PATCH',
       body: JSON.stringify({ status: newStatus, last_updated_by: currentDriver.name }),
     })
     .then(function(r) {
-      if (r.ok) { showToast('Status updated \u2713'); }
+      if (r.ok) { showToast('Status updated \u2713'); updateEarnings(); }
       else showToast('Update failed', true);
     })
     .catch(function() { showToast('Could not update', true); });
   }
+
 
   /* ── COPY PHONE ── */
   function copyPhone(phone, el) {
@@ -800,5 +1001,23 @@
     setTimeout(function() { t.classList.remove('show'); }, 3000);
   }
 </script>
+
+<!-- ORDER DETAIL MODAL -->
+<div id="order-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:500;align-items:center;justify-content:center;overflow-y:auto;padding:16px">
+  <div style="background:var(--navy2);border:1px solid var(--navy3);border-radius:16px;padding:24px;width:100%;max-width:440px;margin:auto">
+    <div id="order-modal-body"></div>
+  </div>
+</div>
+
+<!-- HANDOFF CONFIRMATION MODAL -->
+<div id="confirm-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:600;align-items:center;justify-content:center;overflow-y:auto;padding:16px">
+  <div style="background:var(--navy2);border:1px solid var(--navy3);border-radius:16px;padding:24px;width:100%;max-width:400px;margin:auto">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+      <button onclick="closeConfirmModal()" style="background:none;border:none;color:var(--gray);cursor:pointer;font-size:22px;line-height:1;padding:0 4px">&times;</button>
+    </div>
+    <div id="confirm-modal-body"></div>
+  </div>
+</div>
+
 </body>
 </html>
