@@ -311,7 +311,8 @@
         <div style="background:var(--navy2);border:1px solid var(--navy3);border-radius:var(--radius);padding:20px 24px">
           <div style="font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:1px;font-weight:500">Laundromat Revenue</div>
           <div style="font-family:var(--font-head);font-size:32px;font-weight:800;color:var(--white);letter-spacing:-1px;margin:6px 0 4px" id="stat-revenue">&mdash;</div>
-          <div style="font-size:11px;color:var(--gray)">Vendor earnings</div>
+          <div style="font-size:11px;color:var(--gray)">Vendor net earnings</div>
+          <div style="font-size:11px;color:var(--red);margin-top:2px" id="stat-revenue-deduction"></div>
         </div>
       </div>
       <div class="stats-grid" style="margin-bottom:28px">
@@ -743,7 +744,9 @@
           <option value="Delivered to Vendor">Delivered to Vendor</option>
           <option value="Processing">Processing</option>
           <option value="Ready">Ready</option>
+          <option value="Out for Delivery">Out for Delivery</option>
           <option value="Delivered to Customer">Delivered to Customer</option>
+          <option value="Disputed">Disputed</option>
           <option value="Cancelled">Cancelled</option>
         </select>
       </div>
@@ -782,6 +785,15 @@
         </div>
       </div>
     </div>
+
+    <!-- Handoff Audit -->
+    <div id="odm-audit-wrap" style="border-top:1px solid var(--navy3);padding-top:16px;margin-top:16px;display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:12px" onclick="odmToggleAudit()">
+        <div style="font-size:13px;font-weight:700">Handoff Audit</div>
+        <span style="font-size:16px;color:var(--gray)" id="odm-audit-chevron">&#8250;</span>
+      </div>
+      <div id="odm-audit-body" style="display:none"></div>
+    </div>
   </div>
 </div>
 
@@ -818,6 +830,71 @@
   var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, storageKey: 'klinpal-superadmin-auth' }
   });
+  var STATUS_LABELS = {
+    'Pending':               'Order received, awaiting pickup',
+    'Picked Up':             'Order picked, on the way to laundromat',
+    'Delivered to Vendor':   'Delivered to Vendor',
+    'Processing':            'Items are being processed/cleaned',
+    'Ready':                 'Ready for delivery',
+    'Out for Delivery':      'Items collected, on the way to customer',
+    'Delivered to Customer': 'Delivered to Customer',
+    'Disputed':              'Disputed — under review',
+    'Cancelled':             'Cancelled',
+  };
+  function statusLabel(s) { return STATUS_LABELS[s] || s || 'Unknown'; }
+
+
+  function formatItemsForTelegram(itemsJson, itemsFlat) {
+    if (!itemsJson) return itemsFlat || '—';
+    var data = typeof itemsJson === 'string'
+      ? (function(){ try{return JSON.parse(itemsJson);}catch(e){return null;} })()
+      : itemsJson;
+    if (!data || typeof data !== 'object' || Array.isArray(data)) return itemsFlat || '—';
+    var lines = [];
+    Object.keys(data).forEach(function(cat) {
+      lines.push('┌─ ' + cat);
+      var svcs = data[cat];
+      if (Array.isArray(svcs)) {
+        svcs.forEach(function(s, i) {
+          var prefix = i === svcs.length-1 ? '└── ' : '├── ';
+          lines.push('   ' + prefix + s.name + ' \u00D7 ' + s.qty);
+        });
+      }
+    });
+    return lines.join('\n');
+  }
+
+  function formatItemsCompact(itemsJson, itemsFlat) {
+    if (!itemsJson) return itemsFlat || '—';
+    var data = typeof itemsJson === 'string'
+      ? (function(){ try{return JSON.parse(itemsJson);}catch(e){return null;} })()
+      : itemsJson;
+    if (!data || typeof data !== 'object' || Array.isArray(data)) return itemsFlat || '—';
+    return Object.keys(data).map(function(cat) {
+      var svcs = data[cat].map(function(s){ return s.name + ' ×' + s.qty; }).join(', ');
+      return cat + ': ' + svcs;
+    }).join(' | ');
+  }
+
+  function formatItemsGroupedHtml(itemsJson, itemsFlat) {
+    if (!itemsJson) return '<span style="color:var(--gray)">' + (itemsFlat||'—') + '</span>';
+    var data = typeof itemsJson === 'string'
+      ? (function(){ try{return JSON.parse(itemsJson);}catch(e){return null;} })()
+      : itemsJson;
+    if (!data || typeof data !== 'object' || Array.isArray(data)) return '<span style="color:var(--gray)">' + (itemsFlat||'—') + '</span>';
+    var html = '';
+    Object.keys(data).forEach(function(cat) {
+      html += '<div style="font-size:11px;font-weight:700;color:var(--gray2);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:3px;margin-top:8px">' + cat + '</div>';
+      data[cat].forEach(function(s) {
+        html += '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--white)">'
+          + '<span>' + s.name + ' ×' + s.qty + '</span>'
+          + (s.price ? '<span style="color:var(--gray)">₦' + (s.price*s.qty).toLocaleString() + '</span>' : '')
+          + '</div>';
+      });
+    });
+    return html;
+  }
+
   var _sessionToken = null;
   var GOOGLE_MAPS_KEY = 'AIzaSyA4mpTBCqmyZpCZFtP-_oVvjs_8AhNoSa0';
 
@@ -1108,7 +1185,8 @@
       var totPlt = orders.reduce(function(a,o){ return a+(Number(o.platform_fee)||0); },0);
       var totPen = orders.filter(function(o){ return o.status==='Pending'; }).length;
       document.getElementById('stat-orders').textContent        = orders.length;
-      document.getElementById('stat-revenue').textContent       = '\u20A6'+totSvc.toLocaleString();
+      document.getElementById('stat-revenue').textContent          = '\u20A6'+(totSvc-totPlt).toLocaleString();
+      document.getElementById('stat-revenue-deduction').textContent = '-\u20A6'+totPlt.toLocaleString()+' platform fee';
       document.getElementById('stat-delivery').textContent      = '\u20A6'+totDel.toLocaleString();
       document.getElementById('stat-service-fee').textContent   = '\u20A6'+totFee.toLocaleString();
       document.getElementById('stat-platform-fee').textContent  = '\u20A6'+totPlt.toLocaleString();
@@ -1318,7 +1396,7 @@
 
   function renderDrillTable(orders) {
     var payStatuses = ['Pending','Paid','Not Paid'];
-    var statuses    = ['Pending','Picked Up','Delivered to Vendor','Processing','Ready','Delivered to Customer','Cancelled'];
+    var statuses    = ['Pending','Picked Up','Delivered to Vendor','Processing','Ready','Out for Delivery','Delivered to Customer','Disputed','Cancelled'];
     var driverOpts  = '<option value="">Unassigned</option>' + allDrivers.filter(function(d){ return d.active; }).map(function(d){
       return '<option value="'+d.id+'">'+d.name+' ('+d.percentage+'%)</option>';
     }).join('');
@@ -1337,9 +1415,9 @@
       var klinpal     = delivFee - pickupComm - delivComm;
 
       var mainRow = '<tr>'
-        +'<td><div class="mono">'+(o.order_id||'\u2014')+'</div><div style="font-size:11px;color:var(--gray);margin-top:3px">'+date+'</div></td>'
+        +'<td><div class="mono" onclick="openOrderDetailModal(\''+o.order_id+'\')" style="cursor:pointer;color:var(--teal);text-decoration:underline;text-underline-offset:3px">'+(o.order_id||'\u2014')+'</div><div style="font-size:11px;color:var(--gray);margin-top:3px">'+date+'</div></td>'
         +'<td><div style="font-weight:600">'+(o.customer_name||'\u2014')+'</div><div style="font-size:12px;color:var(--gray)">'+(o.phone||'')+'</div><div style="font-size:11px;color:var(--gray);max-width:180px;margin-top:2px">'+(o.address||'')+'</div></td>'
-        +'<td style="font-size:12px;color:var(--gray);max-width:160px">'+(o.items||'\u2014')+'</td>'
+        +'<td style="font-size:12px;color:var(--gray);max-width:180px">'+formatItemsCompact(o.items_json,o.items)+'</td>'
         +'<td><span class="mono">\u20A6'+(Number(o.subtotal)||0).toLocaleString()+'</span>'
         +'<div style="font-size:11px;color:var(--gray);margin-top:3px">+\u20A6'+delivFee.toLocaleString()+' pickup & delivery</div>'
         +'<div style="font-size:11px;color:var(--gray)">+\u20A6'+(Number(o.service_fee)||0).toLocaleString()+' service fee</div>'
@@ -1441,16 +1519,16 @@
         var vendorName = currentDrillVendor ? (currentDrillVendor.name || '\u2014') : '\u2014';
         var vendorPhone = currentDrillVendor ? (currentDrillVendor.phone || '\u2014') : '\u2014';
         sendTelegram(pickupDrv.telegram_chat_id,
-          '\uD83D\uDEF5 Pickup Assignment\n\n'
-          +'Order ID: '+orderId+'\n'
-          +'Customer: '+(o ? o.customer_name : '\u2014')+'\n'
-          +'Phone: '+(o ? o.phone : '\u2014')+'\n'
-          +'Pickup address: '+(o ? o.address : '\u2014')+'\n'
-          +'Drop off at: '+vendorName+'\n'
-          +'Vendor address: '+vendorAddr+'\n'
-          +'Vendor phone: '+vendorPhone+'\n'
-          +'Items: '+(o ? o.items : '\u2014')+'\n'
-          +'Your commission: \u20A6'+pickupComm.toLocaleString()
+          '\uD83D\uDEF5 *Pickup Assignment*\n\n'
+          +'*Order ID:* '+orderId+'\n'
+          +'*Customer:* '+(o ? o.customer_name : '\u2014')+'\n'
+          +'*Phone:* '+(o ? o.phone : '\u2014')+'\n\n'
+          +'*\uD83D\uDCCD Pickup Address*\n'+(o ? o.address : '\u2014')+'\n\n'
+          +'*\uD83C\uDFEA Drop off at:* '+vendorName+'\n'
+          +'*Vendor Address:* '+vendorAddr+'\n'
+          +'*Vendor Phone:* '+vendorPhone+'\n\n'
+          +'*\uD83D\uDCE6 Items:*\n'+(o ? formatItemsForTelegram(o.items_json, o.items) : '\u2014')+'\n\n'
+          +'*\uD83D\uDCB0 Your commission: \u20A6'+pickupComm.toLocaleString()+'*'
         );
       }
     })
@@ -1485,16 +1563,27 @@
         var vendorName = currentDrillVendor ? (currentDrillVendor.name || '\u2014') : '\u2014';
         var vendorPhone = currentDrillVendor ? (currentDrillVendor.phone || '\u2014') : '\u2014';
         sendTelegram(delivDrv.telegram_chat_id,
-          '\uD83D\uDEF5 Delivery Assignment\n\n'
-          +'Order ID: '+orderId+'\n'
-          +'Customer: '+(o ? o.customer_name : '\u2014')+'\n'
-          +'Phone: '+(o ? o.phone : '\u2014')+'\n'
-          +'Collect from: '+vendorName+'\n'
-          +'Vendor address: '+vendorAddr+'\n'
-          +'Vendor phone: '+vendorPhone+'\n'
-          +'Delivery address: '+(o ? o.address : '\u2014')+'\n'
-          +'Items: '+(o ? o.items : '\u2014')+'\n'
-          +'Your commission: \u20A6'+delivComm.toLocaleString()
+          '\uD83D\uDEF5 *Delivery Assignment*\n\n'
+          +'*Order ID:* '+orderId+'\n'
+          +'*Customer:* '+(o ? o.customer_name : '\u2014')+'\n'
+          +'*Phone:* '+(o ? o.phone : '\u2014')+'\n\n'
+          +'*\uD83C\uDFEA Collect from:* '+vendorName+'\n'
+          +'*Vendor Address:* '+vendorAddr+'\n'
+          +'*Vendor Phone:* '+vendorPhone+'\n\n'
+          +'*\uD83D\uDCCD Delivery Address*\n'+(o ? o.address : '\u2014')+'\n\n'
+          +'*\uD83D\uDCE6 Items:*\n'+(o ? formatItemsForTelegram(o.items_json, o.items) : '\u2014')+'\n\n'
+          +'*\uD83D\uDCB0 Your commission: \u20A6'+delivComm.toLocaleString()+'*'
+        );
+      }
+      // Notify vendor group when delivery rider assigned
+      if (currentDrillVendor && currentDrillVendor.telegram_chat_id && delivDrv) {
+        sendTelegram(currentDrillVendor.telegram_chat_id,
+          '\uD83D\uDEF5 *Delivery Rider Assigned*\n\n'
+          +'*Order ID:* '+orderId+'\n'
+          +'*Customer:* '+(o ? o.customer_name : '\u2014')+'\n\n'
+          +'*Rider:* '+delivDrv.name+'\n'
+          +'*Phone:* '+(delivDrv.phone || '\u2014')+'\n\n'
+          +'\uD83D\uDCCD Rider is on the way to collect the order'
         );
       }
     })
@@ -1629,7 +1718,7 @@
     document.getElementById('odm-name').textContent       = o.customer_name || '\u2014';
     document.getElementById('odm-phone').textContent      = o.phone || '';
     document.getElementById('odm-address').textContent    = o.address || '';
-    document.getElementById('odm-items').textContent      = o.items || '\u2014';
+    document.getElementById('odm-items').innerHTML = formatItemsGroupedHtml(o.items_json, o.items);
     document.getElementById('odm-subtotal').textContent   = '\u20A6' + (Number(o.subtotal)||0).toLocaleString();
     document.getElementById('odm-delivery-fee').textContent = '\u20A6' + (Number(o.delivery_fee)||0).toLocaleString();
     document.getElementById('odm-service-fee').textContent  = '\u20A6' + (Number(o.service_fee)||0).toLocaleString();
@@ -1667,12 +1756,114 @@
     }
 
     odmUpdateCommissionDisplay(o);
+    odmRenderAudit(o);
     document.getElementById('order-detail-modal').classList.add('open');
   }
 
   function closeOrderDetailModal() {
     document.getElementById('order-detail-modal').classList.remove('open');
     odmOrderId = null;
+  }
+
+  function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function odmToggleAudit() {
+    var body    = document.getElementById('odm-audit-body');
+    var chevron = document.getElementById('odm-audit-chevron');
+    var open    = body.style.display === 'block';
+    body.style.display      = open ? 'none' : 'block';
+    chevron.style.transform = open ? '' : 'rotate(90deg)';
+  }
+
+  function odmRenderAudit(o) {
+    var wrap    = document.getElementById('odm-audit-wrap');
+    var body    = document.getElementById('odm-audit-body');
+    var chevron = document.getElementById('odm-audit-chevron');
+
+    var steps = [
+      { label: 'Handoff 1 \u2014 Pickup from Customer',  data: o.pickup_confirmation },
+      { label: 'Handoff 2 \u2014 Receipt at Vendor',     data: o.vendor_receipt_confirmation },
+      { label: 'Handoff 3 \u2014 Dispatch from Vendor',  data: o.vendor_dispatch_confirmation },
+      { label: 'Handoff 4 \u2014 Collection by Rider',   data: o.rider_collection_confirmation },
+      { label: 'Handoff 5 \u2014 Receipt by Customer',   data: o.customer_receipt_confirmation },
+    ];
+
+    var hasAny = steps.some(function(s) { return s.data; });
+    if (!hasAny) { wrap.style.display = 'none'; return; }
+
+    wrap.style.display = 'block';
+    var isDisputed = o.status === 'Disputed';
+
+    if (isDisputed) {
+      body.style.display      = 'block';
+      chevron.style.transform = 'rotate(90deg)';
+    } else {
+      body.style.display      = 'none';
+      chevron.style.transform = '';
+    }
+
+    var disputeHtml = '';
+    if (isDisputed && o.customer_receipt_confirmation) {
+      var crc = typeof o.customer_receipt_confirmation === 'string' ? JSON.parse(o.customer_receipt_confirmation) : o.customer_receipt_confirmation;
+      if (crc && crc.comment) {
+        disputeHtml = '<div style="background:rgba(255,87,87,0.1);border:1px solid rgba(255,87,87,0.3);border-radius:8px;padding:12px;margin-bottom:14px">'
+          + '<div style="font-size:11px;font-weight:700;color:var(--red);margin-bottom:4px">&#9888; Customer Dispute</div>'
+          + '<div style="font-size:12px;color:var(--white);line-height:1.5">' + escHtml(crc.comment) + '</div>'
+          + '</div>';
+      }
+    }
+
+    var stepsHtml = steps.map(function(step) {
+      var conf = step.data;
+      if (conf && typeof conf === 'string') { try { conf = JSON.parse(conf); } catch(e) { conf = null; } }
+
+      if (!conf) {
+        return '<div style="display:flex;gap:12px;margin-bottom:12px;opacity:0.4">'
+          + '<div style="flex-shrink:0;width:6px;height:6px;border-radius:50%;background:var(--gray);margin-top:5px"></div>'
+          + '<div style="font-size:12px;color:var(--gray)">' + step.label + '</div>'
+          + '</div>';
+      }
+
+      var match      = conf.match !== false;
+      var dotColor   = match ? 'var(--green)' : 'var(--red)';
+      var matchBadge = match
+        ? '<span style="font-size:10px;font-weight:700;color:var(--green)">&#10003; Match</span>'
+        : '<span style="font-size:10px;font-weight:700;color:var(--red)">&#9888; Mismatch</span>';
+      var when = conf.confirmed_at ? new Date(conf.confirmed_at).toLocaleString('en-GB', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' }) : '';
+      var who  = conf.confirmed_by || '';
+
+      var countsHtml = '';
+      if (conf.counts && typeof conf.counts === 'object') {
+        countsHtml = '<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px">'
+          + Object.keys(conf.counts).map(function(cat) {
+              return '<span style="background:var(--navy2);border-radius:4px;padding:2px 8px;font-size:11px;color:var(--white)">'
+                + escHtml(cat) + ' \u00D7' + conf.counts[cat] + '</span>';
+            }).join('')
+          + '</div>';
+      }
+
+      var commentHtml = '';
+      if (conf.override && conf.comment) {
+        commentHtml = '<div style="margin-top:6px;font-size:11px;color:var(--amber);font-style:italic">"' + escHtml(conf.comment) + '"</div>';
+      }
+
+      return '<div style="display:flex;gap:12px;margin-bottom:14px">'
+        + '<div style="flex-shrink:0;width:6px;height:6px;border-radius:50%;background:' + dotColor + ';margin-top:5px"></div>'
+        + '<div style="flex:1;min-width:0">'
+        +   '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">'
+        +     '<div style="font-size:12px;font-weight:600;color:var(--white)">' + step.label + '</div>'
+        +     matchBadge
+        +   '</div>'
+        +   '<div style="font-size:11px;color:var(--gray);margin-top:2px">' + escHtml(who) + (when ? ' \u00B7 ' + when : '') + '</div>'
+        +   countsHtml
+        +   commentHtml
+        + '</div>'
+        + '</div>';
+    }).join('');
+
+    body.innerHTML = disputeHtml + stepsHtml;
   }
 
   function odmUpdateCommissionDisplay(o) {
@@ -1724,16 +1915,16 @@
         var vendorName = currentDrillVendor ? (currentDrillVendor.name || '\u2014') : '\u2014';
         var vendorPhone = currentDrillVendor ? (currentDrillVendor.phone || '\u2014') : '\u2014';
         sendTelegram(pickupDrv.telegram_chat_id,
-          '\uD83D\uDEF5 Pickup Assignment\n\n'
-          + 'Order ID: ' + odmOrderId + '\n'
-          + 'Customer: ' + (o ? o.customer_name : '\u2014') + '\n'
-          + 'Phone: '    + (o ? o.phone : '\u2014') + '\n'
-          + 'Pickup address: ' + (o ? o.address : '\u2014') + '\n'
-          + 'Drop off at: ' + vendorName + '\n'
-          + 'Vendor address: ' + vendorAddr + '\n'
-          + 'Vendor phone: ' + vendorPhone + '\n'
-          + 'Items: '    + (o ? o.items : '\u2014') + '\n'
-          + 'Your commission: \u20A6' + pickupFee.toLocaleString()
+          '\uD83D\uDEF5 *Pickup Assignment*\n\n'
+          + '*Order ID:* ' + odmOrderId + '\n'
+          + '*Customer:* ' + (o ? o.customer_name : '\u2014') + '\n'
+          + '*Phone:* '    + (o ? o.phone : '\u2014') + '\n\n'
+          + '*\uD83D\uDCCD Pickup Address*\n' + (o ? o.address : '\u2014') + '\n\n'
+          + '*\uD83C\uDFEA Drop off at:* ' + vendorName + '\n'
+          + '*Vendor Address:* ' + vendorAddr + '\n'
+          + '*Vendor Phone:* ' + vendorPhone + '\n\n'
+          + '*\uD83D\uDCE6 Items:*\n' + (o ? formatItemsForTelegram(o.items_json, o.items) : '\u2014') + '\n\n'
+          + '*\uD83D\uDCB0 Your commission: \u20A6' + pickupFee.toLocaleString() + '*'
         );
       }
     })
@@ -1767,16 +1958,16 @@
         var vendorName = currentDrillVendor ? (currentDrillVendor.name || '\u2014') : '\u2014';
         var vendorPhone = currentDrillVendor ? (currentDrillVendor.phone || '\u2014') : '\u2014';
         sendTelegram(delivDrv.telegram_chat_id,
-          '\uD83D\uDEF5 Delivery Assignment\n\n'
-          + 'Order ID: ' + odmOrderId + '\n'
-          + 'Customer: ' + (o ? o.customer_name : '\u2014') + '\n'
-          + 'Phone: '    + (o ? o.phone : '\u2014') + '\n'
-          + 'Collect from: ' + vendorName + '\n'
-          + 'Vendor address: ' + vendorAddr + '\n'
-          + 'Vendor phone: ' + vendorPhone + '\n'
-          + 'Delivery address: ' + (o ? o.address : '\u2014') + '\n'
-          + 'Items: '    + (o ? o.items : '\u2014') + '\n'
-          + 'Your commission: \u20A6' + delivFeeR.toLocaleString()
+          '\uD83D\uDEF5 *Delivery Assignment*\n\n'
+          + '*Order ID:* ' + odmOrderId + '\n'
+          + '*Customer:* ' + (o ? o.customer_name : '\u2014') + '\n'
+          + '*Phone:* '    + (o ? o.phone : '\u2014') + '\n\n'
+          + '*\uD83C\uDFEA Collect from:* ' + vendorName + '\n'
+          + '*Vendor Address:* ' + vendorAddr + '\n'
+          + '*Vendor Phone:* ' + vendorPhone + '\n\n'
+          + '*\uD83D\uDCCD Delivery Address*\n' + (o ? o.address : '\u2014') + '\n\n'
+          + '*\uD83D\uDCE6 Items:*\n' + (o ? formatItemsForTelegram(o.items_json, o.items) : '\u2014') + '\n\n'
+          + '*\uD83D\uDCB0 Your commission: \u20A6' + delivFeeR.toLocaleString() + '*'
         );
       }
     })
@@ -1812,7 +2003,7 @@
 
 
   function sendTelegram(chatId, text) {
-    fetch('https://api.telegram.org/bot8021952716:AAFg_CsHXdp3SGl6guMiPTqHKs9cPvpv_7o/sendMessage', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ chat_id:chatId, text:text }) }).catch(function(){});
+    fetch('https://api.telegram.org/bot8021952716:AAFg_CsHXdp3SGl6guMiPTqHKs9cPvpv_7o/sendMessage', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ chat_id:chatId, text:text, parse_mode:'Markdown' }) }).catch(function(){});
   }
 
   function openAddRiderModal() { ['rider-name','rider-phone','rider-percentage','rider-telegram'].forEach(function(id){ document.getElementById(id).value=''; }); document.getElementById('add-rider-modal').classList.add('open'); }
@@ -1974,7 +2165,7 @@
         return '<tr>'
           +'<td><div class="mono" style="color:var(--teal)">'+(o.order_id||'—')+'</div><div style="font-size:11px;color:var(--gray)">'+date+'</div></td>'
           +'<td><div style="font-weight:600">'+(o.customer_name||'—')+'</div><div style="font-size:11px;color:var(--gray);max-width:160px">'+(o.address||'')+'</div></td>'
-          +'<td style="font-size:12px;color:var(--gray)">'+(o.items||'—')+'</td>'
+          +'<td style="font-size:12px;color:var(--gray);max-width:160px">'+formatItemsCompact(o.items_json,o.items)+'</td>'
           +'<td><div style="font-size:11px;color:var(--teal);font-weight:600;margin-bottom:4px">'+roleLabel+'</div>'
           +'<div style="font-family:var(--font-mono)">₦'+myEarned.toLocaleString()+'</div>'
           +settledLabel+'</td>'
