@@ -31,6 +31,23 @@ function sbFetch(path, options) {
   return fetch(url, opts);
 }
 
+/* ─── STATUS LABELS ─── */
+var STATUS_LABELS = {
+  'Pending':               'Order received, awaiting pickup',
+  'Picked Up':             'Order picked, on the way to laundromat',
+  'Delivered to Vendor':   'Delivered to Vendor',
+  'Processing':            'Items are being processed/cleaned',
+  'Ready':                 'Ready for delivery',
+  'Out for Delivery':      'Items collected, on the way to customer',
+  'Delivered to Customer': 'Delivered to Customer',
+  'Disputed':              'Disputed — under review',
+  'Cancelled':             'Cancelled',
+};
+
+function statusLabel(status) {
+  return STATUS_LABELS[status] || status || 'Unknown';
+}
+
 /* ─── VENDOR STATE (populated dynamically from URL slug) ─── */
 var VENDOR = {
   id:               '',
@@ -766,7 +783,7 @@ function renderServices() {
       );
     }).join('');
 
-    var header = categories.length > 1 ? '<div class="cat-header">' + cat + '</div>' : '';
+    var header = '<div class="cat-header">' + cat + '</div>';
     return '<div class="cat-section">' + header + rows + '</div>';
   }).join('');
 
@@ -868,15 +885,14 @@ function renderSummary() {
     catMap[cat].push(s);
   });
   var groupedRows = catOrder.map(function(cat) {
-    var showHeader = catOrder.length > 1;
-    var hdr = showHeader ? '<div style="font-size:11px;font-weight:600;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.8px;margin:12px 0 6px">' + cat + '</div>' : '';
+    var hdr = '<div class="summary-cat-label">' + cat + '</div>';
     var catRows = catMap[cat].map(function(s) {
       return '<div class="summary-row">'
         + '<span>' + s.name + ' <small style="color:var(--gray-500)">\xD7' + s.qty + '</small></span>'
         + '<span>\u20A6' + (s.price * s.qty).toLocaleString() + '</span>'
         + '</div>';
     }).join('');
-    return hdr + catRows;
+    return '<div class="summary-cat-section">' + hdr + catRows + '</div>';
   }).join('');
   document.getElementById('summary-items').innerHTML = groupedRows
     + (discount > 0
@@ -889,6 +905,7 @@ function renderSummary() {
         + '<span style="text-decoration:line-through;color:var(--gray-500)">\u20A6' + rawSub.toLocaleString() + '</span>'
         + '</div>'
       : '')
+    + '<div class="summary-totals-divider"></div>'
     + '<div class="summary-row sub-row">'
     +   '<span>Subtotal</span>'
     +   '<span>\u20A6' + sub.toLocaleString() + '</span>'
@@ -918,6 +935,14 @@ function submitOrder() {
   var sub       = rawSub - discount;
   var total     = sub + deliveryFee + serviceFee;
 
+  // Build structured items JSON — nested by category
+  var itemsStructured = {};
+  items.forEach(function(s) {
+    var cat = s.category || 'Services';
+    if (!itemsStructured[cat]) itemsStructured[cat] = [];
+    itemsStructured[cat].push({ name: s.name, qty: s.qty, price: s.price });
+  });
+  // Also keep flat string for legacy display fallback
   var itemsStr = items.map(function(s) { return s.qty + 'x ' + s.name; }).join(', ');
 
   orderPayload = {
@@ -927,6 +952,7 @@ function submitOrder() {
     phone:         currentUser ? currentUser.phone : '',
     address:       selectedAddress || (currentUser ? currentUser.address : ''),
     items:         itemsStr,
+    items_json:    itemsStructured,
     subtotal:      sub,
     delivery_fee:  deliveryFee,
     service_fee:   serviceFee,
@@ -1112,6 +1138,26 @@ function bootstrapVendor() {
     document.title = VENDOR.name + ' — Laundry';
     var brandEls = document.querySelectorAll('.vendor-name-placeholder');
     brandEls.forEach(function(el) { el.textContent = VENDOR.name; });
+
+    // Topbar: logo + name side by side if logo exists, name only if not
+    var topbarNameEls = document.querySelectorAll('.topbar-vendor-name');
+    topbarNameEls.forEach(function(el) { el.textContent = VENDOR.name; });
+    var topbarLogoEls = document.querySelectorAll('.topbar-vendor-logo');
+    topbarLogoEls.forEach(function(el) {
+      if (VENDOR.logo_url) {
+        el.src = VENDOR.logo_url;
+        el.alt = VENDOR.name;
+        el.style.display = 'inline-block';
+      } else {
+        el.style.display = 'none';
+      }
+    });
+
+    // Inject track link
+    var trackLinks = document.querySelectorAll('.track-order-link');
+    trackLinks.forEach(function(el) {
+      el.href = '/track?vendor=' + VENDOR.slug;
+    });
 
     // Load active services — flatten nested category structure
     if (vendor.services && vendor.services.length) {
