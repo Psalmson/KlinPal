@@ -14,8 +14,9 @@
 
 <!-- S1: LANDING -->
 <section class="screen active" id="s-landing">
-  <div class="topbar">
-    <div class="logo"><img src="" alt="Klinpal" class="logo-img"></div>
+  <div class="topbar topbar-branded">
+    <img src="" alt="" class="topbar-vendor-logo" style="display:none;height:32px;width:auto;object-fit:contain;border-radius:4px">
+    <span class="topbar-vendor-name"></span>
   </div>
   <div class="hero">
     <div class="hero-visual">🧺</div>
@@ -28,7 +29,8 @@
       <span class="trust-pill">⚡ Fast Turnaround</span>
     </div>
     <button class="btn-primary" onclick="go('s-phone')">Request Laundry</button>
-    <p class="vendor-name-placeholder cta-note"></p>
+    <p class="cta-note">Powered by Klinpal</p>
+    <a href="#" class="track-order-link" style="display:block;text-align:center;font-size:13px;color:var(--teal);text-decoration:none;padding:4px 0">Track your order →</a>
   </div>
 </section>
 
@@ -163,7 +165,6 @@
   </div>
   <div class="screen-body">
     <div class="screen-head">
-      <div class="review-chip">REVIEW</div>
       <h2 class="screen-title">Order Summary</h2>
     </div>
     <div class="summary-card">
