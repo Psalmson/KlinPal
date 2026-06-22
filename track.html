@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<link rel="icon" href="images/favicon.svg" type="image/svg+xml">
+<title>Track Your Order — Klinpal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inria+Serif:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --teal:#00c9a7;--teal-dark:#00a88a;
+    --navy:#0d1b2a;--navy2:#112233;--navy3:#1a2e42;
+    --white:#ffffff;--gray-50:#f0f4f8;--gray-100:#e2e8f0;
+    --gray-300:#c0cdd9;--gray-500:#7a90a8;--gray-700:#3d5166;
+    --green:#22c55e;--red:#ef4444;--amber:#f59e0b;
+    --font-head:'Inria Serif',serif;--font-body:'Instrument Sans',sans-serif;
+    --radius:14px;--radius-sm:8px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:var(--font-body);background:var(--gray-50);color:var(--gray-700);min-height:100vh;}
+
+  .topbar{position:sticky;top:0;background:var(--white);border-bottom:1px solid var(--gray-100);padding:0 20px;height:56px;display:flex;align-items:center;justify-content:space-between;z-index:10;}
+  .topbar-logo{font-family:var(--font-head);font-size:18px;font-weight:800;color:var(--navy);}
+  .topbar-logo span{color:var(--teal);}
+
+  .wrap{max-width:480px;margin:0 auto;padding:24px 16px 48px;}
+
+  /* Phone lookup */
+  #screen-lookup{display:block;}
+  #screen-orders{display:none;}
+
+  .card{background:var(--white);border-radius:var(--radius);padding:24px;margin-bottom:16px;border:1px solid var(--gray-100);}
+  .card-title{font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--navy);margin-bottom:6px;}
+  .card-sub{font-size:13px;color:var(--gray-500);margin-bottom:20px;}
+
+  .field-label{font-size:11px;font-weight:600;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px;display:block;}
+  .field-input{width:100%;border:1.5px solid var(--gray-300);border-radius:var(--radius-sm);padding:12px 16px;font-family:var(--font-body);font-size:15px;color:var(--navy);outline:none;transition:border-color 0.2s;margin-bottom:16px;background:var(--white);}
+  .field-input:focus{border-color:var(--teal);}
+  .field-error{font-size:12px;color:var(--red);margin-top:-12px;margin-bottom:12px;display:none;}
+
+  .btn-primary{width:100%;background:var(--teal);color:var(--white);border:none;border-radius:var(--radius-sm);padding:14px;font-family:var(--font-head);font-size:15px;font-weight:700;cursor:pointer;transition:background 0.15s;}
+  .btn-primary:hover{background:var(--teal-dark);}
+  .btn-ghost{width:100%;background:none;border:1.5px solid var(--gray-300);border-radius:var(--radius-sm);padding:12px;font-family:var(--font-body);font-size:14px;color:var(--gray-700);cursor:pointer;margin-top:8px;}
+
+  /* Status progress */
+  .status-bar{display:flex;align-items:center;margin-bottom:20px;}
+  .status-dot{width:10px;height:10px;border-radius:50%;background:var(--gray-300);flex-shrink:0;}
+  .status-dot.done{background:var(--teal);}
+  .status-dot.active{background:var(--teal);box-shadow:0 0 0 3px rgba(0,201,167,0.2);}
+  .status-line{flex:1;height:2px;background:var(--gray-100);}
+  .status-line.done{background:var(--teal);}
+
+  .order-card{background:var(--white);border-radius:var(--radius);border:1px solid var(--gray-100);padding:20px;margin-bottom:12px;}
+  .order-id{font-family:var(--font-body);font-size:12px;color:var(--teal);font-weight:600;margin-bottom:4px;}
+  .order-date{font-size:11px;color:var(--gray-500);margin-bottom:12px;}
+  .order-status{font-size:14px;font-weight:600;color:var(--navy);margin-bottom:4px;}
+  .order-items{font-size:12px;color:var(--gray-500);margin-bottom:14px;}
+
+  .cat-label{font-size:11px;font-weight:700;color:var(--gray-700);text-transform:uppercase;letter-spacing:0.6px;margin:10px 0 4px;}
+  .svc-row{display:flex;justify-content:space-between;font-size:13px;color:var(--gray-700);padding:3px 0;}
+
+  .confirm-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;}
+  .btn-confirm{border:none;border-radius:var(--radius-sm);padding:13px;font-family:var(--font-head);font-size:14px;font-weight:700;cursor:pointer;}
+  .btn-confirm-yes{background:var(--green);color:var(--white);}
+  .btn-confirm-no{background:rgba(239,68,68,0.1);color:var(--red);border:1px solid rgba(239,68,68,0.3);}
+
+  .dispute-wrap{display:none;margin-top:12px;}
+  .dispute-wrap textarea{width:100%;border:1.5px solid var(--gray-300);border-radius:var(--radius-sm);padding:10px 14px;font-family:var(--font-body);font-size:13px;color:var(--navy);resize:vertical;min-height:80px;outline:none;margin-bottom:10px;}
+  .dispute-wrap textarea:focus{border-color:var(--red);}
+
+  .history-toggle{font-size:13px;color:var(--teal);background:none;border:none;cursor:pointer;padding:0;font-family:var(--font-body);font-weight:600;}
+  .reorder-btn{font-size:12px;color:var(--gray-500);background:none;border:1px solid var(--gray-300);border-radius:20px;padding:4px 12px;cursor:pointer;font-family:var(--font-body);}
+  .reorder-btn:hover{border-color:var(--teal);color:var(--teal);}
+
+  .empty-state{text-align:center;padding:48px 20px;color:var(--gray-500);font-size:14px;}
+  .loading-state{text-align:center;padding:48px 20px;color:var(--gray-500);font-size:14px;}
+
+  .pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+  .pill-done{background:rgba(34,197,94,0.1);color:var(--green);}
+  .pill-active{background:rgba(0,201,167,0.1);color:var(--teal);}
+  .pill-disputed{background:rgba(239,68,68,0.1);color:var(--red);}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:8px">
+    <img id="topbar-vendor-logo" src="" alt="" style="display:none;height:32px;width:auto;object-fit:contain;border-radius:4px">
+    <span id="topbar-vendor-name" style="font-family:'Inria Serif',serif;font-size:16px;font-weight:700;color:#0d1b2a"></span>
+  </div>
+  <div style="font-size:12px;color:var(--gray-500)" id="topbar-vendor"></div>
+</div>
+
+<div class="wrap">
+
+  <!-- LOOKUP SCREEN -->
+  <div id="screen-lookup">
+    <div class="card">
+      <div class="card-title">Track Your Order</div>
+      <div class="card-sub">Enter your phone number to see your orders.</div>
+      <label class="field-label">Phone Number</label>
+      <input class="field-input" id="track-phone" type="tel" placeholder="e.g. 08012345678" inputmode="numeric" autocomplete="tel">
+      <p class="field-error" id="track-phone-error">Please enter a valid 11-digit number.</p>
+      <button class="btn-primary" onclick="lookupOrders()">View My Orders →</button>
+    </div>
+  </div>
+
+  <!-- ORDERS SCREEN -->
+  <div id="screen-orders">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div style="font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--navy)">Your Orders</div>
+      <button onclick="showLookup()" style="font-size:12px;color:var(--gray-500);background:none;border:none;cursor:pointer;font-family:var(--font-body)">← Change number</button>
+    </div>
+    <div id="orders-list"><div class="loading-state">Loading...</div></div>
+  </div>
+
+</div>
+
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+  var SUPABASE_URL = KLINPAL_ENV.SUPABASE_URL;
+  var SUPABASE_KEY = KLINPAL_ENV.SUPABASE_KEY;
+  var TELEGRAM_BOT = '8021952756:AAFg_CsHXdp3SGl6guMiPTqHKs9cPvpv_7o';
+  var SUPERADMIN_CHAT = '-5041093515';
+
+  var STATUS_LABELS = {
+    'Pending':               'Order received, awaiting pickup',
+    'Picked Up':             'Order picked, on the way to laundromat',
+    'Delivered to Vendor':   'Delivered to Vendor',
+    'Processing':            'Items are being processed/cleaned',
+    'Ready':                 'Ready for delivery',
+    'Out for Delivery':      'Items collected, on the way to customer',
+    'Delivered to Customer': 'Delivered to Customer',
+    'Disputed':              'Disputed — under review',
+    'Cancelled':             'Cancelled',
+  };
+  function statusLabel(s) { return STATUS_LABELS[s] || s || 'Unknown'; }
+
+  var STATUS_STEPS = ['Pending','Picked Up','Delivered to Vendor','Processing','Ready','Out for Delivery','Delivered to Customer'];
+
+  var params   = new URLSearchParams(window.location.search);
+  var vendorSlug = params.get('vendor') || '';
+  var VENDOR   = null;
+  var allOrders = [];
+  var customerPhone = '';
+
+  function sbFetch(path, opts) {
+    var headers = Object.assign({
+      'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json', 'Prefer': 'return=representation'
+    }, (opts && opts.headers) || {});
+    return fetch(SUPABASE_URL + '/rest/v1/' + path, Object.assign({}, opts||{}, { headers: headers }));
+  }
+
+  // Bootstrap vendor
+  if (vendorSlug) {
+    sbFetch('vendors?slug=eq.' + encodeURIComponent(vendorSlug) + '&active=eq.true&limit=1&select=id,name,slug,logo_url')
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      if (data && data.length) {
+        VENDOR = data[0];
+        document.getElementById('topbar-vendor').textContent = VENDOR.name;
+        document.title = 'Track — ' + VENDOR.name;
+        var logoEl   = document.getElementById('topbar-vendor-logo');
+        var nameEl   = document.getElementById('topbar-vendor-name');
+        if (VENDOR.logo_url) {
+          logoEl.src = VENDOR.logo_url;
+          logoEl.alt = VENDOR.name;
+          logoEl.style.display = 'inline-block';
+        } else {
+          nameEl.textContent = VENDOR.name;
+        }
+      }
+    }).catch(function(){});
+  }
+
+  function showLookup() {
+    document.getElementById('screen-lookup').style.display = 'block';
+    document.getElementById('screen-orders').style.display = 'none';
+  }
+
+  function lookupOrders() {
+    var input = document.getElementById('track-phone');
+    var err   = document.getElementById('track-phone-error');
+    var phone = input.value.trim().replace(/\s+/g,'');
+    if (phone.startsWith('+234')) phone = '0' + phone.slice(4);
+    if (phone.length !== 11 || !/^\d{11}$/.test(phone)) {
+      err.style.display = 'block'; return;
+    }
+    err.style.display = 'none';
+    customerPhone = phone;
+    document.getElementById('screen-lookup').style.display = 'none';
+    document.getElementById('screen-orders').style.display = 'block';
+    document.getElementById('orders-list').innerHTML = '<div class="loading-state">Loading your orders...</div>';
+
+    var vendorFilter = VENDOR ? '&vendor_id=eq.' + VENDOR.id : '';
+    sbFetch('orders?phone=eq.' + encodeURIComponent(phone) + vendorFilter + '&order=created_at.desc&select=*')
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      allOrders = Array.isArray(data) ? data : [];
+      renderOrders();
+    })
+    .catch(function() {
+      document.getElementById('orders-list').innerHTML = '<div class="empty-state">Could not load orders. Please try again.</div>';
+    });
+  }
+
+  document.getElementById('track-phone').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') lookupOrders();
+  });
+
+  function renderOrders() {
+    var list = document.getElementById('orders-list');
+    if (!allOrders.length) {
+      list.innerHTML = '<div class="empty-state">No orders found for this number.</div>';
+      return;
+    }
+
+    var active    = allOrders.filter(function(o) { return o.status !== 'Delivered to Customer' && o.status !== 'Cancelled' && o.status !== 'Disputed'; });
+    var completed = allOrders.filter(function(o) { return o.status === 'Delivered to Customer' || o.status === 'Cancelled' || o.status === 'Disputed'; });
+
+    var html = '';
+
+    // Active orders
+    active.forEach(function(o) {
+      html += renderOrderCard(o, true);
+    });
+
+    // History section
+    if (completed.length) {
+      html += '<div style="margin:20px 0 12px;display:flex;align-items:center;justify-content:space-between">'
+        + '<div style="font-family:var(--font-head);font-size:15px;font-weight:700;color:var(--navy)">Order History</div>'
+        + '</div>';
+      completed.forEach(function(o) {
+        html += renderOrderCard(o, false);
+      });
+    }
+
+    list.innerHTML = html;
+  }
+
+  function renderOrderCard(o, isActive) {
+    var date = o.created_at ? new Date(o.created_at).toLocaleDateString('en-GB') : '';
+    var stLabel = statusLabel(o.status);
+    var pillClass = o.status === 'Delivered to Customer' ? 'pill-done' : o.status === 'Disputed' ? 'pill-disputed' : 'pill-active';
+
+    // Progress bar
+    var progressHtml = '';
+    if (isActive) {
+      var steps = STATUS_STEPS;
+      var curIdx = steps.indexOf(o.status);
+      progressHtml = '<div class="status-bar">';
+      steps.forEach(function(s, i) {
+        progressHtml += '<div class="status-dot ' + (i < curIdx ? 'done' : i === curIdx ? 'active' : '') + '"></div>';
+        if (i < steps.length - 1) progressHtml += '<div class="status-line ' + (i < curIdx ? 'done' : '') + '"></div>';
+      });
+      progressHtml += '</div>';
+    }
+
+    // Items
+    var itemsHtml = '';
+    if (o.items_json) {
+      var data = typeof o.items_json === 'string' ? (function(){ try{return JSON.parse(o.items_json);}catch(e){return null;} })() : o.items_json;
+      if (data) {
+        Object.keys(data).forEach(function(cat) {
+          itemsHtml += '<div class="cat-label">' + cat + '</div>';
+          data[cat].forEach(function(s) {
+            itemsHtml += '<div class="svc-row"><span>' + s.name + ' × ' + s.qty + '</span>'
+              + (s.price ? '<span>₦' + (s.price * s.qty).toLocaleString() + '</span>' : '')
+              + '</div>';
+          });
+        });
+      }
+    } else if (o.items) {
+      itemsHtml = '<div class="order-items">' + o.items + '</div>';
+    }
+
+    // Confirmation section — only for Out for Delivery
+    var confirmHtml = '';
+    if (o.status === 'Out for Delivery' && !o.customer_receipt_confirmation) {
+      confirmHtml = '<div style="border-top:1px solid var(--gray-100);padding-top:14px;margin-top:14px">'
+        + '<div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:4px">Your order has been delivered</div>'
+        + '<div style="font-size:12px;color:var(--gray-500);margin-bottom:12px">Please confirm you received your complete order.</div>'
+        + '<div class="confirm-btns">'
+        + '<button class="btn-confirm btn-confirm-yes" onclick="confirmReceipt(\'' + o.order_id + '\')">✓ Confirm Receipt</button>'
+        + '<button class="btn-confirm btn-confirm-no" onclick="showDispute(\'' + o.order_id + '\')">Report Issue</button>'
+        + '</div>'
+        + '<div class="dispute-wrap" id="dispute-' + o.order_id + '">'
+        + '<textarea id="dispute-comment-' + o.order_id + '" placeholder="Describe the issue with your order..."></textarea>'
+        + '<button onclick="submitDispute(\'' + o.order_id + '\')" style="width:100%;background:var(--red);color:var(--white);border:none;border-radius:var(--radius-sm);padding:12px;font-family:var(--font-head);font-size:14px;font-weight:700;cursor:pointer">Submit Report</button>'
+        + '</div>'
+        + '</div>';
+    } else if (o.customer_receipt_confirmation) {
+      var crc = typeof o.customer_receipt_confirmation === 'string' ? JSON.parse(o.customer_receipt_confirmation) : o.customer_receipt_confirmation;
+      if (crc && crc.disputed) {
+        confirmHtml = '<div style="border-top:1px solid var(--gray-100);padding-top:12px;margin-top:12px;font-size:12px;color:var(--red)">⚠ Issue reported — under review</div>';
+      } else {
+        confirmHtml = '<div style="border-top:1px solid var(--gray-100);padding-top:12px;margin-top:12px;font-size:12px;color:var(--green)">✓ Receipt confirmed</div>';
+      }
+    }
+
+    // Reorder button
+    var reorderHtml = '<div style="margin-top:12px;text-align:right">'
+      + '<button class="reorder-btn" onclick="reorder()">Reorder →</button>'
+      + '</div>';
+
+    return '<div class="order-card">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">'
+      + '<div class="order-id">' + (o.order_id || '—') + '</div>'
+      + '<span class="pill ' + pillClass + '">' + stLabel + '</span>'
+      + '</div>'
+      + '<div class="order-date">' + date + '</div>'
+      + progressHtml
+      + itemsHtml
+      + confirmHtml
+      + reorderHtml
+      + '</div>';
+  }
+
+  function confirmReceipt(orderId) {
+    var confirmation = {
+      confirmed_by: customerPhone,
+      confirmed_at: new Date().toISOString(),
+      disputed: false,
+      comment: '',
+    };
+    sbFetch('orders?order_id=eq.' + orderId, {
+      method: 'PATCH',
+      body: JSON.stringify({ customer_receipt_confirmation: confirmation, status: 'Delivered to Customer' }),
+    })
+    .then(function(r) {
+      if (!r.ok) { alert('Could not save confirmation. Please try again.'); return; }
+      var o = allOrders.find(function(x){ return x.order_id === orderId; });
+      if (o) { o.status = 'Delivered to Customer'; o.customer_receipt_confirmation = confirmation; }
+      renderOrders();
+    })
+    .catch(function(){ alert('Could not save. Please try again.'); });
+  }
+
+  function showDispute(orderId) {
+    var wrap = document.getElementById('dispute-' + orderId);
+    if (wrap) wrap.style.display = wrap.style.display === 'block' ? 'none' : 'block';
+  }
+
+  function submitDispute(orderId) {
+    var commentEl = document.getElementById('dispute-comment-' + orderId);
+    var comment   = commentEl ? commentEl.value.trim() : '';
+    if (!comment) { alert('Please describe the issue before submitting.'); return; }
+
+    var confirmation = {
+      confirmed_by: customerPhone,
+      confirmed_at: new Date().toISOString(),
+      disputed: true,
+      comment:  comment,
+    };
+
+    sbFetch('orders?order_id=eq.' + orderId, {
+      method: 'PATCH',
+      body: JSON.stringify({ customer_receipt_confirmation: confirmation, status: 'Disputed' }),
+    })
+    .then(function(r) {
+      if (!r.ok) { alert('Could not submit report. Please try again.'); return; }
+      var o = allOrders.find(function(x){ return x.order_id === orderId; });
+      if (o) { o.status = 'Disputed'; o.customer_receipt_confirmation = confirmation; }
+      // Notify superadmin
+      fetch('https://api.telegram.org/bot' + TELEGRAM_BOT + '/sendMessage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: SUPERADMIN_CHAT,
+          text: '\u26A0\uFE0F *Disputed Delivery \u2014 Klinpal*\n\n'
+            + '*Order ID:* ' + orderId + '\n'
+            + '*Customer Phone:* ' + customerPhone + '\n'
+            + '*Vendor:* ' + (VENDOR ? VENDOR.name : '\u2014') + '\n\n'
+            + '*Issue:*\n' + comment,
+          parse_mode: 'Markdown'
+        })
+      }).catch(function(){});
+      renderOrders();
+    })
+    .catch(function(){ alert('Could not submit. Please try again.'); });
+  }
+
+  function reorder() {
+    var vendorParam = vendorSlug ? '?vendor=' + vendorSlug : '';
+    window.location.href = '/order' + vendorParam;
+  }
+</script>
+</body>
+</html>
