@@ -767,8 +767,8 @@ function renderServices() {
         : '';
       return (
         '<div class="service-row">'
-        + '<div class="service-card ' + (checked ? 'has-items' : '') + '" id="card-' + s.id + '">'
-        +   '<div class="service-check ' + (checked ? 'checked' : '') + '" id="check-' + s.id + '">' + checkIcon + '</div>'
+        + '<div class="service-card ' + (checked ? 'has-items' : '') + '" id="card-' + i + '">'
+        +   '<div class="service-check ' + (checked ? 'checked' : '') + '" id="check-' + i + '">' + checkIcon + '</div>'
         +   '<div class="service-info">'
         +     '<div class="service-name">' + s.name + '</div>'
         +     '<div class="service-price">' + s.price.toLocaleString() + '/item</div>'
@@ -776,7 +776,7 @@ function renderServices() {
         + '</div>'
         + '<div class="qty-ctrl">'
         +   '<button class="qty-btn" onclick="changeQty(' + i + ',-1)">&#8722;</button>'
-        +   '<input class="qty-input" id="qty-' + s.id + '" type="number" min="0" value="' + s.qty + '" oninput="setQty(' + i + ',this)">'
+        +   '<input class="qty-input" id="qty-' + i + '" type="number" min="0" value="' + s.qty + '" oninput="setQty(' + i + ',this)">'
         +   '<button class="qty-btn" onclick="changeQty(' + i + ',1)">+</button>'
         + '</div>'
         + '</div>'
@@ -811,8 +811,8 @@ function updateCheck(id, active) {
 function changeQty(idx, delta) {
   SERVICES[idx].qty = Math.max(0, SERVICES[idx].qty + delta);
   var s = SERVICES[idx];
-  document.getElementById('qty-' + s.id).value = s.qty;
-  updateCheck(s.id, s.qty > 0);
+  document.getElementById('qty-' + idx).value = s.qty;
+  updateCheck(idx, s.qty > 0);
   updateSubtotal();
 }
 
@@ -820,7 +820,7 @@ function setQty(idx, input) {
   var val = Math.max(0, parseInt(input.value) || 0);
   SERVICES[idx].qty = val;
   input.value = val;
-  updateCheck(SERVICES[idx].id, val > 0);
+  updateCheck(idx, val > 0);
   updateSubtotal();
 }
 
