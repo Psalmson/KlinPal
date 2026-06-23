@@ -1024,7 +1024,22 @@
     // Vendor-only setup
     if (!isStaffSession) {
       if (currentVendor.telegram_chat_id) document.getElementById('telegram-chat-id').value = currentVendor.telegram_chat_id;
-      if (currentVendor.services && currentVendor.services.length) services = currentVendor.services;
+      if (currentVendor.services && currentVendor.services.length) {
+        var rawCats   = [];
+        var flatSvcs  = [];
+        currentVendor.services.forEach(function(item) {
+          if (Array.isArray(item.services)) {
+            rawCats.push(item);
+          } else {
+            // Legacy flat service (has price, no nested services array)
+            flatSvcs.push({ name: item.name, price: Number(item.price) || 0, active: item.active !== false });
+          }
+        });
+        if (flatSvcs.length) {
+          rawCats.unshift({ id: 'cat_uncategorized', name: 'Uncategorized', services: flatSvcs });
+        }
+        services = rawCats;
+      }
       renderServicesEditor();
       loadStaff();
 
@@ -1728,6 +1743,7 @@
       return;
     }
     wrap.innerHTML = services.map(function(cat, ci) {
+      if (!Array.isArray(cat.services)) cat.services = [];
       var serviceRows = cat.services.map(function(s, si) {
         return '<div style="display:grid;grid-template-columns:1fr 120px auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--navy3)">'
           + '<div><input class="field-input" type="text" value="' + escVal(s.name) + '" placeholder="Service name" oninput="services[' + ci + '].services[' + si + '].name=this.value" style="margin:0"></div>'
@@ -1781,7 +1797,7 @@
   function addCategory() {
     var name = document.getElementById('new-cat-name').value.trim();
     if (!name) { showToast('Enter a category name', true); return; }
-    services.push({ id: 'cat_' + Date.now(), name: name, services: [] });
+    services.push({ id: 'cat_' + Date.now() + '_' + Math.random().toString(36).slice(2,8), name: name, services: [] });
     document.getElementById('new-cat-name').value = '';
     renderServicesEditor();
     showToast('Category added ✓');
@@ -1794,7 +1810,7 @@
     var price   = priceEl ? (parseInt(priceEl.value) || 0) : 0;
     if (!name)  { showToast('Enter a service name', true); return; }
     if (!price) { showToast('Enter a valid price', true); return; }
-    services[ci].services.push({ id: 'svc_' + Date.now(), name: name, price: price, active: true });
+    services[ci].services.push({ id: 'svc_' + Date.now() + '_' + Math.random().toString(36).slice(2,8), name: name, price: price, active: true });
     renderServicesEditor();
     showToast('Service added ✓');
   }
@@ -2249,4 +2265,3 @@
 
 </body>
 </html>
-  
