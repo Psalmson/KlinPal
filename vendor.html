@@ -1797,7 +1797,7 @@
   function addCategory() {
     var name = document.getElementById('new-cat-name').value.trim();
     if (!name) { showToast('Enter a category name', true); return; }
-    services.push({ id: 'cat_' + Date.now(), name: name, services: [] });
+    services.push({ id: 'cat_' + Date.now() + '_' + Math.random().toString(36).slice(2,8), name: name, services: [] });
     document.getElementById('new-cat-name').value = '';
     renderServicesEditor();
     showToast('Category added ✓');
@@ -1810,7 +1810,7 @@
     var price   = priceEl ? (parseInt(priceEl.value) || 0) : 0;
     if (!name)  { showToast('Enter a service name', true); return; }
     if (!price) { showToast('Enter a valid price', true); return; }
-    services[ci].services.push({ id: 'svc_' + Date.now(), name: name, price: price, active: true });
+    services[ci].services.push({ id: 'svc_' + Date.now() + '_' + Math.random().toString(36).slice(2,8), name: name, price: price, active: true });
     renderServicesEditor();
     showToast('Service added ✓');
   }
