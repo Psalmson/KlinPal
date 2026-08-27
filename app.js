@@ -279,6 +279,15 @@ function go(screenId) {
   document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
   document.getElementById(screenId).classList.add('active');
   window.scrollTo(0, 0);
+
+  // Show floating order bar only on the order screen
+  var bar = document.getElementById('floating-order-bar');
+  if (bar) bar.style.display = (screenId === 's-order') ? 'block' : 'none';
+
+  // Add bottom padding to order screen-body so content clears the floating bar
+  var orderBody = document.querySelector('#s-order .screen-body');
+  if (orderBody) orderBody.style.paddingBottom = (screenId === 's-order') ? '90px' : '';
+
   if (screenId === 's-order')   renderOrderScreen();
   if (screenId === 's-summary') renderSummary();
   if (screenId === 's-confirm') renderConfirmScreen();
@@ -826,9 +835,16 @@ function setQty(idx, input) {
 
 function updateSubtotal() {
   var sub = SERVICES.reduce(function(a, s) { return a + s.price * s.qty; }, 0);
-  document.getElementById('order-subtotal').textContent = '\u20A6' + sub.toLocaleString();
+  var el = document.getElementById('order-subtotal');
+  if (el) el.textContent = '\u20A6' + sub.toLocaleString();
   var hasItems = SERVICES.some(function(s) { return s.qty > 0; });
-  document.getElementById('proceed-btn').disabled = !hasItems;
+  var btn = document.getElementById('proceed-btn');
+  if (btn) {
+    btn.disabled = !hasItems;
+    btn.style.opacity  = hasItems ? '1'   : '0.4';
+    btn.style.background = hasItems ? 'var(--teal)' : 'var(--gray-300, #ccc)';
+    btn.style.cursor   = hasItems ? 'pointer' : 'not-allowed';
+  }
 }
 
 function proceedFromOrder() {
