@@ -665,7 +665,7 @@ body {
   margin-bottom: 20px;
   position: sticky;
   top: 56px;
-  background: var(--white);
+  background: var(--off-white);
   z-index: 10;
   padding-top: 8px;
 }
