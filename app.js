@@ -73,6 +73,8 @@ var SERVICES = [
 { id: 'iron',    name: 'Wash + Iron',  price: 300, qty: 0 },
 { id: 'dry',     name: 'Dry-clean',    price: 300, qty: 0 },
 ];
+var CATEGORY_DESCRIPTIONS = {};
+var CATEGORY_TURNAROUNDS  = {};
 
 var currentUser      = null;
 var isNewCustomer    = false;
@@ -279,6 +281,22 @@ function go(screenId) {
   document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
   document.getElementById(screenId).classList.add('active');
   window.scrollTo(0, 0);
+
+  // Show floating order bar only on the order screen
+  var bar = document.getElementById('floating-order-bar');
+  if (bar) bar.style.display = (screenId === 's-order') ? 'block' : 'none';
+
+  // Show sticky search+tab bar only on order screen
+  var stickyBar = document.getElementById('order-sticky-bar');
+  if (stickyBar) stickyBar.style.display = (screenId === 's-order') ? 'block' : 'none';
+
+  // Reset search when leaving order screen
+  if (screenId !== 's-order') _searchQuery = '';
+
+  // Add bottom padding to order screen-body so content clears the floating bar
+  var orderBody = document.querySelector('#s-order .screen-body');
+  if (orderBody) orderBody.style.paddingBottom = (screenId === 's-order') ? '90px' : '';
+
   if (screenId === 's-order')   renderOrderScreen();
   if (screenId === 's-summary') renderSummary();
   if (screenId === 's-confirm') renderConfirmScreen();
@@ -740,21 +758,128 @@ function getCategories() {
   return cats;
 }
 
-function renderServices() {
-  var categories = getCategories();
-  var container  = document.getElementById('services-list');
+var _searchQuery = '';
 
-  // Tab bar
-  var tabBar = '';
-  if (categories.length > 1) {
-    tabBar = '<div class="cat-tab-bar" id="cat-tab-bar">'
-      + categories.map(function(cat, ci) {
-          return '<button class="cat-tab' + (ci === 0 ? ' active' : '') + '" onclick="scrollToCategory(' + ci + ',this)">' + cat + '</button>';
-        }).join('')
-      + '</div>';
+function renderSearchBar() {
+  return '<div style="position:relative;margin-bottom:12px">'
+    + '<input id="svc-search" type="search" placeholder="Search services…" value="' + escHtml(_searchQuery) + '" '
+    + 'oninput="onServiceSearch(this.value)" '
+    + 'style="width:100%;box-sizing:border-box;padding:10px 36px 10px 36px;border:1.5px solid var(--gray-200,#e5e5e5);border-radius:10px;font-size:14px;font-family:var(--font-body);background:var(--white,#fff);color:var(--navy,#173753);outline:none">'
+    + '<svg style="position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'
+    + (_searchQuery ? '<button onclick="clearServiceSearch()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:4px;color:var(--gray-400,#999);font-size:16px;line-height:1">✕</button>' : '')
+    + '</div>';
+}
+
+function renderTabBar(categories, disabled) {
+  if (categories.length <= 1) return '';
+  var arrowStyle = 'position:absolute;top:50%;transform:translateY(-50%);background:var(--off-white,#f7f9fc);border:1.5px solid var(--gray-300,#ddd);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--gray-700,#555);z-index:11;box-shadow:0 1px 4px rgba(0,0,0,0.10);line-height:1;padding:0;font-family:var(--font-body)';
+  return '<div style="margin-bottom:16px">'
+    + '<div style="position:relative">'
+    + '<div class="cat-tab-bar" id="cat-tab-bar" onscroll="updateTabFade()" style="' + (disabled ? 'opacity:0.4;pointer-events:none;' : '') + 'margin-bottom:0;padding-right:34px">'
+    + categories.map(function(cat, ci) {
+        return '<button class="cat-tab' + (ci === 0 ? ' active' : '') + '" onclick="scrollToCategory(' + ci + ',this)">' + cat + '</button>';
+      }).join('')
+    + '</div>'
+    + '<div id="tab-fade-right" style="position:absolute;top:0;right:28px;width:40px;height:100%;background:linear-gradient(to right,transparent,var(--off-white,#f7f9fc));pointer-events:none"></div>'
+    + '<div id="tab-fade-left" style="position:absolute;top:0;left:0;width:40px;height:100%;background:linear-gradient(to left,transparent,var(--off-white,#f7f9fc));pointer-events:none;visibility:hidden"></div>'
+    + '<button id="tab-arrow-left" onclick="scrollTabBar(-1)" style="' + arrowStyle + ';left:0;visibility:hidden;pointer-events:none">‹</button>'
+    + '<button id="tab-arrow-right" onclick="scrollTabBar(1)" style="' + arrowStyle + ';right:0">›</button>'
+    + '</div>'
+    + '</div>';
+}
+
+function scrollTabBar(dir) {
+  var bar = document.getElementById('cat-tab-bar');
+  if (bar) bar.scrollBy({ left: dir * 120, behavior: 'smooth' });
+}
+
+function updateTabFade() {
+  var bar = document.getElementById('cat-tab-bar');
+  var fr  = document.getElementById('tab-fade-right');
+  var fl  = document.getElementById('tab-fade-left');
+  var ar  = document.getElementById('tab-arrow-right');
+  var al  = document.getElementById('tab-arrow-left');
+  if (!bar) return;
+  var atEnd   = bar.scrollLeft + bar.clientWidth >= bar.scrollWidth - 4;
+  var atStart = bar.scrollLeft <= 4;
+  if (fr) fr.style.visibility = atEnd   ? 'hidden' : 'visible';
+  if (fl) fl.style.visibility = atStart ? 'hidden' : 'visible';
+  if (ar) { ar.style.visibility = atEnd   ? 'hidden' : 'visible'; ar.style.pointerEvents = atEnd   ? 'none' : 'auto'; }
+  if (al) { al.style.visibility = atStart ? 'hidden' : 'visible'; al.style.pointerEvents = atStart ? 'none' : 'auto'; }
+}
+
+function onServiceSearch(q) {
+  _searchQuery = q.trim().toLowerCase();
+  renderServices();
+  if (_searchQuery) {
+    var inp = document.getElementById('svc-search');
+    if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
+  }
+}
+
+function clearServiceSearch() {
+  _searchQuery = '';
+  renderServices();
+  var inp = document.getElementById('svc-search');
+  if (inp) inp.focus();
+}
+
+function renderSearchResults() {
+  var matches = SERVICES.map(function(s, i) { return { s: s, i: i }; })
+    .filter(function(o) { return o.s.name.toLowerCase().indexOf(_searchQuery) !== -1; });
+
+  if (!matches.length) {
+    return '<div style="text-align:center;padding:32px 16px;color:var(--gray-400,#999);font-size:14px">No services found for "' + escHtml(_searchQuery) + '"</div>';
   }
 
-  // Grouped sections
+  return '<div style="font-size:12px;color:var(--gray-400,#999);margin-bottom:12px">' + matches.length + ' result' + (matches.length !== 1 ? 's' : '') + ' for "' + escHtml(_searchQuery) + '"</div>'
+    + matches.map(function(o) {
+        var s = o.s, i = o.i;
+        var checked   = s.qty > 0;
+        var checkIcon = checked
+          ? '<svg width="12" height="10" viewBox="0 0 12 10" fill="none"><path d="M1 5L4.5 8.5L11 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+          : '';
+        var catPill = s.category
+          ? '<span style="font-size:10px;background:var(--teal-lt,#e6f7f1);color:var(--teal,#1a9a6e);border-radius:20px;padding:2px 8px;margin-left:6px;font-weight:500">' + escHtml(s.category) + '</span>'
+          : '';
+        return '<div class="service-row">'
+          + '<div class="service-card ' + (checked ? 'has-items' : '') + '" id="card-' + i + '">'
+          +   '<div class="service-check ' + (checked ? 'checked' : '') + '" id="check-' + i + '">' + checkIcon + '</div>'
+          +   '<div class="service-info">'
+          +     '<div class="service-name" style="display:flex;align-items:center;flex-wrap:wrap">' + escHtml(s.name) + catPill + '</div>'
+          +     '<div class="service-price">' + s.price.toLocaleString() + '/item</div>'
+          +   '</div>'
+          + '</div>'
+          + '<div class="qty-ctrl">'
+          +   '<button class="qty-btn" onclick="changeQty(' + i + ',-1)">&#8722;</button>'
+          +   '<input class="qty-input" id="qty-' + i + '" type="number" min="0" value="' + s.qty + '" oninput="setQty(' + i + ',this)">'
+          +   '<button class="qty-btn" onclick="changeQty(' + i + ',1)">+</button>'
+          + '</div>'
+          + '</div>';
+      }).join('');
+}
+
+function renderServices() {
+  var categories   = getCategories();
+  var container    = document.getElementById('services-list');
+  var tabWrap      = document.getElementById('order-tab-bar-wrap');
+  var searchWrap   = document.getElementById('order-search-wrap');
+
+  // Always update sticky bar
+  if (tabWrap)    tabWrap.innerHTML    = renderTabBar(categories, !!_searchQuery);
+  if (searchWrap) searchWrap.innerHTML = renderSearchBar();
+
+  // Service sections or search results
+  if (_searchQuery) {
+    container.innerHTML = renderSearchResults();
+    updateSubtotal();
+    if (_searchQuery) {
+      var inp = document.getElementById('svc-search');
+      if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
+    }
+    return;
+  }
+
   var sections = categories.map(function(cat) {
     var catServices = SERVICES.map(function(s, i) { return { s: s, i: i }; })
       .filter(function(o) { return (o.s.category || 'Services') === cat; });
@@ -783,19 +908,30 @@ function renderServices() {
       );
     }).join('');
 
-    var header = '<div class="cat-header">' + cat + '</div>';
+    var desc       = CATEGORY_DESCRIPTIONS[cat] || '';
+    var turnaround = CATEGORY_TURNAROUNDS[cat]  || '';
+    var header = '<div class="cat-header">' + cat + '</div>'
+      + (desc       ? '<div style="font-size:12px;color:var(--gray-500,#888);margin:-4px 0 10px;line-height:1.5">' + escHtml(desc) + '</div>' : '')
+      + (turnaround ? '<div style="font-size:11px;color:var(--gray-400,#999);margin-bottom:10px">⏱ ' + escHtml(turnaround) + '</div>' : '');
     return '<div class="cat-section">' + header + rows + '</div>';
   }).join('');
 
-  container.innerHTML = tabBar + sections;
+  container.innerHTML = sections;
   updateSubtotal();
+  setTimeout(updateTabFade, 0);
 }
 
 function scrollToCategory(idx, btn) {
   document.querySelectorAll('.cat-tab').forEach(function(t) { t.classList.remove('active'); });
   btn.classList.add('active');
   var sects = document.querySelectorAll('.cat-section');
-  if (sects[idx]) sects[idx].scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (!sects[idx]) return;
+  var stickyBar = document.getElementById('order-sticky-bar');
+  var topbarH   = 57;
+  var stickyH   = stickyBar ? stickyBar.offsetHeight : 0;
+  var offset    = topbarH + stickyH + 8;
+  var top       = sects[idx].getBoundingClientRect().top + window.scrollY - offset;
+  window.scrollTo({ top: top, behavior: 'smooth' });
 }
 
 function updateCheck(id, active) {
@@ -826,9 +962,16 @@ function setQty(idx, input) {
 
 function updateSubtotal() {
   var sub = SERVICES.reduce(function(a, s) { return a + s.price * s.qty; }, 0);
-  document.getElementById('order-subtotal').textContent = '\u20A6' + sub.toLocaleString();
+  var el = document.getElementById('order-subtotal');
+  if (el) el.textContent = '\u20A6' + sub.toLocaleString();
   var hasItems = SERVICES.some(function(s) { return s.qty > 0; });
-  document.getElementById('proceed-btn').disabled = !hasItems;
+  var btn = document.getElementById('proceed-btn');
+  if (btn) {
+    btn.disabled = !hasItems;
+    btn.style.opacity  = hasItems ? '1'   : '0.4';
+    btn.style.background = hasItems ? 'var(--teal)' : 'var(--gray-300, #ccc)';
+    btn.style.cursor   = hasItems ? 'pointer' : 'not-allowed';
+  }
 }
 
 function proceedFromOrder() {
@@ -1165,7 +1308,9 @@ function bootstrapVendor() {
       vendor.services.forEach(function(cat) {
         // Support both new nested format and legacy flat format
         if (cat.services && Array.isArray(cat.services)) {
-          // New nested format: { id, name, services: [...] }
+          // New nested format: { id, name, description, turnaround, services: [...] }
+          if (cat.description) CATEGORY_DESCRIPTIONS[cat.name] = cat.description;
+          if (cat.turnaround)  CATEGORY_TURNAROUNDS[cat.name]  = cat.turnaround;
           cat.services.filter(function(s) { return s.active; }).forEach(function(s) {
             flat.push({ id: s.id, name: s.name, price: s.price, qty: 0, category: cat.name });
           });
