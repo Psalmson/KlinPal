@@ -147,15 +147,43 @@
       <p class="screen-sub">Select what you need and how many items.</p>
     </div>
     <div id="services-list"></div>
-    <div class="order-footer">
-      <div class="subtotal-row">
-        <span class="subtotal-label">Subtotal</span>
-        <span class="subtotal-value" id="order-subtotal">₦0</span>
-      </div>
-      <button class="btn-primary" id="proceed-btn" onclick="proceedFromOrder()" disabled>Review Order →</button>
-    </div>
   </div>
 </section>
+
+<!-- FLOATING ORDER BAR — fixed to viewport, visible on s-order only -->
+<div id="floating-order-bar" style="
+  display:none;
+  position:fixed;
+  bottom:0;left:0;right:0;
+  z-index:200;
+  background:var(--white);
+  border-top:1px solid var(--gray-100);
+  padding:12px 20px 20px;
+  padding-bottom:max(20px, env(safe-area-inset-bottom));
+  box-shadow:0 -4px 24px rgba(0,0,0,0.08);
+">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;max-width:480px;margin:0 auto">
+    <div>
+      <div style="font-size:11px;color:var(--gray-500);margin-bottom:1px">Subtotal</div>
+      <div style="font-family:var(--font-head);font-size:20px;font-weight:700;color:var(--navy)" id="order-subtotal">₦0</div>
+    </div>
+    <button id="proceed-btn" onclick="proceedFromOrder()" disabled style="
+      flex-shrink:0;
+      background:var(--teal);
+      color:var(--white);
+      border:none;
+      border-radius:100px;
+      padding:14px 28px;
+      font-family:var(--font-body);
+      font-size:15px;
+      font-weight:600;
+      cursor:pointer;
+      transition:opacity 0.15s,background 0.15s;
+      opacity:0.4;
+      white-space:nowrap;
+    ">Review Order →</button>
+  </div>
+</div>
 
 <!-- S6: SUMMARY -->
 <section class="screen" id="s-summary">
