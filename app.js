@@ -768,7 +768,7 @@ function renderSearchBar() {
 
 function renderTabBar(categories, disabled) {
   if (categories.length <= 1) return '';
-  var arrowStyle = 'position:absolute;top:50%;transform:translateY(-50%);background:var(--white,#fff);border:1.5px solid var(--gray-300,#ddd);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--gray-700,#555);z-index:11;box-shadow:0 1px 4px rgba(0,0,0,0.10);line-height:1;padding:0;font-family:var(--font-body)';
+  var arrowStyle = 'position:absolute;top:50%;transform:translateY(-50%);background:var(--off-white,#f7f9fc);border:1.5px solid var(--gray-300,#ddd);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--gray-700,#555);z-index:11;box-shadow:0 1px 4px rgba(0,0,0,0.10);line-height:1;padding:0;font-family:var(--font-body)';
   return '<div style="position:relative;margin-bottom:16px">'
     + '<button id="tab-arrow-left" onclick="scrollTabBar(-1)" style="' + arrowStyle + ';left:0;opacity:0;pointer-events:none">‹</button>'
     + '<div class="cat-tab-bar" id="cat-tab-bar" onscroll="updateTabFade()" style="' + (disabled ? 'opacity:0.4;pointer-events:none;' : '') + 'padding-left:4px;padding-right:4px">'
@@ -776,8 +776,8 @@ function renderTabBar(categories, disabled) {
         return '<button class="cat-tab' + (ci === 0 ? ' active' : '') + '" onclick="scrollToCategory(' + ci + ',this)">' + cat + '</button>';
       }).join('')
     + '</div>'
-    + '<div id="tab-fade-right" style="position:absolute;top:0;right:28px;width:40px;height:100%;background:linear-gradient(to right,transparent,var(--white,#fff));pointer-events:none"></div>'
-    + '<div id="tab-fade-left" style="position:absolute;top:0;left:28px;width:40px;height:100%;background:linear-gradient(to left,transparent,var(--white,#fff));pointer-events:none;opacity:0"></div>'
+    + '<div id="tab-fade-right" style="position:absolute;top:0;right:28px;width:40px;height:100%;background:linear-gradient(to right,transparent,var(--off-white,#f7f9fc));pointer-events:none"></div>'
+    + '<div id="tab-fade-left" style="position:absolute;top:0;left:28px;width:40px;height:100%;background:linear-gradient(to left,transparent,var(--off-white,#f7f9fc));pointer-events:none;opacity:0"></div>'
     + '<button id="tab-arrow-right" onclick="scrollTabBar(1)" style="' + arrowStyle + ';right:0">›</button>'
     + '</div>';
 }
