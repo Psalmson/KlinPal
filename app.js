@@ -781,6 +781,7 @@ function renderServices() {
         +   '<div class="service-info">'
         +     '<div class="service-name">' + s.name + '</div>'
         +     '<div class="service-price">' + s.price.toLocaleString() + '/item</div>'
+        +     (s.turnaround ? '<div style="font-size:11px;color:var(--gray-400,#999);margin-top:1px">⏱ ' + escHtml(s.turnaround) + '</div>' : '')
         +   '</div>'
         + '</div>'
         + '<div class="qty-ctrl">'
@@ -1183,7 +1184,7 @@ function bootstrapVendor() {
         if (cat.services && Array.isArray(cat.services)) {
           // New nested format: { id, name, services: [...] }
           cat.services.filter(function(s) { return s.active; }).forEach(function(s) {
-            flat.push({ id: s.id, name: s.name, price: s.price, qty: 0, category: cat.name });
+            flat.push({ id: s.id, name: s.name, price: s.price, qty: 0, category: cat.name, turnaround: s.turnaround || '' });
           });
         } else if (cat.active !== false) {
           // Legacy flat format: { id, name, price, active }
