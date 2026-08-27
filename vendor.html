@@ -1768,13 +1768,11 @@
       }).join('');
 
       return '<div style="background:var(--navy2);border:1px solid var(--navy3);border-radius:var(--radius);padding:20px;margin-bottom:16px">'
-        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
-        +   '<input class="field-input" type="text" value="' + escVal(cat.name) + '" oninput="services[' + ci + '].name=this.value" style="margin:0;font-family:var(--font-head);font-size:15px;font-weight:700;width:auto;flex:1">'
-        +   '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">'
-        +     (ci > 0 ? '<button onclick="moveCat(' + ci + ',-1)" style="background:var(--navy3);border:1px solid var(--navy3);border-radius:6px;color:var(--gray);cursor:pointer;font-size:14px;padding:4px 8px;line-height:1" title="Move up">↑</button>' : '<button disabled style="background:transparent;border:1px solid transparent;border-radius:6px;color:transparent;font-size:14px;padding:4px 8px;line-height:1">↑</button>')
-        +     (ci < services.length - 1 ? '<button onclick="moveCat(' + ci + ',1)" style="background:var(--navy3);border:1px solid var(--navy3);border-radius:6px;color:var(--gray);cursor:pointer;font-size:14px;padding:4px 8px;line-height:1" title="Move down">↓</button>' : '<button disabled style="background:transparent;border:1px solid transparent;border-radius:6px;color:transparent;font-size:14px;padding:4px 8px;line-height:1">↓</button>')
-        +     '<button class="delete-btn" style="font-size:12px;padding:4px 10px" onclick="deleteCategory(' + ci + ')">Remove</button>'
-        +   '</div>'
+        + '<input class="field-input" type="text" value="' + escVal(cat.name) + '" oninput="services[' + ci + '].name=this.value" style="margin:0 0 10px;font-family:var(--font-head);font-size:15px;font-weight:700;width:100%">'
+        + '<div style="display:flex;align-items:center;gap:6px;margin-bottom:12px">'
+        +   (ci > 0 ? '<button onclick="moveCat(' + ci + ',-1)" style="background:var(--navy3);border:1px solid var(--navy3);border-radius:6px;color:var(--gray);cursor:pointer;font-size:14px;padding:4px 10px;line-height:1" title="Move up">↑</button>' : '<button disabled style="background:transparent;border:1px solid transparent;border-radius:6px;color:transparent;font-size:14px;padding:4px 10px;line-height:1">↑</button>')
+        +   (ci < services.length - 1 ? '<button onclick="moveCat(' + ci + ',1)" style="background:var(--navy3);border:1px solid var(--navy3);border-radius:6px;color:var(--gray);cursor:pointer;font-size:14px;padding:4px 10px;line-height:1" title="Move down">↓</button>' : '<button disabled style="background:transparent;border:1px solid transparent;border-radius:6px;color:transparent;font-size:14px;padding:4px 10px;line-height:1">↓</button>')
+        +   '<button class="delete-btn" style="font-size:12px;padding:4px 10px;margin-left:auto" onclick="deleteCategory(' + ci + ')">Remove Category</button>'
         + '</div>'
         + '<div style="display:grid;grid-template-columns:1fr 130px;gap:8px;margin-bottom:12px">'
         +   '<div>'
