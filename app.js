@@ -286,6 +286,10 @@ function go(screenId) {
   var bar = document.getElementById('floating-order-bar');
   if (bar) bar.style.display = (screenId === 's-order') ? 'block' : 'none';
 
+  // Show sticky search+tab bar only on order screen
+  var stickyBar = document.getElementById('order-sticky-bar');
+  if (stickyBar) stickyBar.style.display = (screenId === 's-order') ? 'block' : 'none';
+
   // Reset search when leaving order screen
   if (screenId !== 's-order') _searchQuery = '';
 
@@ -856,17 +860,25 @@ function renderSearchResults() {
 }
 
 function renderServices() {
-  var categories = getCategories();
-  var container  = document.getElementById('services-list');
-  var searchBar  = renderSearchBar();
+  var categories   = getCategories();
+  var container    = document.getElementById('services-list');
+  var tabWrap      = document.getElementById('order-tab-bar-wrap');
+  var searchWrap   = document.getElementById('order-search-wrap');
 
+  // Always update sticky bar
+  if (tabWrap)    tabWrap.innerHTML    = renderTabBar(categories, !!_searchQuery);
+  if (searchWrap) searchWrap.innerHTML = renderSearchBar();
+
+  // Service sections or search results
   if (_searchQuery) {
-    container.innerHTML = searchBar + renderTabBar(categories, true) + renderSearchResults();
+    container.innerHTML = renderSearchResults();
     updateSubtotal();
+    if (_searchQuery) {
+      var inp = document.getElementById('svc-search');
+      if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
+    }
     return;
   }
-
-  var tabBar = renderTabBar(categories, false);
 
   var sections = categories.map(function(cat) {
     var catServices = SERVICES.map(function(s, i) { return { s: s, i: i }; })
@@ -904,7 +916,7 @@ function renderServices() {
     return '<div class="cat-section">' + header + rows + '</div>';
   }).join('');
 
-  container.innerHTML = searchBar + tabBar + sections;
+  container.innerHTML = sections;
   updateSubtotal();
   setTimeout(updateTabFade, 0);
 }
@@ -913,7 +925,13 @@ function scrollToCategory(idx, btn) {
   document.querySelectorAll('.cat-tab').forEach(function(t) { t.classList.remove('active'); });
   btn.classList.add('active');
   var sects = document.querySelectorAll('.cat-section');
-  if (sects[idx]) sects[idx].scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (!sects[idx]) return;
+  var stickyBar = document.getElementById('order-sticky-bar');
+  var topbarH   = 57;
+  var stickyH   = stickyBar ? stickyBar.offsetHeight : 0;
+  var offset    = topbarH + stickyH + 8;
+  var top       = sects[idx].getBoundingClientRect().top + window.scrollY - offset;
+  window.scrollTo({ top: top, behavior: 'smooth' });
 }
 
 function updateCheck(id, active) {
