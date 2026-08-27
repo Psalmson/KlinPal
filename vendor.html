@@ -1745,9 +1745,10 @@
     wrap.innerHTML = services.map(function(cat, ci) {
       if (!Array.isArray(cat.services)) cat.services = [];
       var serviceRows = cat.services.map(function(s, si) {
-        return '<div style="display:grid;grid-template-columns:1fr 120px auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--navy3)">'
+        return '<div style="display:grid;grid-template-columns:1fr 110px 110px auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--navy3)">'
           + '<div><input class="field-input" type="text" value="' + escVal(s.name) + '" placeholder="Service name" oninput="services[' + ci + '].services[' + si + '].name=this.value" style="margin:0"></div>'
           + '<div><input class="field-input" type="number" value="' + s.price + '" placeholder="Price" oninput="services[' + ci + '].services[' + si + '].price=parseInt(this.value)||0" style="margin:0"></div>'
+          + '<div><input class="field-input" type="text" value="' + escVal(s.turnaround||'') + '" placeholder="e.g. 2 days" oninput="services[' + ci + '].services[' + si + '].turnaround=this.value.trim()" style="margin:0"></div>'
           + '<div style="display:flex;align-items:center;gap:10px">'
           +   '<label class="toggle-switch" title="Active"><input type="checkbox"' + (s.active ? ' checked' : '') + ' onchange="services[' + ci + '].services[' + si + '].active=this.checked"><span class="toggle-slider"></span></label>'
           +   '<button class="delete-btn" style="padding:6px 10px;font-size:12px" onclick="deleteService(' + ci + ',' + si + ')">✕</button>'
@@ -1762,15 +1763,17 @@
         +   '</div>'
         +   '<button class="delete-btn" style="font-size:12px;padding:4px 10px" onclick="deleteCategory(' + ci + ')">Remove Category</button>'
         + '</div>'
-        + '<div style="display:grid;grid-template-columns:1fr 120px auto;gap:10px;padding-bottom:6px;margin-bottom:2px">'
+        + '<div style="display:grid;grid-template-columns:1fr 110px 110px auto;gap:10px;padding-bottom:6px;margin-bottom:2px">'
         +   '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);font-weight:600">Service Name</div>'
         +   '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);font-weight:600">Price (₦)</div>'
+        +   '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);font-weight:600">Turnaround</div>'
         +   '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);font-weight:600">Active</div>'
         + '</div>'
         + serviceRows
         + '<div style="margin-top:12px;display:flex;gap:8px">'
         +   '<input class="field-input" type="text" id="new-svc-name-' + ci + '" placeholder="New service name" style="margin:0;flex:1">'
-        +   '<input class="field-input" type="number" id="new-svc-price-' + ci + '" placeholder="Price" style="margin:0;width:120px">'
+        +   '<input class="field-input" type="number" id="new-svc-price-' + ci + '" placeholder="Price" style="margin:0;width:110px">'
+        +   '<input class="field-input" type="text" id="new-svc-turnaround-' + ci + '" placeholder="e.g. 2 days" style="margin:0;width:110px">'
         +   '<button class="save-btn" style="margin:0;padding:10px 16px;font-size:13px" onclick="addServiceToCategory(' + ci + ')">+ Add</button>'
         + '</div>'
         + '</div>';
@@ -1804,13 +1807,15 @@
   }
 
   function addServiceToCategory(ci) {
-    var nameEl  = document.getElementById('new-svc-name-' + ci);
-    var priceEl = document.getElementById('new-svc-price-' + ci);
-    var name    = nameEl ? nameEl.value.trim() : '';
-    var price   = priceEl ? (parseInt(priceEl.value) || 0) : 0;
+    var nameEl       = document.getElementById('new-svc-name-' + ci);
+    var priceEl      = document.getElementById('new-svc-price-' + ci);
+    var turnaroundEl = document.getElementById('new-svc-turnaround-' + ci);
+    var name         = nameEl ? nameEl.value.trim() : '';
+    var price        = priceEl ? (parseInt(priceEl.value) || 0) : 0;
+    var turnaround   = turnaroundEl ? turnaroundEl.value.trim() : '';
     if (!name)  { showToast('Enter a service name', true); return; }
     if (!price) { showToast('Enter a valid price', true); return; }
-    services[ci].services.push({ id: 'svc_' + Date.now() + '_' + Math.random().toString(36).slice(2,8), name: name, price: price, active: true });
+    services[ci].services.push({ id: 'svc_' + Date.now() + '_' + Math.random().toString(36).slice(2,8), name: name, price: price, turnaround: turnaround, active: true });
     renderServicesEditor();
     showToast('Service added ✓');
   }
