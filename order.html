@@ -140,6 +140,11 @@
     <button class="back-btn" onclick="goBackFromOrder()">← Back</button>
     <div class="logo"><img src="" alt="Klinpal" class="logo-img"></div>
   </div>
+  <!-- STICKY SEARCH + TAB BAR -->
+  <div id="order-sticky-bar" style="position:sticky;top:56px;z-index:9;background:var(--off-white,#f7f9fc);padding:10px 20px 0;border-bottom:1px solid var(--gray-100,#e2e8f0)">
+    <div id="order-tab-bar-wrap"></div>
+    <div id="order-search-wrap" style="padding-bottom:10px"></div>
+  </div>
   <div class="screen-body">
     <div id="welcome-banner"></div>
     <div class="screen-head">
@@ -172,7 +177,7 @@
       background:var(--teal);
       color:var(--white);
       border:none;
-      border-radius:100px;
+      border-radius:14px;
       padding:14px 28px;
       font-family:var(--font-body);
       font-size:15px;
