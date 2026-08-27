@@ -1745,11 +1745,13 @@
     wrap.innerHTML = services.map(function(cat, ci) {
       if (!Array.isArray(cat.services)) cat.services = [];
       var serviceRows = cat.services.map(function(s, si) {
-        return '<div style="display:grid;grid-template-columns:1fr 110px 110px auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--navy3)">'
-          + '<div><input class="field-input" type="text" value="' + escVal(s.name) + '" placeholder="Service name" oninput="services[' + ci + '].services[' + si + '].name=this.value" style="margin:0"></div>'
-          + '<div><input class="field-input" type="number" value="' + s.price + '" placeholder="Price" oninput="services[' + ci + '].services[' + si + '].price=parseInt(this.value)||0" style="margin:0"></div>'
-          + '<div><input class="field-input" type="text" value="' + escVal(s.turnaround||'') + '" placeholder="e.g. 2 days" oninput="services[' + ci + '].services[' + si + '].turnaround=this.value.trim()" style="margin:0"></div>'
-          + '<div style="display:flex;align-items:center;gap:10px">'
+        return '<div style="padding:10px 0;border-bottom:1px solid var(--navy3)">'
+          + '<div style="display:grid;grid-template-columns:1fr 100px;gap:8px;align-items:center;margin-bottom:6px">'
+          +   '<div><input class="field-input" type="text" value="' + escVal(s.name) + '" placeholder="Service name" oninput="services[' + ci + '].services[' + si + '].name=this.value" style="margin:0"></div>'
+          +   '<div><input class="field-input" type="number" value="' + s.price + '" placeholder="Price" oninput="services[' + ci + '].services[' + si + '].price=parseInt(this.value)||0" style="margin:0"></div>'
+          + '</div>'
+          + '<div style="display:flex;align-items:center;gap:8px">'
+          +   '<input class="field-input" type="text" value="' + escVal(s.turnaround||'') + '" placeholder="Turnaround e.g. 2 days" oninput="services[' + ci + '].services[' + si + '].turnaround=this.value.trim()" style="margin:0;flex:1;font-size:12px">'
           +   '<label class="toggle-switch" title="Active"><input type="checkbox"' + (s.active ? ' checked' : '') + ' onchange="services[' + ci + '].services[' + si + '].active=this.checked"><span class="toggle-slider"></span></label>'
           +   '<button class="delete-btn" style="padding:6px 10px;font-size:12px" onclick="deleteService(' + ci + ',' + si + ')">✕</button>'
           + '</div>'
@@ -1763,11 +1765,9 @@
         +   '</div>'
         +   '<button class="delete-btn" style="font-size:12px;padding:4px 10px" onclick="deleteCategory(' + ci + ')">Remove Category</button>'
         + '</div>'
-        + '<div style="display:grid;grid-template-columns:1fr 110px 110px auto;gap:10px;padding-bottom:6px;margin-bottom:2px">'
+        + '<div style="display:grid;grid-template-columns:1fr 100px;gap:8px;padding-bottom:6px;margin-bottom:2px">'
         +   '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);font-weight:600">Service Name</div>'
         +   '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);font-weight:600">Price (₦)</div>'
-        +   '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);font-weight:600">Turnaround</div>'
-        +   '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);font-weight:600">Active</div>'
         + '</div>'
         + serviceRows
         + '<div style="margin-top:12px;display:flex;gap:8px">'
