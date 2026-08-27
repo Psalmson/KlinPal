@@ -73,6 +73,8 @@ var SERVICES = [
 { id: 'iron',    name: 'Wash + Iron',  price: 300, qty: 0 },
 { id: 'dry',     name: 'Dry-clean',    price: 300, qty: 0 },
 ];
+var CATEGORY_DESCRIPTIONS = {};
+var CATEGORY_TURNAROUNDS  = {};
 
 var currentUser      = null;
 var isNewCustomer    = false;
@@ -781,7 +783,6 @@ function renderServices() {
         +   '<div class="service-info">'
         +     '<div class="service-name">' + s.name + '</div>'
         +     '<div class="service-price">' + s.price.toLocaleString() + '/item</div>'
-        +     (s.turnaround ? '<div style="font-size:11px;color:var(--gray-400,#999);margin-top:1px">⏱ ' + escHtml(s.turnaround) + '</div>' : '')
         +   '</div>'
         + '</div>'
         + '<div class="qty-ctrl">'
@@ -793,7 +794,11 @@ function renderServices() {
       );
     }).join('');
 
-    var header = '<div class="cat-header">' + cat + '</div>';
+    var desc       = CATEGORY_DESCRIPTIONS[cat] || '';
+    var turnaround = CATEGORY_TURNAROUNDS[cat]  || '';
+    var header = '<div class="cat-header">' + cat + '</div>'
+      + (desc       ? '<div style="font-size:12px;color:var(--gray-500,#888);margin:-4px 0 10px;line-height:1.5">' + escHtml(desc) + '</div>' : '')
+      + (turnaround ? '<div style="font-size:11px;color:var(--gray-400,#999);margin-bottom:10px">⏱ ' + escHtml(turnaround) + '</div>' : '');
     return '<div class="cat-section">' + header + rows + '</div>';
   }).join('');
 
@@ -1182,9 +1187,11 @@ function bootstrapVendor() {
       vendor.services.forEach(function(cat) {
         // Support both new nested format and legacy flat format
         if (cat.services && Array.isArray(cat.services)) {
-          // New nested format: { id, name, services: [...] }
+          // New nested format: { id, name, description, turnaround, services: [...] }
+          if (cat.description) CATEGORY_DESCRIPTIONS[cat.name] = cat.description;
+          if (cat.turnaround)  CATEGORY_TURNAROUNDS[cat.name]  = cat.turnaround;
           cat.services.filter(function(s) { return s.active; }).forEach(function(s) {
-            flat.push({ id: s.id, name: s.name, price: s.price, qty: 0, category: cat.name, turnaround: s.turnaround || '' });
+            flat.push({ id: s.id, name: s.name, price: s.price, qty: 0, category: cat.name });
           });
         } else if (cat.active !== false) {
           // Legacy flat format: { id, name, price, active }
