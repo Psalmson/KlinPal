@@ -233,8 +233,8 @@
 
     var table, filter;
     if (currentMode === 'vendor') {
-      table  = 'vendors?slug=eq.' + encodeURIComponent(val.toLowerCase()) + '&limit=1&select=id,name,slug,email';
-      filter = function(row) { return !row.email; }; // unclaimed if no email
+      table  = 'vendors?slug=eq.' + encodeURIComponent(val.toLowerCase()) + '&limit=1&select=id,name,slug,email,password';
+      filter = function(row) { return !row.password; }; // unclaimed if no password hash yet
     } else if (currentMode === 'staff') {
       table  = 'vendor_staff?phone=eq.' + encodeURIComponent(val) + '&active=eq.true&limit=1&select=id,name,phone,email,vendor_id';
       filter = function(row) { return !row.email; };
@@ -259,6 +259,11 @@
         }
         verifiedRow = row;
         document.getElementById('verified-name').textContent = '✓ ' + row.name;
+        // Pre-fill email if already on vendor row (set by superadmin at onboarding)
+        if (currentMode === 'vendor' && row.email) {
+          var emailField = document.getElementById('cred-email');
+          if (emailField) emailField.value = row.email;
+        }
         showStep('step-credentials');
       })
       .catch(function() { showError('verify-error', 'Could not verify. Please try again.'); })
