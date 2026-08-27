@@ -669,7 +669,12 @@ body {
   z-index: 10;
   padding-top: 8px;
 }
-.cat-tab-bar::-webkit-scrollbar { display: none; }
+/* cat-tab-bar inside sticky order bar — position:relative not sticky */
+#order-tab-bar-wrap .cat-tab-bar {
+  position: relative;
+  top: auto;
+  margin-bottom: 8px;
+}
 .cat-tab {
   flex-shrink: 0;
   padding: 6px 16px;
@@ -722,3 +727,4 @@ body {
   font-weight: 700;
   color: var(--navy);
 }
+.cat-tab-bar::-webkit-scrollbar { display: none; }
